@@ -7,7 +7,7 @@ const CTA = () => {
   const navigate = useNavigate();
 
   return (
-    <section id="cta" className="relative py-16 bg-blue-600 transition-colors duration-300">
+    <section id="cta" className="relative py-16 bg-blue-600">
       {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-0 transform -translate-x-1/4 -translate-y-1/4">

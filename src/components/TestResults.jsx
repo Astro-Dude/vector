@@ -231,19 +231,19 @@ const TestResults = () => {
           <div className="p-6 sm:p-8 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
             <button
               onClick={handleRetakeTest}
-              className="w-full sm:w-auto px-6 py-3 bg-white border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              className="w-full sm:w-auto px-6 py-3 bg-white border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50"
             >
               Retake Test
             </button>
             <button
               onClick={handleViewSolutions}
-              className="w-full sm:w-auto px-6 py-3 bg-blue-600 border border-transparent rounded-md text-white font-medium hover:bg-blue-700 transition-colors"
+              className="w-full sm:w-auto px-6 py-3 bg-blue-600 border border-transparent rounded-md text-white font-medium hover:bg-blue-700"
             >
               View Solutions
             </button>
             <a
               href="#register"
-              className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 border border-transparent rounded-md text-white font-medium hover:from-indigo-700 hover:to-blue-700 transition-colors"
+              className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 border border-transparent rounded-md text-white font-medium hover:from-indigo-700 hover:to-blue-700"
             >
               Explore Full Test Series
             </a>

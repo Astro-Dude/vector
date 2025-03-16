@@ -1,4 +1,3 @@
-import { ThemeProvider } from './context/ThemeContext';
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
@@ -18,7 +17,7 @@ import Dashboard from './components/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoadingScreen from './components/LoadingScreen';
-import { Suspense, lazy, useEffect } from 'react';
+import { Suspense } from 'react';
 import { useAuth } from './context/AuthContext';
 
 // Loading component for Suspense
@@ -44,7 +43,6 @@ const PublicRoute = ({ children }) => {
 // Layout component to conditionally render navbar and footer
 const Layout = ({ children }) => {
   const location = useLocation();
-  const { currentUser } = useAuth();
   
   // Hide navbar and footer on test-related pages, auth pages, and dashboard
   const hideNavFooter = location.pathname.includes('/test/') || 
@@ -54,7 +52,7 @@ const Layout = ({ children }) => {
                         location.pathname === '/dashboard';
   
   return (
-    <div className="min-h-screen bg-white transition-colors duration-300">
+    <div className="min-h-screen bg-white">
       {!hideNavFooter && <Navbar />}
       <ErrorBoundary>
         <Suspense fallback={<LoadingFallback />}>
@@ -137,7 +135,7 @@ const UnauthenticatedApp = () => {
     <Routes>
       {/* Home Page */}
       <Route path="/" element={
-        <main className="bg-white transition-colors duration-300">
+        <main className="bg-white">
           <Hero />
           <Features />
           <Testimonials />
@@ -183,17 +181,15 @@ const AppContent = () => {
 
 function App() {
   return (
-    <ThemeProvider>
-      <ErrorBoundary>
-        <AuthProvider>
-          <Router>
-            <Layout>
-              <AppContent />
-            </Layout>
-          </Router>
-        </AuthProvider>
-      </ErrorBoundary>
-    </ThemeProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <Router>
+          <Layout>
+            <AppContent />
+          </Layout>
+        </Router>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

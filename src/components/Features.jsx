@@ -59,7 +59,7 @@ const Features = () => {
   ];
 
   return (
-    <section id="features" className="py-16 bg-gray-50 transition-colors duration-300">
+    <section id="features" className="py-16 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900">
@@ -88,7 +88,7 @@ const Features = () => {
         <div className="mt-16 text-center">
           <Link
             to="/login"
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-300"
+            className="mt-8 px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
           >
             Start Your NSET Preparation
             <svg className="ml-2 -mr-1 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">

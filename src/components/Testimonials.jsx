@@ -43,7 +43,7 @@ const Testimonials = () => {
   };
 
   return (
-    <section id="testimonials" className="py-16 bg-white transition-colors duration-300 overflow-hidden">
+    <section id="testimonials" className="py-16 bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900">
@@ -117,10 +117,8 @@ const Testimonials = () => {
                   <button
                     key={idx}
                     onClick={() => setActiveIndex(idx)}
-                    className={`w-2.5 h-2.5 rounded-full focus:outline-none transition-colors duration-300 ${
-                      idx === activeIndex
-                        ? "bg-blue-600"
-                        : "bg-gray-300"
+                    className={`w-2.5 h-2.5 rounded-full focus:outline-none ${
+                      idx === activeIndex ? 'bg-blue-600' : 'bg-gray-300'
                     }`}
                     aria-label={`Go to testimonial ${idx + 1}`}
                   />

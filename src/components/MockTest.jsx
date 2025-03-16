@@ -395,13 +395,13 @@ const MockTest = ({ questions = nsetQuestions }) => {
             <div className="flex flex-col space-y-4">
               <button 
                 onClick={enterFullScreen}
-                className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
                 Enter Full Screen & Start Test
               </button>
               <button 
                 onClick={startTestAnyway}
-                className="px-6 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors"
+                className="px-6 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
               >
                 Start Without Full Screen
               </button>
@@ -427,7 +427,7 @@ const MockTest = ({ questions = nsetQuestions }) => {
               </div>
               <button
                 onClick={handleSubmitTest}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
                 Submit Test
               </button>
@@ -481,7 +481,7 @@ const MockTest = ({ questions = nsetQuestions }) => {
                       {currentQuestion.options.map((option) => (
                         <label
                           key={option.id}
-                          className={`flex items-start p-4 border rounded-lg cursor-pointer transition-colors ${
+                          className={`flex items-start p-4 border rounded-lg cursor-pointer ${
                             answers[currentQuestion.id] === option.id
                               ? 'bg-blue-50 border-blue-200'
                               : 'border-gray-200 hover:bg-gray-50'
@@ -526,7 +526,7 @@ const MockTest = ({ questions = nsetQuestions }) => {
                     className={`px-4 py-2 flex items-center text-sm font-medium rounded-md ${
                       currentQuestionIndex === 0
                         ? 'text-gray-400 cursor-not-allowed'
-                        : 'text-gray-700 hover:bg-gray-200'
+                        : 'text-gray-700'
                     }`}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -540,7 +540,7 @@ const MockTest = ({ questions = nsetQuestions }) => {
                     className={`px-4 py-2 flex items-center text-sm font-medium rounded-md ${
                       currentQuestionIndex === questions.length - 1
                         ? 'text-gray-400 cursor-not-allowed'
-                        : 'text-gray-700 hover:bg-gray-200'
+                        : 'text-gray-700'
                     }`}
                   >
                     Next
@@ -615,7 +615,7 @@ const MockTest = ({ questions = nsetQuestions }) => {
                   
                   <button
                     onClick={handleSubmitTest}
-                    className="w-full mt-6 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    className="w-full mt-6 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                   >
                     Submit Test
                   </button>

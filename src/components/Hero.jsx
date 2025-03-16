@@ -1,11 +1,12 @@
-import { useTheme } from '../hooks/useTheme';
+// import { useTheme } from '../hooks/useTheme';
 import { Link } from 'react-router-dom';
 
 const Hero = () => {
-  const { theme } = useTheme();
+  // Remove theme references
+  // const { theme } = useTheme();
 
   return (
-    <section id="hero" className="relative bg-white transition-colors duration-300 pt-24 pb-16 overflow-hidden">
+    <section id="hero" className="relative bg-white pt-24 pb-16 overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute right-0 top-0 w-1/2 h-1/2 bg-gradient-to-bl from-blue-50 opacity-50 rounded-bl-full transform translate-x-1/4 -translate-y-1/4"></div>
