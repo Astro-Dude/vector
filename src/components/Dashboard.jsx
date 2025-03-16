@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import FirestoreError from './FirestoreError';
+import NameLogo from '../assets/images/NameLogo.png';
 
 const Dashboard = () => {
   const { currentUser, userProfile, logout, firestoreConnected, getUserProfile } = useAuth();
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   
   // Sample test offerings
   const sampleTests = [
@@ -54,6 +56,10 @@ const Dashboard = () => {
   const toggleProfile = () => {
     setProfileOpen(!profileOpen);
   };
+  
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
+  };
 
   const formatPrice = (price) => {
     return typeof price === 'number' ? `₹${price}` : price;
@@ -66,32 +72,45 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* Simplified Header/Navbar */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <div className="flex">
+            {/* Left side with menu icon and logo */}
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={toggleMenu}
+                className="p-2 rounded-md text-gray-700 hover:text-blue-600 focus:outline-none"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+
+              {/* Logo moved next to menu icon */}
               <Link to="/" className="flex-shrink-0 flex items-center">
-                <span className="text-2xl font-bold text-blue-600">Vector</span>
+                <img src={NameLogo} alt="Vector" className="h-22" />
               </Link>
             </div>
             
-            <div className="relative ml-3">
-              <div>
-                <button
-                  onClick={toggleProfile}
-                  className="max-w-xs bg-white flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <span className="sr-only">Open user menu</span>
-                  <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium">
-                    {currentUser?.displayName?.charAt(0) || 'U'}
-                  </div>
-                  <span className="ml-2 text-gray-700">{currentUser?.displayName || 'User'}</span>
-                  <svg className="ml-1 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                </button>
-              </div>
+            {/* Empty div to maintain flex spacing */}
+            <div className="flex-1"></div>
+            
+            {/* Profile on right */}
+            <div className="relative">
+              <button
+                onClick={toggleProfile}
+                className="max-w-xs bg-white flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <span className="sr-only">Open user menu</span>
+                <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium">
+                  {currentUser?.displayName?.charAt(0) || 'U'}
+                </div>
+                <span className="ml-2 text-gray-700 hidden sm:inline">{currentUser?.displayName || 'User'}</span>
+                <svg className="ml-1 h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
               
               {profileOpen && (
                 <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
@@ -109,6 +128,47 @@ const Dashboard = () => {
           </div>
         </div>
       </header>
+
+      {/* Side Menu - appears when menu icon is clicked */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-40 flex">
+          {/* Completely transparent overlay - just for click handling */}
+          <div 
+            className="fixed inset-0 bg-transparent" 
+            onClick={toggleMenu}
+            aria-hidden="true"
+          ></div>
+          
+          {/* Menu panel */}
+          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white border-r border-gray-200 shadow-xl transform transition-transform duration-300 ease-in-out">
+            <div className="p-4 flex items-center justify-between">
+              <span className="text-xl font-bold text-blue-600">Menu</span>
+              <button
+                onClick={toggleMenu}
+                className="p-2 rounded-md text-gray-700 hover:text-blue-600 focus:outline-none"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto">
+              <nav className="py-4">
+                <div className="px-2 space-y-1">
+                  <Link 
+                    to="/" 
+                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-100 hover:text-blue-600"
+                  >
+                    Home
+                  </Link>
+                  {/* Additional menu items can be added here later */}
+                </div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main content */}
       <main className="py-10">
@@ -250,6 +310,8 @@ const Dashboard = () => {
           </div>
         </div>
       </main>
+      
+      {/* No footer as requested */}
     </div>
   );
 };

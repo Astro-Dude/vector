@@ -63,7 +63,7 @@ const CTA = () => {
           )}
         </div>
         
-        <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 md:grid-cols-3 gap-6">
           <div className="flex flex-col items-center p-4 bg-blue-700 rounded-lg">
             <span className="text-3xl font-bold text-white mb-1">20+</span>
             <span className="text-blue-100">NSET Practice Tests</span>
@@ -75,10 +75,6 @@ const CTA = () => {
           <div className="flex flex-col items-center p-4 bg-blue-700 rounded-lg">
             <span className="text-3xl font-bold text-white mb-1">15+</span>
             <span className="text-blue-100">Expert Mentors</span>
-          </div>
-          <div className="flex flex-col items-center p-4 bg-blue-700 rounded-lg">
-            <span className="text-3xl font-bold text-white mb-1">90%</span>
-            <span className="text-blue-100">Success Rate</span>
           </div>
         </div>
       </div>

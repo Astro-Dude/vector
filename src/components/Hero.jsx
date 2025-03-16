@@ -26,19 +26,19 @@ const Hero = () => {
           <div className="mt-8 sm:flex sm:justify-center lg:justify-start">
             <div className="rounded-md shadow">
               <Link
-                to="/test/sample/start"
+                to="/login"
                 className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 md:py-4 md:text-lg md:px-10 transition-all duration-300 transform hover:scale-105"
               >
                 Start Preparing
               </Link>
             </div>
             <div className="mt-3 sm:mt-0 sm:ml-3">
-              <a
-                href="#test-series"
+              <Link
+                to="/login"
                 className="w-full flex items-center justify-center px-8 py-3 border border-gray-300 text-base font-medium rounded-md text-blue-600 bg-white hover:bg-gray-50 md:py-4 md:text-lg md:px-10 transition-all duration-300"
               >
                 Explore Test Series
-              </a>
+              </Link>
             </div>
           </div>
         </div>
@@ -54,8 +54,8 @@ const Hero = () => {
             </div>
           </div>
           
-          {/* Stats */}
-          <div className="mt-8 grid grid-cols-3 gap-4 text-center">
+          {/* Stats - removed success rate */}
+          <div className="mt-8 grid grid-cols-2 gap-4 text-center">
             <div className="bg-white p-4 rounded-lg shadow">
               <p className="text-3xl font-bold text-blue-600">20+</p>
               <p className="text-sm text-gray-500">Practice Tests</p>
@@ -63,10 +63,6 @@ const Hero = () => {
             <div className="bg-white p-4 rounded-lg shadow">
               <p className="text-3xl font-bold text-blue-600">15+</p>
               <p className="text-sm text-gray-500">Expert Mentors</p>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <p className="text-3xl font-bold text-blue-600">90%</p>
-              <p className="text-sm text-gray-500">Success Rate</p>
             </div>
           </div>
         </div>

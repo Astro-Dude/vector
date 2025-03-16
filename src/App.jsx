@@ -46,11 +46,12 @@ const Layout = ({ children }) => {
   const location = useLocation();
   const { currentUser } = useAuth();
   
-  // Hide navbar and footer on test-related pages and auth pages
+  // Hide navbar and footer on test-related pages, auth pages, and dashboard
   const hideNavFooter = location.pathname.includes('/test/') || 
                         location.pathname.includes('/login') || 
                         location.pathname.includes('/signup') || 
-                        location.pathname.includes('/forgot-password');
+                        location.pathname.includes('/forgot-password') ||
+                        location.pathname === '/dashboard';
   
   return (
     <div className="min-h-screen bg-white transition-colors duration-300">
