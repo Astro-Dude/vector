@@ -5,7 +5,7 @@ const TestResults = () => {
   const navigate = useNavigate();
   
   // Extract data from location state (should be passed from test page)
-  const { answers = {}, questions = [], timeSpent = 0 } = location.state || {};
+  const { answers = {}, questions = [], timeSpent = 0, endedDueToFullScreenViolation = false } = location.state || {};
   
   // Calculate results
   const totalQuestions = questions.length;
@@ -42,6 +42,14 @@ const TestResults = () => {
   
   // Performance feedback based on score
   const getFeedback = () => {
+    if (endedDueToFullScreenViolation) {
+      return {
+        title: "Test Terminated",
+        message: "Your test was automatically terminated because you exited full-screen mode for more than 45 seconds. Full-screen mode is required for test integrity.",
+        color: "text-red-600"
+      };
+    }
+    
     if (scorePercentage >= 80) {
       return {
         title: "Excellent Performance!",

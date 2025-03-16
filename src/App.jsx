@@ -86,7 +86,7 @@ const AuthenticatedApp = () => {
             <MockTestStart 
               testId="nset-sample" 
               testName="NSET Free Sample Test" 
-              duration={60} 
+              duration={120} 
               questions={21} 
             />
           </ProtectedRoute>

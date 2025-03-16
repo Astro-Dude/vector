@@ -10,13 +10,14 @@ const Dashboard = () => {
   const [profileOpen, setProfileOpen] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showSyllabus, setShowSyllabus] = useState(false);
   
   // Sample test offerings
   const sampleTests = [
-    { id: 'nset-2024-1', title: 'NSET 2024 Mock Test 1', duration: 60, questions: 50, price: 499, status: 'purchase' },
-    { id: 'nset-2024-2', title: 'NSET 2024 Mock Test 2', duration: 60, questions: 50, price: 499, status: 'purchase' },
+    { id: 'nset-2024-1', title: 'NSET 2024 Mock Test 1', duration: 120, questions: 50, price: 499, status: 'purchase' },
+    { id: 'nset-2024-2', title: 'NSET 2024 Mock Test 2', duration: 120, questions: 50, price: 499, status: 'purchase' },
     { id: 'nset-2024-full', title: 'NSET 2024 Full Test Series', duration: 'Varies', questions: '250+', price: 1999, status: 'purchase' },
-    { id: 'sample', title: 'NSET Free Sample Test', duration: 60, questions: 21, price: 'Free', status: 'free' },
+    { id: 'sample', title: 'NSET Free Sample Test', duration: 120, questions: 21, price: 'Free', status: 'free' },
   ];
   
   // Sample purchased tests - use userProfile data if available
@@ -59,6 +60,11 @@ const Dashboard = () => {
   
   const toggleMenu = () => {
     setMenuOpen(!menuOpen);
+  };
+
+  const toggleSyllabus = () => {
+    setShowSyllabus(!showSyllabus);
+    setMenuOpen(false); // Close the menu when selecting syllabus
   };
 
   const formatPrice = (price) => {
@@ -162,6 +168,12 @@ const Dashboard = () => {
                   >
                     Home
                   </Link>
+                  <button 
+                    onClick={toggleSyllabus}
+                    className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-100 hover:text-blue-600"
+                  >
+                    Syllabus
+                  </button>
                   {/* Additional menu items can be added here later */}
                 </div>
               </nav>
@@ -173,127 +185,237 @@ const Dashboard = () => {
       {/* Main content */}
       <main className="py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Welcome section */}
-          <div className="bg-white overflow-hidden shadow rounded-lg mb-6">
-            <div className="px-4 py-5 sm:p-6">
-              <h1 className="text-2xl font-bold text-gray-900">Welcome, {currentUser?.displayName || 'Student'}</h1>
-              <p className="mt-1 text-sm text-gray-500">
-                Your one-stop platform for NSET preparation. Access mock tests, study resources, and more.
-              </p>
-            </div>
-          </div>
-
-          {/* Dashboard grid */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            {/* Resources/Test Series section */}
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+          {/* Welcome section - only visible on home page */}
+          {!showSyllabus && (
+            <div className="bg-white overflow-hidden shadow rounded-lg mb-6">
               <div className="px-4 py-5 sm:p-6">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">Test Series & Resources</h2>
+                <h1 className="text-2xl font-bold text-gray-900">Welcome, {currentUser?.displayName || 'Student'}</h1>
+                <p className="mt-1 text-sm text-gray-500">
+                  Your one-stop platform for NSET preparation. Access mock tests, study resources, and more.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Syllabus section - only visible when toggled */}
+          {showSyllabus ? (
+            <div className="bg-white overflow-hidden shadow rounded-lg mb-6">
+              <div className="px-4 py-5 sm:p-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-4">NSET Exam Syllabus</h2>
                 
-                <div className="space-y-4">
-                  {sampleTests.map((test) => (
-                    <div key={test.id} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-                      <div>
-                        <h3 className="text-md font-medium text-gray-900">{test.title}</h3>
-                        <div className="mt-1 flex items-center text-sm text-gray-500">
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mr-2">
-                            {test.duration} min
-                          </span>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                            {test.questions} Questions
-                          </span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-3">
-                        <span className="text-md font-medium text-gray-900">{formatPrice(test.price)}</span>
-                        {test.status === 'free' ? (
-                          <Link
-                            to={`/test/${test.id}/start`}
-                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                          >
-                            Start Test
-                          </Link>
-                        ) : test.status === 'purchased' ? (
-                          <Link
-                            to={`/test/${test.id}/start`}
-                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                          >
-                            Take Test
-                          </Link>
-                        ) : (
-                          <button
-                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                          >
-                            Purchase
-                          </button>
-                        )}
-                      </div>
+                {/* Logical Reasoning section */}
+                <div className="mb-8">
+                  <h3 className="text-lg font-semibold text-blue-700 mb-3">Logical Reasoning</h3>
+                  <p className="text-gray-700 mb-4">
+                    The Logical Reasoning section has questions that will test your ability to read
+                    and analyse visual representations of data. It will also test your ability to think
+                    logically. You may also need to structure data that appears unstructured. This
+                    section requires the candidate to have sound skills in logical reasoning and
+                    data representation.
+                  </p>
+                  <h4 className="text-md font-medium text-gray-900 mb-2">Topics covered:</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2">
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Series, Blood Relations, & Family Tree</span>
                     </div>
-                  ))}
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Simple & Compound Interest</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Direction Sense</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Puzzles</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Seating Arrangement</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Venn Diagram</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Data Sufficiency</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Pie Charts</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Bar and Line Graphs</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Coding-Decoding</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Sets and Caselets</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Clocks and Calendars</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Syllogism</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Percentages</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Profit and Loss</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Speed, Time and Distance</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Work and Time</span>
+                    </div>
+                  </div>
                 </div>
                 
-                <div className="mt-5">
-                  <a href="#" className="text-sm font-medium text-blue-600 hover:text-blue-500">
-                    View all resources &rarr;
-                  </a>
+                {/* Mathematics section */}
+                <div>
+                  <h3 className="text-lg font-semibold text-blue-700 mb-3">Mathematics</h3>
+                  <p className="text-gray-700 mb-4">
+                    The mathematics section evaluates the candidate's knowledge and
+                    problem-solving skills. It gauges their quantitative aptitude and ability to
+                    apply mathematical concepts to solve problems.
+                  </p>
+                  <h4 className="text-md font-medium text-gray-900 mb-2">Topics covered:</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2">
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Number Theory</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Exponentials and Logarithms</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Probability and Statistics</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Permutation and Combinations</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Ratio and Proportion</span>
+                    </div>
+                    <div className="flex items-center">
+                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Sets (Venn Diagrams)</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-
-            {/* Purchased/Events section */}
-            <div className="space-y-6">
-              {/* Purchased Tests */}
+          ) : (
+            /* Dashboard grid - only visible when syllabus is not shown */
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              {/* Resources/Test Series section */}
               <div className="bg-white overflow-hidden shadow rounded-lg">
                 <div className="px-4 py-5 sm:p-6">
-                  <h2 className="text-lg font-medium text-gray-900 mb-4">Your Purchased Tests</h2>
-                  
-                  {purchasedTests.length > 0 ? (
-                    <div className="space-y-4">
-                      {purchasedTests.map((test) => (
-                        <div key={test.id} className="border rounded-lg p-4 flex justify-between items-center">
-                          <div>
-                            <h3 className="text-md font-medium text-gray-900">{test.title}</h3>
-                            <p className="mt-1 text-sm text-gray-500">Purchased on {test.purchaseDate}</p>
-                          </div>
-                          <Link
-                            to={`/test/${test.id}/start`}
-                            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                          >
-                            Start Test
-                          </Link>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-6 bg-gray-50 rounded-lg">
-                      <p className="text-gray-500">You haven't purchased any tests yet.</p>
-                      <p className="mt-2 text-sm text-gray-500">
-                        Check out our test series and purchase one to start your preparation.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              {/* Upcoming Events */}
-              <div className="bg-white overflow-hidden shadow rounded-lg">
-                <div className="px-4 py-5 sm:p-6">
-                  <h2 className="text-lg font-medium text-gray-900 mb-4">Upcoming Events</h2>
+                  <h2 className="text-lg font-medium text-gray-900 mb-4">Test Series & Resources</h2>
                   
                   <div className="space-y-4">
-                    {upcomingEvents.map((event) => (
-                      <div key={event.id} className="border rounded-lg p-4">
-                        <h3 className="text-md font-medium text-gray-900">{event.title}</h3>
-                        <div className="mt-1 flex items-center justify-between">
-                          <div className="text-sm text-gray-500">
-                            <p>{event.date} at {event.time}</p>
+                    {sampleTests.map((test) => (
+                      <div key={test.id} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div>
+                          <h3 className="text-md font-medium text-gray-900">{test.title}</h3>
+                          <div className="mt-1 flex items-center text-sm text-gray-500">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+                              {test.duration} min
+                            </span>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                              {test.questions} Questions
+                            </span>
                           </div>
-                          <button
-                            className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                          >
-                            Register
-                          </button>
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                          <span className="text-md font-medium text-gray-900">{formatPrice(test.price)}</span>
+                          {test.status === 'free' ? (
+                            <Link
+                              to={`/test/${test.id}/start`}
+                              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            >
+                              Start Test
+                            </Link>
+                          ) : test.status === 'purchased' ? (
+                            <Link
+                              to={`/test/${test.id}/start`}
+                              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                            >
+                              Take Test
+                            </Link>
+                          ) : (
+                            <button
+                              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            >
+                              Purchase
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -301,13 +423,80 @@ const Dashboard = () => {
                   
                   <div className="mt-5">
                     <a href="#" className="text-sm font-medium text-blue-600 hover:text-blue-500">
-                      View all events &rarr;
+                      View all resources &rarr;
                     </a>
                   </div>
                 </div>
               </div>
+
+              {/* Purchased/Events section */}
+              <div className="space-y-6">
+                {/* Purchased Tests */}
+                <div className="bg-white overflow-hidden shadow rounded-lg">
+                  <div className="px-4 py-5 sm:p-6">
+                    <h2 className="text-lg font-medium text-gray-900 mb-4">Your Purchased Tests</h2>
+                    
+                    {purchasedTests.length > 0 ? (
+                      <div className="space-y-4">
+                        {purchasedTests.map((test) => (
+                          <div key={test.id} className="border rounded-lg p-4 flex justify-between items-center">
+                            <div>
+                              <h3 className="text-md font-medium text-gray-900">{test.title}</h3>
+                              <p className="mt-1 text-sm text-gray-500">Purchased on {test.purchaseDate}</p>
+                            </div>
+                            <Link
+                              to={`/test/${test.id}/start`}
+                              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            >
+                              Start Test
+                            </Link>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-6 bg-gray-50 rounded-lg">
+                        <p className="text-gray-500">You haven't purchased any tests yet.</p>
+                        <p className="mt-2 text-sm text-gray-500">
+                          Check out our test series and purchase one to start your preparation.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Upcoming Events */}
+                <div className="bg-white overflow-hidden shadow rounded-lg">
+                  <div className="px-4 py-5 sm:p-6">
+                    <h2 className="text-lg font-medium text-gray-900 mb-4">Upcoming Events</h2>
+                    
+                    <div className="space-y-4">
+                      {upcomingEvents.map((event) => (
+                        <div key={event.id} className="border rounded-lg p-4">
+                          <h3 className="text-md font-medium text-gray-900">{event.title}</h3>
+                          <div className="mt-1 flex items-center justify-between">
+                            <div className="text-sm text-gray-500">
+                              <p>{event.date} at {event.time}</p>
+                            </div>
+                            <button
+                              className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                            >
+                              Register
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="mt-5">
+                      <a href="#" className="text-sm font-medium text-blue-600 hover:text-blue-500">
+                        View all events &rarr;
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </main>
       

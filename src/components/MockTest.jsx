@@ -182,10 +182,12 @@ const MockTest = ({ questions = nsetQuestions }) => {
   const [answers, setAnswers] = useState({});
   const [textAnswers, setTextAnswers] = useState({});
   const [markedForReview, setMarkedForReview] = useState([]);
-  const [timeRemaining, setTimeRemaining] = useState(60 * 60); // 60 minutes in seconds
+  const [timeRemaining, setTimeRemaining] = useState(120 * 60); // 120 minutes in seconds
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
-  const [testStarted, setTestStarted] = useState(false); // Add this state to track if test has started
+  const [testStarted, setTestStarted] = useState(false);
+  const [fullScreenExitTime, setFullScreenExitTime] = useState(null);
+  const [showFullScreenWarning, setShowFullScreenWarning] = useState(false);
   
   // Function to disable right-click
   const disableRightClick = (e) => {
@@ -259,10 +261,14 @@ const MockTest = ({ questions = nsetQuestions }) => {
       
       setIsFullScreen(!!fullscreenElement);
       
-      // If fullscreen is exited but test has started, we want to keep showing the test
+      // If fullscreen is exited but test has started, start the warning timer
       if (!fullscreenElement && testStarted) {
-        // Optional: You could add a warning here that fullscreen was exited
-        console.log("Fullscreen exited, but test continues");
+        setFullScreenExitTime(Date.now());
+        setShowFullScreenWarning(true);
+      } else if (fullscreenElement && testStarted) {
+        // Reset if user returns to full screen
+        setFullScreenExitTime(null);
+        setShowFullScreenWarning(false);
       }
     };
     
@@ -361,7 +367,7 @@ const MockTest = ({ questions = nsetQuestions }) => {
       state: { 
         answers: allAnswers,
         questions,
-        timeSpent: 3600 - timeRemaining
+        timeSpent: 120 * 60 - timeRemaining
       }
     });
     
@@ -371,11 +377,31 @@ const MockTest = ({ questions = nsetQuestions }) => {
     }
   };
   
-  // Force test to start even if fullscreen fails or is not supported
-  const startTestAnyway = () => {
-    setTestStarted(true);
-    setIsFullScreen(true); // Pretend we're in fullscreen mode even if we're not
-  };
+  // Add full screen exit monitor
+  useEffect(() => {
+    if (fullScreenExitTime && testStarted && !testSubmitted) {
+      const interval = setInterval(() => {
+        const timeOutOfFullScreen = Math.floor((Date.now() - fullScreenExitTime) / 1000);
+        
+        // If user has been out of full screen for more than 45 seconds, end the test
+        if (timeOutOfFullScreen >= 45) {
+          clearInterval(interval);
+          setTestSubmitted(true);
+          navigate('/test/' + testId + '/results', {
+            state: {
+              answers: answers,
+              textAnswers: textAnswers,
+              questions: questions,
+              timeSpent: 120 * 60 - timeRemaining,
+              endedDueToFullScreenViolation: true
+            }
+          });
+        }
+      }, 1000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [fullScreenExitTime, testStarted, testSubmitted, answers, textAnswers, questions, timeRemaining, navigate, testId]);
   
   // If no questions are provided, show appropriate message
   if (questions.length === 0) {
@@ -391,7 +417,7 @@ const MockTest = ({ questions = nsetQuestions }) => {
         <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-8 max-w-md text-center">
             <h2 className="text-2xl font-bold mb-4">Start Test</h2>
-            <p className="mb-6">This test must be taken in full-screen mode. Click the button below to start.</p>
+            <p className="mb-6">This test must be taken in full-screen mode. The test will automatically end if you exit full-screen mode for more than 45 seconds.</p>
             <div className="flex flex-col space-y-4">
               <button 
                 onClick={enterFullScreen}
@@ -399,13 +425,23 @@ const MockTest = ({ questions = nsetQuestions }) => {
               >
                 Enter Full Screen & Start Test
               </button>
-              <button 
-                onClick={startTestAnyway}
-                className="px-6 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
-              >
-                Start Without Full Screen
-              </button>
             </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Add full screen warning */}
+      {showFullScreenWarning && (
+        <div className="fixed inset-0 bg-red-500 bg-opacity-90 z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg p-8 max-w-md text-center">
+            <h2 className="text-2xl font-bold text-red-600 mb-4">Warning: Full Screen Exited!</h2>
+            <p className="mb-6">Your test will automatically be submitted in <span className="font-bold">{45 - Math.floor((Date.now() - fullScreenExitTime) / 1000)} seconds</span> if you don't return to full screen mode.</p>
+            <button 
+              onClick={enterFullScreen}
+              className="px-6 py-3 bg-red-600 text-white rounded-md hover:bg-red-700"
+            >
+              Return to Full Screen
+            </button>
           </div>
         </div>
       )}

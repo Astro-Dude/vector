@@ -62,7 +62,7 @@ const MockTestStart = ({ testId, testName = "NSET Free Sample Test", duration = 
             </div>
             <div className="flex items-start">
               <div className="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold text-sm mr-3">6</div>
-              <p>The test must be taken in full-screen mode. Right-clicking and copy-pasting are disabled during the test.</p>
+              <p><strong>Important:</strong> The test must be taken in full-screen mode. The test will automatically end if you exit full-screen mode for more than 45 seconds. Right-clicking and copy-pasting are disabled during the test.</p>
             </div>
           </div>
         </div>
@@ -73,11 +73,11 @@ const MockTestStart = ({ testId, testName = "NSET Free Sample Test", duration = 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="border rounded-lg p-4 bg-blue-50">
               <h3 className="text-lg font-medium text-blue-800 mb-2">Quantitative Aptitude</h3>
-              <p className="text-gray-600">Probability, permutation & combination, number theory, ratios, percentages, and mathematical reasoning.</p>
+              <p className="text-gray-600">Probability & statistics, permutation & combination, number theory, ratios & profileOpen, exponentials & logarithms, sets (venn diagrams).</p>
             </div>
             <div className="border rounded-lg p-4 bg-indigo-50">
               <h3 className="text-lg font-medium text-indigo-800 mb-2">Logical Reasoning</h3>
-              <p className="text-gray-600">Direction sense, coding-decoding, clocks, series, syllogism, and analytical reasoning problems.</p>
+              <p className="text-gray-600">Direction sense, coding-decoding, clocks & calendars, series, blood Relations, & family Tree, syllogism, simplle and compound interest, puzzles, seating arrangements, venn diagrams, data sufficiency, pie charts, bar graphs & line graphs, sets & caselets, percentages, profit & loss, speed, time & distance, work & time.</p>
             </div>
           </div>
         </div>
