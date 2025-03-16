@@ -18,9 +18,9 @@ const Dashboard = () => {
   
   // Sample upcoming events
   const upcomingEvents = [
-    { id: 'event-1', title: 'NSET Preparation Webinar', date: 'June 15, 2024', time: '6:00 PM IST', status: 'upcoming' },
-    { id: 'event-2', title: 'Mock Interview Session', date: 'June 20, 2024', time: '5:00 PM IST', status: 'upcoming' },
-    { id: 'event-3', title: 'Q&A with NSET Toppers', date: 'June 25, 2024', time: '7:00 PM IST', status: 'upcoming' },
+    // { id: 'event-1', title: 'NSET Preparation Webinar', date: 'June 15, 2024', time: '6:00 PM IST', status: 'upcoming' },
+    // { id: 'event-2', title: 'Mock Interview Session', date: 'June 20, 2024', time: '5:00 PM IST', status: 'upcoming' },
+    // { id: 'event-3', title: 'Q&A with NSET Toppers', date: 'June 25, 2024', time: '7:00 PM IST', status: 'upcoming' },
   ];
   
   // Handle retry when Firestore connection fails
@@ -206,168 +206,170 @@ const Dashboard = () => {
               <div className="px-4 py-5 sm:p-6">
                 <h2 className="text-xl font-bold text-gray-900 mb-4">NSET Exam Syllabus</h2>
                 
-                {/* Logical Reasoning section */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-semibold text-blue-700 mb-3">Logical Reasoning</h3>
-                  <p className="text-gray-700 mb-4">
-                    The Logical Reasoning section has questions that will test your ability to read
-                    and analyse visual representations of data. It will also test your ability to think
-                    logically. You may also need to structure data that appears unstructured. This
-                    section requires the candidate to have sound skills in logical reasoning and
-                    data representation.
-                  </p>
-                  <h4 className="text-md font-medium text-gray-900 mb-2">Topics covered:</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2">
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Series, Blood Relations, & Family Tree</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Simple & Compound Interest</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Direction Sense</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Puzzles</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Seating Arrangement</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Venn Diagram</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Data Sufficiency</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Pie Charts</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Bar and Line Graphs</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Coding-Decoding</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Sets and Caselets</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Clocks and Calendars</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Syllogism</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Percentages</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Profit and Loss</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Speed, Time and Distance</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Work and Time</span>
+                <div className="max-h-[70vh] overflow-y-auto pr-2">
+                  {/* Logical Reasoning section */}
+                  <div className="mb-8">
+                    <h3 className="text-lg font-semibold text-blue-700 mb-3">Logical Reasoning</h3>
+                    <p className="text-gray-700 mb-4">
+                      The Logical Reasoning section has questions that will test your ability to read
+                      and analyse visual representations of data. It will also test your ability to think
+                      logically. You may also need to structure data that appears unstructured. This
+                      section requires the candidate to have sound skills in logical reasoning and
+                      data representation.
+                    </p>
+                    <h4 className="text-md font-medium text-gray-900 mb-2">Topics covered:</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2">
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Series, Blood Relations, & Family Tree</span>
+                      </div>
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Simple & Compound Interest</span>
+                      </div>
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Direction Sense</span>
+                      </div>
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Puzzles</span>
+                      </div>
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Seating Arrangement</span>
+                      </div>
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Venn Diagram</span>
+                      </div>
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Data Sufficiency</span>
+                      </div>
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Pie Charts</span>
+                      </div>
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Bar and Line Graphs</span>
+                      </div>
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Coding-Decoding</span>
+                      </div>
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Sets and Caselets</span>
+                      </div>
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Clocks and Calendars</span>
+                      </div>
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Syllogism</span>
+                      </div>
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Percentages</span>
+                      </div>
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Profit and Loss</span>
+                      </div>
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Speed, Time and Distance</span>
+                      </div>
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Work and Time</span>
+                      </div>
                     </div>
                   </div>
-                </div>
-                
-                {/* Mathematics section */}
-                <div>
-                  <h3 className="text-lg font-semibold text-blue-700 mb-3">Mathematics</h3>
-                  <p className="text-gray-700 mb-4">
-                    The mathematics section evaluates the candidate's knowledge and
-                    problem-solving skills. It gauges their quantitative aptitude and ability to
-                    apply mathematical concepts to solve problems.
-                  </p>
-                  <h4 className="text-md font-medium text-gray-900 mb-2">Topics covered:</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2">
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Number Theory</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Exponentials and Logarithms</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Probability and Statistics</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Permutation and Combinations</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Ratio and Proportion</span>
-                    </div>
-                    <div className="flex items-center">
-                      <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Sets (Venn Diagrams)</span>
+                  
+                  {/* Mathematics section */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-blue-700 mb-3">Mathematics</h3>
+                    <p className="text-gray-700 mb-4">
+                      The mathematics section evaluates the candidate's knowledge and
+                      problem-solving skills. It gauges their quantitative aptitude and ability to
+                      apply mathematical concepts to solve problems.
+                    </p>
+                    <h4 className="text-md font-medium text-gray-900 mb-2">Topics covered:</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2">
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Number Theory</span>
+                      </div>
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Exponentials and Logarithms</span>
+                      </div>
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Probability and Statistics</span>
+                      </div>
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Permutation and Combinations</span>
+                      </div>
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Ratio and Proportion</span>
+                      </div>
+                      <div className="flex items-center">
+                        <svg className="h-4 w-4 text-blue-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Sets (Venn Diagrams)</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -375,127 +377,180 @@ const Dashboard = () => {
             </div>
           ) : (
             /* Dashboard grid - only visible when syllabus is not shown */
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-              {/* Resources/Test Series section */}
-              <div className="bg-white overflow-hidden shadow rounded-lg">
+            <>
+              {/* Mock Interview Section - Separate from other content */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 overflow-hidden shadow rounded-lg mb-6">
                 <div className="px-4 py-5 sm:p-6">
-                  <h2 className="text-lg font-medium text-gray-900 mb-4">Test Series & Resources</h2>
+                  <h2 className="text-lg font-medium text-gray-900 mb-4">Interview Preparation</h2>
                   
-                  <div className="space-y-4">
-                    {Object.keys(testConfigs).map((testId) => {
-                      const test = testConfigs[testId];
-                      return (
-                        <div key={testId} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-                          <div>
-                            <h3 className="text-md font-medium text-gray-900">{test.testName}</h3>
-                            <div className="mt-1 flex items-center text-sm text-gray-500">
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mr-2">
-                                {test.testDuration} min
-                              </span>
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                                {test.totalQuestions} Questions
-                              </span>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-center gap-3">
-                            <span className="text-md font-medium text-gray-900">{formatPrice(test.price)}</span>
-                            {test.isFree ? (
-                              <button 
-                                onClick={() => handleStartTest(testId)}
-                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                              >
-                                Start Test
-                              </button>
-                            ) : (
-                              <button 
-                                onClick={() => handlePurchase(testId)}
-                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                              >
-                                Purchase
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  
-                  <div className="mt-5">
-                    <a href="#" className="text-sm font-medium text-blue-600 hover:text-blue-500">
-                      View all resources &rarr;
-                    </a>
+                  <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold text-blue-800">1:1 Mock Interview Session</h3>
+                      <ul className="mt-2 space-y-1">
+                        <li className="flex items-start">
+                          <svg className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="text-gray-600">Practice with real SST students who have successfully cleared the NSET exam</span>
+                        </li>
+                        <li className="flex items-start">
+                          <svg className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="text-gray-600">Get personalized feedback on your interview performance</span>
+                        </li>
+                        <li className="flex items-start">
+                          <svg className="h-5 w-5 text-green-500 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="text-gray-600">Improve your interview skills and confidence</span>
+                        </li>
+                      </ul>
+                      <div className="mt-3 flex items-center text-sm text-gray-500">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+                          30 min
+                        </span>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                          With SST Students
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col items-center">
+                      <span className="text-2xl font-bold text-gray-900 mb-2">₹599</span>
+                      <button 
+                        onClick={() => handlePurchase('mock-interview')}
+                        className="inline-flex items-center px-5 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        Book Now
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
-
-              {/* Purchased/Events section */}
-              <div className="space-y-6">
-                {/* Purchased Tests */}
+            
+              <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                {/* Resources/Test Series section */}
                 <div className="bg-white overflow-hidden shadow rounded-lg">
                   <div className="px-4 py-5 sm:p-6">
-                    <h2 className="text-lg font-medium text-gray-900 mb-4">Your Purchased Tests</h2>
+                    <h2 className="text-lg font-medium text-gray-900 mb-4">Test Series & Resources</h2>
                     
-                    {purchasedTests.length > 0 ? (
-                      <div className="space-y-4">
-                        {purchasedTests.map((test) => (
-                          <div key={test.id} className="border rounded-lg p-4 flex justify-between items-center">
+                    <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
+                      {/* Test Series */}
+                      {Object.keys(testConfigs).map((testId) => {
+                        const test = testConfigs[testId];
+                        return (
+                          <div key={testId} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
                             <div>
-                              <h3 className="text-md font-medium text-gray-900">{test.title}</h3>
-                              <p className="mt-1 text-sm text-gray-500">Purchased on {test.purchaseDate}</p>
+                              <h3 className="text-md font-medium text-gray-900">{test.testName}</h3>
+                              <div className="mt-1 flex items-center text-sm text-gray-500">
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+                                  {test.testDuration} min
+                                </span>
+                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                  {test.totalQuestions} Questions
+                                </span>
+                              </div>
                             </div>
-                            <Link
-                              to={`/test/${test.id}/start`}
-                              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            >
-                              Start Test
-                            </Link>
+                            
+                            <div className="flex items-center gap-3">
+                              <span className="text-md font-medium text-gray-900">{formatPrice(test.price)}</span>
+                              {test.isFree ? (
+                                <button 
+                                  onClick={() => handleStartTest(testId)}
+                                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                >
+                                  Start Test
+                                </button>
+                              ) : (
+                                <button 
+                                  onClick={() => handlePurchase(testId)}
+                                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                >
+                                  Purchase
+                                </button>
+                              )}
+                            </div>
                           </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="text-center py-6 bg-gray-50 rounded-lg">
-                        <p className="text-gray-500">You haven't purchased any tests yet.</p>
-                        <p className="mt-2 text-sm text-gray-500">
-                          Check out our test series and purchase one to start your preparation.
-                        </p>
-                      </div>
-                    )}
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
-                
-                {/* Upcoming Events */}
-                <div className="bg-white overflow-hidden shadow rounded-lg">
-                  <div className="px-4 py-5 sm:p-6">
-                    <h2 className="text-lg font-medium text-gray-900 mb-4">Upcoming Events</h2>
-                    
-                    <div className="space-y-4">
-                      {upcomingEvents.map((event) => (
-                        <div key={event.id} className="border rounded-lg p-4">
-                          <h3 className="text-md font-medium text-gray-900">{event.title}</h3>
-                          <div className="mt-1 flex items-center justify-between">
-                            <div className="text-sm text-gray-500">
-                              <p>{event.date} at {event.time}</p>
-                            </div>
-                            <button
-                              className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            >
-                              Register
-                            </button>
+
+                {/* Purchased/Events section */}
+                <div className="space-y-6">
+                  {/* Purchased Tests */}
+                  <div className="bg-white overflow-hidden shadow rounded-lg">
+                    <div className="px-4 py-5 sm:p-6">
+                      <h2 className="text-lg font-medium text-gray-900 mb-4">Your Purchased Tests</h2>
+                      
+                      <div className="max-h-[30vh] overflow-y-auto pr-2">
+                        {purchasedTests.length > 0 ? (
+                          <div className="space-y-4">
+                            {purchasedTests.map((test) => (
+                              <div key={test.id} className="border rounded-lg p-4 flex justify-between items-center">
+                                <div>
+                                  <h3 className="text-md font-medium text-gray-900">{test.title}</h3>
+                                  <p className="mt-1 text-sm text-gray-500">Purchased on {test.purchaseDate}</p>
+                                </div>
+                                <Link
+                                  to={`/test/${test.id}/start`}
+                                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                >
+                                  Start Test
+                                </Link>
+                              </div>
+                            ))}
                           </div>
-                        </div>
-                      ))}
+                        ) : (
+                          <div className="text-center py-6 bg-gray-50 rounded-lg">
+                            <p className="text-gray-500">You haven't purchased any tests yet.</p>
+                            <p className="mt-2 text-sm text-gray-500">
+                              Check out our test series and purchase one to start your preparation.
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    
-                    <div className="mt-5">
-                      <a href="#" className="text-sm font-medium text-blue-600 hover:text-blue-500">
-                        View all events &rarr;
-                      </a>
+                  </div>
+                  
+                  {/* Upcoming Events */}
+                  <div className="bg-white overflow-hidden shadow rounded-lg">
+                    <div className="px-4 py-5 sm:p-6">
+                      <h2 className="text-lg font-medium text-gray-900 mb-4">Upcoming Events</h2>
+                      
+                      <div className="space-y-4 max-h-[30vh] overflow-y-auto pr-2">
+                        {upcomingEvents.length > 0 ? (
+                          upcomingEvents.map((event) => (
+                            <div key={event.id} className="border rounded-lg p-4">
+                              <h3 className="text-md font-medium text-gray-900">{event.title}</h3>
+                              <div className="mt-1 flex items-center justify-between">
+                                <div className="text-sm text-gray-500">
+                                  <p>{event.date} at {event.time}</p>
+                                </div>
+                                <button
+                                  className="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                >
+                                  Register
+                                </button>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-center py-6 bg-gray-50 rounded-lg">
+                            <p className="text-gray-500">No upcoming events at the moment.</p>
+                            <p className="mt-2 text-sm text-gray-500">
+                              Check back later for new events.
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </>
           )}
         </div>
       </main>

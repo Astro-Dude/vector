@@ -8,8 +8,7 @@ import nsetQuestions from './nsetQuestions';
 // Define test IDs as constants for consistency
 export const TEST_IDS = {
   SAMPLE: 'nset-sample',
-  MOCK_TEST_1: 'nset-mock-1',
-  MOCK_TEST_2: 'nset-mock-2',
+  // MOCK_TEST_1: 'nset-mock-1',
 };
 
 // Define test components that will be shown in the MockTestStart page
@@ -55,29 +54,18 @@ export const testConfigs = {
     testComponents: testComponents
   },
   
-  [TEST_IDS.MOCK_TEST_1]: {
-    // Use placeholder questions until real ones are available
-    questions: placeholderQuestions,
-    testName: "NSET 2024 Mock Test 1",
-    testDuration: 120,
-    totalQuestions: 50,
-    passScore: 70,
-    isFree: false,
-    price: '₹499',
-    testComponents: testComponents
-  },
+  // [TEST_IDS.MOCK_TEST_1]: {
+  //   // Use placeholder questions until real ones are available
+  //   questions: placeholderQuestions,
+  //   testName: "NSET 2024 Mock Test 1",
+  //   testDuration: 120,
+  //   totalQuestions: 50,
+  //   passScore: 70,
+  //   isFree: false,
+  //   price: '₹499',
+  //   testComponents: testComponents
+  // },
   
-  [TEST_IDS.MOCK_TEST_2]: {
-    // Use placeholder questions until real ones are available
-    questions: placeholderQuestions,
-    testName: "NSET 2024 Mock Test 2",
-    testDuration: 120,
-    totalQuestions: 50,
-    passScore: 70,
-    isFree: false,
-    price: '₹499',
-    testComponents: testComponents
-  }
 };
 
 // Helper function to get a test configuration by ID
