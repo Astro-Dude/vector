@@ -122,15 +122,22 @@ const Dashboard = () => {
               </button>
               
               {profileOpen && (
-                <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-10">
-                  <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Your Profile</Link>
-                  <Link to="/settings" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</Link>
-                  <button
-                    onClick={handleLogout}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    Sign out
-                  </button>
+                <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-xl bg-white ring-1 ring-gray-200 focus:outline-none z-10 overflow-hidden">
+                  <div className="p-2">
+                    <div className="px-3 py-2 border-b border-gray-100">
+                      <p className="text-sm font-medium text-gray-900">{currentUser?.displayName || 'User'}</p>
+                      <p className="text-xs text-gray-500 truncate">{currentUser?.email || ''}</p>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="flex w-full items-center px-3 py-2.5 mt-1 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md group transition-colors duration-150"
+                    >
+                      <svg className="mr-2 h-5 w-5 text-red-500 group-hover:text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      Sign out
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

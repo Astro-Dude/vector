@@ -3,7 +3,7 @@ import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Features from './components/Features';
-import Testimonials from './components/Testimonials';
+import Mentors from './components/Mentors';
 import CTA from './components/CTA';
 import Footer from './components/Footer';
 import MockTestStart from './components/MockTestStart';
@@ -153,7 +153,7 @@ const UnauthenticatedApp = () => {
         <main className="bg-white">
           <Hero />
           <Features />
-          <Testimonials />
+          <Mentors />
           <CTA />
         </main>
       } />
