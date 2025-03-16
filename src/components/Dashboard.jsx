@@ -30,6 +30,7 @@ const Dashboard = () => {
   // Handle retry when Firestore connection fails
   const handleRetry = async () => {
     setIsRetrying(true);
+    
     try {
       if (currentUser) {
         await getUserProfile(currentUser.uid);
@@ -58,8 +59,8 @@ const Dashboard = () => {
     return typeof price === 'number' ? `₹${price}` : price;
   };
 
-  // Show Firestore error component if connection fails
-  if (!firestoreConnected && !isRetrying) {
+  // Show Firestore error component only if connection fails completely and it's not retrying
+  if (!firestoreConnected && !isRetrying && !userProfile) {
     return <FirestoreError onRetry={handleRetry} />;
   }
 

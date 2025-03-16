@@ -1,28 +1,36 @@
-import { createContext, useState, useContext, useEffect } from 'react';
+import { createContext, useState, useContext, useEffect, useRef } from 'react';
 import { 
   signOut,
   onAuthStateChanged,
   GoogleAuthProvider,
   signInWithPopup,
   setPersistence,
-  browserLocalPersistence
+  browserLocalPersistence,
+  browserSessionPersistence
 } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase/firebase';
 import { enableFirestoreDebug } from '../firebase/firestore-debug';
 
-// Enable Firestore debug in development
-if (import.meta.env.DEV) {
+// Only enable Firestore debug in development when explicitly needed
+if (import.meta.env.DEV && false) { // Set to true only when debugging
   enableFirestoreDebug();
 }
 
-// Ensure persistence is set to local
-try {
-  setPersistence(auth, browserLocalPersistence)
-    .catch(err => console.error("Error setting persistence:", err));
-} catch (err) {
-  console.error("Persistence setup error:", err);
-}
+// Set persistence based on user preference (default to local)
+const setPersistenceMode = async (rememberMe = true) => {
+  try {
+    const persistenceType = rememberMe ? browserLocalPersistence : browserSessionPersistence;
+    await setPersistence(auth, persistenceType);
+    return true;
+  } catch (err) {
+    console.error("Persistence setup error:", err);
+    return false;
+  }
+};
+
+// Set default persistence on app load
+setPersistenceMode(true);
 
 // Create the authentication context
 const AuthContext = createContext();
@@ -40,45 +48,95 @@ export const AuthProvider = ({ children }) => {
   const [authChecked, setAuthChecked] = useState(false);
   const [error, setError] = useState("");
   const [firestoreConnected, setFirestoreConnected] = useState(true);
+  
+  // Add a retry counter to prevent infinite connection attempts
+  const retryCount = useRef(0);
+  const MAX_RETRIES = 2; // Reduce retries
+  
+  // Cache for user profiles to reduce Firestore reads
+  const profileCache = useRef(new Map());
+  
+  // Create a local fallback profile for when Firestore fails
+  const createFallbackProfile = (uid) => {
+    return {
+      uid: uid,
+      displayName: auth.currentUser?.displayName || "User",
+      email: auth.currentUser?.email || "",
+      role: "student",
+      purchasedTests: [],
+      completedTests: [],
+      isOfflineProfile: true
+    };
+  };
 
-  // Function to sign in with Google
+  // Function to sign in with Google with improved error handling
   const signInWithGoogle = async () => {
     try {
       setError("");
       const provider = new GoogleAuthProvider();
       const userCredential = await signInWithPopup(auth, provider);
       
-      try {
-        // Check if user document exists, if not create one
-        const userDoc = await getDoc(doc(db, "users", userCredential.user.uid));
-        
-        if (!userDoc.exists()) {
-          // Create new user document in Firestore for Google sign-in
-          await setDoc(doc(db, "users", userCredential.user.uid), {
-            uid: userCredential.user.uid,
-            email: userCredential.user.email,
-            displayName: userCredential.user.displayName,
-            photoURL: userCredential.user.photoURL,
-            createdAt: new Date().toISOString(),
-            role: "student",
-            purchasedTests: [],
-            completedTests: [],
-            authProvider: "google"
-          });
+      // Use the user credential immediately rather than waiting for Firestore
+      // This speeds up the login process
+      setCurrentUser(userCredential.user);
+      setAuthChecked(true);
+      
+      // Create a minimal profile immediately
+      const minimalProfile = createFallbackProfile(userCredential.user.uid);
+      setUserProfile(minimalProfile);
+      
+      // Try to fetch/create the Firestore profile in the background
+      setTimeout(() => {
+        try {
+          createOrUpdateUserDocument(userCredential.user);
+        } catch (err) {
+          // Non-blocking error, user can still use the app
+          console.warn("Background profile creation failed:", err);
         }
-      } catch (firestoreError) {
-        console.error("Firestore error during sign-in:", firestoreError);
-        setFirestoreConnected(false);
-        
-        // Still return the user even if Firestore operations fail
-        // This allows basic authentication to work even with Firestore issues
-      }
+      }, 100);
       
       return userCredential.user;
     } catch (err) {
       console.error("Auth error:", err);
       setError(err.message);
       throw err;
+    }
+  };
+  
+  // Separate function to create or update user document
+  const createOrUpdateUserDocument = async (user) => {
+    try {
+      const userDocRef = doc(db, "users", user.uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      if (!userDoc.exists()) {
+        await setDoc(userDocRef, {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          createdAt: new Date().toISOString(),
+          role: "student",
+          purchasedTests: [],
+          completedTests: [],
+          authProvider: "google"
+        });
+      }
+      
+      // Cache the profile
+      const profile = userDoc.exists() ? userDoc.data() : null;
+      if (profile) {
+        profileCache.current.set(user.uid, {
+          data: profile,
+          timestamp: Date.now()
+        });
+        setUserProfile(profile);
+      }
+      
+      setFirestoreConnected(true);
+    } catch (firestoreError) {
+      console.error("Firestore error:", firestoreError);
+      setFirestoreConnected(false);
     }
   };
 
@@ -90,9 +148,7 @@ export const AuthProvider = ({ children }) => {
       setUserProfile(null);
       setCurrentUser(null);
       
-      // Force page reload to clear any cached state
-      window.location.href = '/login';
-      
+      // Don't reload the page, just navigate
       return true;
     } catch (err) {
       console.error("Logout error:", err);
@@ -101,8 +157,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Function to get user profile data from Firestore
+  // Function to get user profile data from Firestore with caching
   const getUserProfile = async (uid) => {
+    // Check cache first (valid for 10 minutes)
+    const cachedProfile = profileCache.current.get(uid);
+    const CACHE_TTL = 10 * 60 * 1000; // 10 minutes in milliseconds
+    
+    if (cachedProfile && (Date.now() - cachedProfile.timestamp) < CACHE_TTL) {
+      setUserProfile(cachedProfile.data);
+      return cachedProfile.data;
+    }
+    
     try {
       const userDocRef = doc(db, "users", uid);
       const userDocSnap = await getDoc(userDocRef);
@@ -111,61 +176,98 @@ export const AuthProvider = ({ children }) => {
         const userData = userDocSnap.data();
         setUserProfile(userData);
         setFirestoreConnected(true);
+        
+        // Update cache
+        profileCache.current.set(uid, {
+          data: userData,
+          timestamp: Date.now()
+        });
+        
         return userData;
       } else {
-        console.log("No user profile found");
-        
         // Create a basic profile if none exists
-        const basicProfile = {
-          uid: uid,
-          displayName: auth.currentUser?.displayName || "User",
-          email: auth.currentUser?.email || "",
-          role: "student",
-          purchasedTests: [],
-          completedTests: []
-        };
+        const basicProfile = createFallbackProfile(uid);
         
         setUserProfile(basicProfile);
         return basicProfile;
       }
     } catch (err) {
-      console.error("Error fetching user profile:", err);
+      console.warn("Profile fetch failed, using fallback:", err);
       setFirestoreConnected(false);
       
+      // Increment retry count
+      retryCount.current += 1;
+      
       // Return a minimal profile based on auth data when Firestore is unavailable
-      const fallbackProfile = {
-        uid: uid,
-        displayName: auth.currentUser?.displayName || "User",
-        email: auth.currentUser?.email || "",
-        role: "student",
-        purchasedTests: [],
-        completedTests: []
-      };
+      const fallbackProfile = createFallbackProfile(uid);
       
       setUserProfile(fallbackProfile);
       return fallbackProfile;
     }
   };
 
-  // Effect to observe auth state changes
+  // Retry user profile fetch with shorter backoff
+  const retryUserProfileFetch = async (uid) => {
+    if (retryCount.current >= MAX_RETRIES) {
+      return false;
+    }
+    
+    // Short backoff: 300ms, 600ms
+    const delay = 300 * (retryCount.current + 1);
+    
+    await new Promise(resolve => setTimeout(resolve, delay));
+    
+    try {
+      await getUserProfile(uid);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
+  // Effect to observe auth state changes - optimized for speed
   useEffect(() => {
-    console.log("Setting up auth state listener");
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log("Auth state changed:", user ? "User logged in" : "No user");
-      setCurrentUser(user);
+    // Function to handle auth state
+    const handleAuthState = async (user) => {
+      // Always mark auth as checked immediately
       setAuthChecked(true);
+      setCurrentUser(user);
       
       if (user) {
-        try {
-          await getUserProfile(user.uid);
-        } catch (err) {
-          console.error("Error in auth state change profile fetch:", err);
+        // First try to use cached profile if available
+        const cachedProfile = profileCache.current.get(user.uid);
+        if (cachedProfile) {
+          setUserProfile(cachedProfile.data);
+          setLoading(false);
+          
+          // Refresh in background after returning control
+          setTimeout(() => {
+            getUserProfile(user.uid).catch(() => {});
+          }, 1000);
+          
+          return;
         }
+        
+        // No cached profile, use fallback and load in background
+        const fallbackProfile = createFallbackProfile(user.uid);
+        setUserProfile(fallbackProfile);
+        setLoading(false);
+        
+        // Try to load real profile in background
+        setTimeout(() => {
+          getUserProfile(user.uid).catch(() => {});
+        }, 200);
       } else {
-        // Clear profile when user is logged out
+        // No user, clear profile and loading
         setUserProfile(null);
+        setLoading(false);
       }
-      
+    };
+    
+    // Set up auth state listener
+    const unsubscribe = onAuthStateChanged(auth, handleAuthState, () => {
+      // Error handler just marks auth as checked and not loading
+      setAuthChecked(true);
       setLoading(false);
     });
 
@@ -182,17 +284,13 @@ export const AuthProvider = ({ children }) => {
     firestoreConnected,
     signInWithGoogle,
     logout,
-    getUserProfile
+    getUserProfile,
+    retryUserProfileFetch
   };
 
-  // Only render children after initial auth check to prevent flashing
   return (
     <AuthContext.Provider value={value}>
-      {authChecked ? children : (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-      )}
+      {children}
     </AuthContext.Provider>
   );
 };
