@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import FirestoreError from './FirestoreError';
 import NameLogo from '../assets/images/NameLogo.png';
+import { testConfigs } from '../data/testConfig';
 
 const Dashboard = () => {
   const { currentUser, userProfile, logout, firestoreConnected, getUserProfile } = useAuth();
@@ -69,6 +70,16 @@ const Dashboard = () => {
 
   const formatPrice = (price) => {
     return typeof price === 'number' ? `₹${price}` : price;
+  };
+
+  const handleStartTest = (testId) => {
+    navigate(`/test/${testId}/start`);
+  };
+  
+  const handlePurchase = (testId) => {
+    // You can implement purchase logic here
+    console.log(`Purchase initiated for ${testId}`);
+    alert("Purchase flow not yet implemented. This will be connected to your payment gateway.");
   };
 
   // Show Firestore error component only if connection fails completely and it's not retrying
@@ -379,46 +390,43 @@ const Dashboard = () => {
                   <h2 className="text-lg font-medium text-gray-900 mb-4">Test Series & Resources</h2>
                   
                   <div className="space-y-4">
-                    {sampleTests.map((test) => (
-                      <div key={test.id} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-                        <div>
-                          <h3 className="text-md font-medium text-gray-900">{test.title}</h3>
-                          <div className="mt-1 flex items-center text-sm text-gray-500">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mr-2">
-                              {test.duration} min
-                            </span>
-                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                              {test.questions} Questions
-                            </span>
+                    {Object.keys(testConfigs).map((testId) => {
+                      const test = testConfigs[testId];
+                      return (
+                        <div key={testId} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                          <div>
+                            <h3 className="text-md font-medium text-gray-900">{test.testName}</h3>
+                            <div className="mt-1 flex items-center text-sm text-gray-500">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+                                {test.testDuration} min
+                              </span>
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                {test.totalQuestions} Questions
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-3">
+                            <span className="text-md font-medium text-gray-900">{formatPrice(test.price)}</span>
+                            {test.isFree ? (
+                              <button 
+                                onClick={() => handleStartTest(testId)}
+                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                              >
+                                Start Test
+                              </button>
+                            ) : (
+                              <button 
+                                onClick={() => handlePurchase(testId)}
+                                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                              >
+                                Purchase
+                              </button>
+                            )}
                           </div>
                         </div>
-                        
-                        <div className="flex items-center gap-3">
-                          <span className="text-md font-medium text-gray-900">{formatPrice(test.price)}</span>
-                          {test.status === 'free' ? (
-                            <Link
-                              to={`/test/${test.id}/start`}
-                              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                            >
-                              Start Test
-                            </Link>
-                          ) : test.status === 'purchased' ? (
-                            <Link
-                              to={`/test/${test.id}/start`}
-                              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                            >
-                              Take Test
-                            </Link>
-                          ) : (
-                            <button
-                              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                            >
-                              Purchase
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                   
                   <div className="mt-5">

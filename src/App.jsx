@@ -19,7 +19,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import LoadingScreen from './components/LoadingScreen';
 import { Suspense } from 'react';
 import { useAuth } from './context/AuthContext';
-import nsetQuestions from './data/nsetQuestions';
+import { testConfigs, TEST_IDS, placeholderQuestions } from './data/testConfig';
 
 // Loading component for Suspense
 const LoadingFallback = () => <LoadingScreen message="Loading content..." />;
@@ -79,34 +79,43 @@ const AuthenticatedApp = () => {
         } 
       />
       
-      {/* Protected Test Pages */}
-      <Route 
-        path="/test/:testId/start" 
-        element={
-          <ProtectedRoute>
-            <MockTestStart 
-              testId="nset-sample" 
-              testName="NSET Free Sample Test" 
-              duration={120} 
-              questions={21} 
-            />
-          </ProtectedRoute>
-        } 
-      />
+      {/* Dynamic Test Routes - Generated from testConfigs */}
+      {Object.keys(testConfigs).map(testId => (
+        <Route 
+          key={`${testId}-start`}
+          path={`/test/${testId}/start`} 
+          element={
+            <ProtectedRoute>
+              <MockTestStart 
+                testId={testId} 
+                testName={testConfigs[testId].testName} 
+                duration={testConfigs[testId].testDuration} 
+                questions={testConfigs[testId].totalQuestions}
+                testComponents={testConfigs[testId].testComponents} 
+              />
+            </ProtectedRoute>
+          } 
+        />
+      ))}
       
-      <Route 
-        path="/test/:testId/questions" 
-        element={
-          <ProtectedRoute>
-            <MockTest 
-              questions={nsetQuestions} 
-              testName="NSET Free Sample Test"
-              testDuration={120}
-            />
-          </ProtectedRoute>
-        } 
-      />
+      {Object.keys(testConfigs).map(testId => (
+        <Route 
+          key={`${testId}-questions`}
+          path={`/test/${testId}/questions`} 
+          element={
+            <ProtectedRoute>
+              <MockTest 
+                questions={testConfigs[testId].questions.length > 0 ? testConfigs[testId].questions : placeholderQuestions} 
+                testName={testConfigs[testId].testName}
+                testDuration={testConfigs[testId].testDuration}
+                passScore={testConfigs[testId].passScore}
+              />
+            </ProtectedRoute>
+          } 
+        />
+      ))}
       
+      {/* Shared routes for results and solutions */}
       <Route 
         path="/test/:testId/results" 
         element={
