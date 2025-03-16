@@ -1,0 +1,21 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow authenticated users to read public files
+    match /public/{allPaths=**} {
+      allow read: if request.auth != null;
+    }
+    
+    // Allow users to upload and access their profile pictures
+    match /users/{userId}/profile/{allPaths=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Block access to all other files
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+} 
