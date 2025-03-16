@@ -11,11 +11,16 @@ const MockTest = ({
   fullScreenRequired = true,
   fullScreenExitTimeout = 45, // In seconds
   resultsPath = '/test/:testId/results',
-  testName = "Exam"
+  testName = "Exam",
+  passScore = 70, // Assuming a default passScore
+  testId: propTestId // Accept testId as a prop
 }) => {
-  const { testId } = useParams();
+  const { testId: paramTestId } = useParams();
   const navigate = useNavigate();
   const fullScreenRef = useRef(null);
+  
+  // Use the prop testId if provided, otherwise fall back to the URL param
+  const testId = propTestId || paramTestId;
   
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -162,8 +167,15 @@ const MockTest = ({
           clearInterval(interval);
           setTestSubmitted(true);
           
+          // Check if testId exists
+          if (!testId) {
+            console.error('Error: testId is undefined during fullscreen violation. Redirecting to dashboard.');
+            navigate('/dashboard');
+            return;
+          }
+          
           // Navigate to results page with violation flag
-          const resultPath = resultsPath.replace(':testId', testId || '');
+          const resultPath = resultsPath.replace(':testId', testId);
           navigate(resultPath, {
             state: {
               answers: {...answers, ...textAnswers},
@@ -236,13 +248,33 @@ const MockTest = ({
       }, {})
     };
     
+    // Add console logs for debugging
+    console.log('Test submitted with testId:', testId);
+    console.log('ResultPath template:', resultsPath);
+    
+    // Check if testId exists
+    if (!testId) {
+      console.error('Error: testId is undefined. Cannot navigate to results page.');
+      alert('An error occurred while submitting your test. Please try again or contact support.');
+      return;
+    }
+    
     // Navigate to results using the template path
-    const resultPath = resultsPath.replace(':testId', testId || '');
+    const resultPath = resultsPath.replace(':testId', testId);
+    console.log('Navigating to:', resultPath);
+    console.log('Navigation state:', { 
+      answers: allAnswers,
+      questions: questions.length,
+      timeSpent: testDuration * 60 - timeRemaining,
+      passScore: passScore
+    });
+    
     navigate(resultPath, { 
       state: { 
         answers: allAnswers,
         questions,
-        timeSpent: testDuration * 60 - timeRemaining
+        timeSpent: testDuration * 60 - timeRemaining,
+        passScore: passScore
       }
     });
     
@@ -541,7 +573,9 @@ MockTest.propTypes = {
   fullScreenRequired: PropTypes.bool,
   fullScreenExitTimeout: PropTypes.number,
   resultsPath: PropTypes.string,
-  testName: PropTypes.string
+  testName: PropTypes.string,
+  passScore: PropTypes.number,
+  testId: PropTypes.string
 };
 
 export default MockTest; 

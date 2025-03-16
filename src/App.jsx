@@ -105,6 +105,7 @@ const AuthenticatedApp = () => {
           element={
             <ProtectedRoute>
               <MockTest 
+                testId={testId}
                 questions={testConfigs[testId].questions.length > 0 ? testConfigs[testId].questions : placeholderQuestions} 
                 testName={testConfigs[testId].testName}
                 testDuration={testConfigs[testId].testDuration}
