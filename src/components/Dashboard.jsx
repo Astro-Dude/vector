@@ -14,10 +14,10 @@ const Dashboard = () => {
   
   // Sample test offerings
   const sampleTests = [
+    { id: 'nset-sample', title: 'NSET Free Sample Test', duration: 120, questions: 21, price: 'Free', status: 'free' },
     { id: 'nset-2024-1', title: 'NSET 2024 Mock Test 1', duration: 120, questions: 50, price: 499, status: 'purchase' },
     { id: 'nset-2024-2', title: 'NSET 2024 Mock Test 2', duration: 120, questions: 50, price: 499, status: 'purchase' },
     { id: 'nset-2024-full', title: 'NSET 2024 Full Test Series', duration: 'Varies', questions: '250+', price: 1999, status: 'purchase' },
-    { id: 'sample', title: 'NSET Free Sample Test', duration: 120, questions: 21, price: 'Free', status: 'free' },
   ];
   
   // Sample purchased tests - use userProfile data if available

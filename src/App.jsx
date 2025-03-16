@@ -19,6 +19,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import LoadingScreen from './components/LoadingScreen';
 import { Suspense } from 'react';
 import { useAuth } from './context/AuthContext';
+import nsetQuestions from './data/nsetQuestions';
 
 // Loading component for Suspense
 const LoadingFallback = () => <LoadingScreen message="Loading content..." />;
@@ -97,7 +98,11 @@ const AuthenticatedApp = () => {
         path="/test/:testId/questions" 
         element={
           <ProtectedRoute>
-            <MockTest />
+            <MockTest 
+              questions={nsetQuestions} 
+              testName="NSET Free Sample Test"
+              testDuration={120}
+            />
           </ProtectedRoute>
         } 
       />

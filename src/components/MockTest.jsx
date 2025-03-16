@@ -1,179 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import PropTypes from 'prop-types';
 
-// NSET sample questions
-const nsetQuestions = [
-  {
-    id: "q1",
-    questionText: "(direction sense) A circular dial of an analog clock is placed in such a way that the minute hand points towards South at 12 noon. At what time between 9 and 10 am the minute hand will point towards South East?",
-    type: "text",
-    category: "Reasoning",
-    correctAnswer: "09:52:30",
-    options: []
-  },
-  {
-    id: "q2",
-    questionText: "(coding-decoding) In a coded language if TIGER is written as 25799 and LION is written as 3569, what will be CRICKET?",
-    type: "text",
-    category: "Reasoning",
-    correctAnswer: "",
-    options: []
-  },
-  {
-    id: "q3",
-    questionText: "(clocks) At what time between 5:30 and 6:00 p.m. does the hour and minute make 90 degrees?",
-    type: "text",
-    category: "Reasoning",
-    correctAnswer: "05:43:38",
-    options: []
-  },
-  {
-    id: "q4",
-    questionText: "(PnC) The number of 4 digit numbers such that the first two digits and the last two digits are prime number and their sum is 102 and their is no 0 in the number",
-    type: "text",
-    category: "Quantitative Aptitude",
-    correctAnswer: "",
-    options: []
-  },
-  {
-    id: "q5",
-    questionText: "(math) If n represent a positive number such that n²+10n is a perfect square, then number of values of n the satisfy this is?",
-    type: "text",
-    category: "Quantitative Aptitude",
-    correctAnswer: "",
-    options: []
-  },
-  {
-    id: "q6",
-    questionText: "(probability) There are 7 Red and 5 Blue in a bag, if 2 balls are picked from the bag without replacement, what is the probability of both balls being Red?",
-    type: "text",
-    category: "Quantitative Aptitude",
-    correctAnswer: "7C2/12C2",
-    options: []
-  },
-  {
-    id: "q7",
-    questionText: "(math) There is a 3*3 matrix that can be filled with numbers from 0-9 in such a way that their sum horizontally it vertically is a prime number then at most how many summations result can be a prime number",
-    type: "text",
-    category: "Quantitative Aptitude",
-    correctAnswer: "",
-    options: []
-  },
-  {
-    id: "q8",
-    questionText: "(probability) A box has 2 Black, 3 Red, 5 White balls. If 5 balls are picked with replacement what is the probability that white ball is picked exactly twice",
-    type: "text",
-    category: "Quantitative Aptitude",
-    correctAnswer: "",
-    options: []
-  },
-  {
-    id: "q9",
-    questionText: "(PnC) Number of ways to put 10 books in two identical boxes with exactly 5 in each box",
-    type: "text",
-    category: "Quantitative Aptitude",
-    correctAnswer: "10C5/2",
-    options: []
-  },
-  {
-    id: "q10",
-    questionText: "(PnC) Also see the highest power of 2 in the 200! or 200C100",
-    type: "text",
-    category: "Quantitative Aptitude",
-    correctAnswer: "",
-    options: []
-  },
-  {
-    id: "q11",
-    questionText: "(log) if log 25 to base 3 / log 5 to base 7 = log n to base 3 / log 2 root 2 to base 7 then value of n is?",
-    type: "text",
-    category: "Quantitative Aptitude",
-    correctAnswer: "",
-    options: []
-  },
-  {
-    id: "q12",
-    questionText: "(syllogism) similar to syllogism in which the give around 5 statement name as A,B,C,D,E and conclusion like if A+C is correct than d is correct or not. like that",
-    type: "text",
-    category: "Reasoning",
-    correctAnswer: "",
-    options: []
-  },
-  {
-    id: "q13",
-    questionText: "(Investing) P invests ₹30,000 for 6 months, A invests ₹40,000 for 12 months, and R invests ₹50,000 from the 4th month to the 12th month. After an overall profit of ₹125,000, ₹20,000 is set aside for an emergency fund. What will be the profit of P?",
-    type: "text",
-    category: "Quantitative Aptitude",
-    correctAnswer: "",
-    options: []
-  },
-  {
-    id: "q14",
-    questionText: "(ratio) Milkman has 2 cans of milk. 1st can milk and water ratio 3 : 2 and 2nd can 4 : 1. He mixes 15 litres from 1st can with 20 litres from second in large container. What's volume of milk in litres in the resulting mixture?",
-    type: "text",
-    category: "Quantitative Aptitude",
-    correctAnswer: "",
-    options: []
-  },
-  {
-    id: "q15",
-    questionText: "(PnC) How many 4 digits of ATM pin are there in which 2 first are ab second 2 are cd, ab and cd are prime numbers and ab+cd=102",
-    type: "text",
-    category: "Quantitative Aptitude",
-    correctAnswer: "",
-    options: []
-  },
-  {
-    id: "q16",
-    questionText: "(percentage) Question from interest in which there are 3 friend who invested in parts 2 start than 1 friend joined after 3 month than 2nd friend leave investment after 9 month and in the end of a year they earn some profit take 20,000 for reinvest and remaining divide",
-    type: "text",
-    category: "Quantitative Aptitude",
-    correctAnswer: "",
-    options: []
-  },
-  {
-    id: "q17",
-    questionText: "(number theory) A 3 digit number which is divisible by 7 but when divided with 23 leaves a remainder of 3",
-    type: "text",
-    category: "Quantitative Aptitude",
-    correctAnswer: "",
-    options: []
-  },
-  {
-    id: "q18",
-    questionText: "(sets) Out of 50 each required to choose one language and sport. 20 choose French, 20 cricket, 12 German and cricket. How many choose French and football?",
-    type: "text",
-    category: "Quantitative Aptitude",
-    correctAnswer: "12",
-    options: []
-  },
-  {
-    id: "q19",
-    questionText: "(IQ) 100 spectators. 55 watched on 1st day, 65 on 2nd, 75 on 3rd. What is the maximum number of spectators who watched all the matches in all three days?",
-    type: "text",
-    category: "Reasoning",
-    correctAnswer: "45",
-    options: []
-  },
-  {
-    id: "q20",
-    questionText: "(series) Complete sequence: 11, 13, 23, 53, 121, 251, ?",
-    type: "text",
-    category: "Reasoning",
-    correctAnswer: "",
-    options: []
-  },
-  {
-    id: "q21",
-    questionText: "(PnC) What is the rank of the word 'ELBOW'?",
-    type: "text",
-    category: "Quantitative Aptitude",
-    correctAnswer: "",
-    options: []
-  }
-];
-
-const MockTest = ({ questions = nsetQuestions }) => {
+/**
+ * A reusable test component that can be used with any set of questions
+ */
+const MockTest = ({ 
+  questions = [], 
+  testDuration = 120, // Default 120 minutes
+  fullScreenRequired = true,
+  fullScreenExitTimeout = 45, // In seconds
+  resultsPath = '/test/:testId/results',
+  testName = "Exam"
+}) => {
   const { testId } = useParams();
   const navigate = useNavigate();
   const fullScreenRef = useRef(null);
@@ -182,7 +21,7 @@ const MockTest = ({ questions = nsetQuestions }) => {
   const [answers, setAnswers] = useState({});
   const [textAnswers, setTextAnswers] = useState({});
   const [markedForReview, setMarkedForReview] = useState([]);
-  const [timeRemaining, setTimeRemaining] = useState(120 * 60); // 120 minutes in seconds
+  const [timeRemaining, setTimeRemaining] = useState(testDuration * 60); // Convert minutes to seconds
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [testStarted, setTestStarted] = useState(false);
@@ -220,9 +59,11 @@ const MockTest = ({ questions = nsetQuestions }) => {
         setIsFullScreen(true);
       } catch (err) {
         console.error("Error attempting to enable full-screen mode:", err);
-        // If fullscreen fails, still allow the test to start
-        setTestStarted(true);
-        setIsFullScreen(true);
+        // If fullscreen fails but fullscreen is not required, still allow the test to start
+        if (!fullScreenRequired) {
+          setTestStarted(true);
+          setIsFullScreen(true);
+        }
       }
     }
   };
@@ -248,8 +89,10 @@ const MockTest = ({ questions = nsetQuestions }) => {
 
   // Setup event listeners
   useEffect(() => {
-    document.addEventListener('contextmenu', disableRightClick);
-    document.addEventListener('keydown', disableCopyPaste);
+    if (fullScreenRequired) {
+      document.addEventListener('contextmenu', disableRightClick);
+      document.addEventListener('keydown', disableCopyPaste);
+    }
     
     // Watch for fullscreen change
     const fullscreenChange = () => {
@@ -262,7 +105,7 @@ const MockTest = ({ questions = nsetQuestions }) => {
       setIsFullScreen(!!fullscreenElement);
       
       // If fullscreen is exited but test has started, start the warning timer
-      if (!fullscreenElement && testStarted) {
+      if (!fullscreenElement && testStarted && fullScreenRequired) {
         setFullScreenExitTime(Date.now());
         setShowFullScreenWarning(true);
       } else if (fullscreenElement && testStarted) {
@@ -278,8 +121,11 @@ const MockTest = ({ questions = nsetQuestions }) => {
     document.addEventListener('msfullscreenchange', fullscreenChange);
     
     return () => {
-      document.removeEventListener('contextmenu', disableRightClick);
-      document.removeEventListener('keydown', disableCopyPaste);
+      if (fullScreenRequired) {
+        document.removeEventListener('contextmenu', disableRightClick);
+        document.removeEventListener('keydown', disableCopyPaste);
+      }
+      
       document.removeEventListener('fullscreenchange', fullscreenChange);
       document.removeEventListener('mozfullscreenchange', fullscreenChange);
       document.removeEventListener('webkitfullscreenchange', fullscreenChange);
@@ -290,7 +136,7 @@ const MockTest = ({ questions = nsetQuestions }) => {
         exitFullScreen();
       }
     };
-  }, [isFullScreen, testStarted]);
+  }, [isFullScreen, testStarted, fullScreenRequired]);
 
   // Timer effect
   useEffect(() => {
@@ -304,6 +150,34 @@ const MockTest = ({ questions = nsetQuestions }) => {
       handleSubmitTest();
     }
   }, [timeRemaining, testSubmitted, testStarted]);
+  
+  // Add full screen exit monitor
+  useEffect(() => {
+    if (fullScreenExitTime && testStarted && !testSubmitted && fullScreenRequired) {
+      const interval = setInterval(() => {
+        const timeOutOfFullScreen = Math.floor((Date.now() - fullScreenExitTime) / 1000);
+        
+        // If user has been out of full screen for more than specified timeout, end the test
+        if (timeOutOfFullScreen >= fullScreenExitTimeout) {
+          clearInterval(interval);
+          setTestSubmitted(true);
+          
+          // Navigate to results page with violation flag
+          const resultPath = resultsPath.replace(':testId', testId || '');
+          navigate(resultPath, {
+            state: {
+              answers: {...answers, ...textAnswers},
+              questions: questions,
+              timeSpent: testDuration * 60 - timeRemaining,
+              endedDueToFullScreenViolation: true
+            }
+          });
+        }
+      }, 1000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [fullScreenExitTime, testStarted, testSubmitted, answers, textAnswers, questions, timeRemaining, navigate, testId, fullScreenRequired, fullScreenExitTimeout, testDuration, resultsPath]);
   
   // Format time as MM:SS
   const formatTime = (seconds) => {
@@ -362,12 +236,13 @@ const MockTest = ({ questions = nsetQuestions }) => {
       }, {})
     };
     
-    // Navigate to results or show results modal
-    navigate(`/test/${testId}/results`, { 
+    // Navigate to results using the template path
+    const resultPath = resultsPath.replace(':testId', testId || '');
+    navigate(resultPath, { 
       state: { 
         answers: allAnswers,
         questions,
-        timeSpent: 120 * 60 - timeRemaining
+        timeSpent: testDuration * 60 - timeRemaining
       }
     });
     
@@ -377,35 +252,9 @@ const MockTest = ({ questions = nsetQuestions }) => {
     }
   };
   
-  // Add full screen exit monitor
-  useEffect(() => {
-    if (fullScreenExitTime && testStarted && !testSubmitted) {
-      const interval = setInterval(() => {
-        const timeOutOfFullScreen = Math.floor((Date.now() - fullScreenExitTime) / 1000);
-        
-        // If user has been out of full screen for more than 45 seconds, end the test
-        if (timeOutOfFullScreen >= 45) {
-          clearInterval(interval);
-          setTestSubmitted(true);
-          navigate('/test/' + testId + '/results', {
-            state: {
-              answers: answers,
-              textAnswers: textAnswers,
-              questions: questions,
-              timeSpent: 120 * 60 - timeRemaining,
-              endedDueToFullScreenViolation: true
-            }
-          });
-        }
-      }, 1000);
-      
-      return () => clearInterval(interval);
-    }
-  }, [fullScreenExitTime, testStarted, testSubmitted, answers, textAnswers, questions, timeRemaining, navigate, testId]);
-  
   // If no questions are provided, show appropriate message
   if (questions.length === 0) {
-    return <div className="min-h-screen flex items-center justify-center">Loading questions...</div>;
+    return <div className="min-h-screen flex items-center justify-center">No questions available for this test.</div>;
   }
   
   const currentQuestion = questions[currentQuestionIndex];
@@ -416,26 +265,33 @@ const MockTest = ({ questions = nsetQuestions }) => {
       {!testStarted && (
         <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-8 max-w-md text-center">
-            <h2 className="text-2xl font-bold mb-4">Start Test</h2>
-            <p className="mb-6">This test must be taken in full-screen mode. The test will automatically end if you exit full-screen mode for more than 45 seconds.</p>
+            <h2 className="text-2xl font-bold mb-4">Start {testName}</h2>
+            <p className="mb-6">
+              {fullScreenRequired 
+                ? `This test must be taken in full-screen mode. The test will automatically end if you exit full-screen mode for more than ${fullScreenExitTimeout} seconds.` 
+                : "Click the button below to start the test."}
+            </p>
             <div className="flex flex-col space-y-4">
               <button 
                 onClick={enterFullScreen}
                 className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700"
               >
-                Enter Full Screen & Start Test
+                {fullScreenRequired ? "Enter Full Screen & Start Test" : "Start Test"}
               </button>
+              {fullScreenRequired && !isFullScreen && (
+                <p className="text-sm text-gray-500">Full-screen mode is required for this test.</p>
+              )}
             </div>
           </div>
         </div>
       )}
       
       {/* Add full screen warning */}
-      {showFullScreenWarning && (
+      {showFullScreenWarning && fullScreenRequired && (
         <div className="fixed inset-0 bg-red-500 bg-opacity-90 z-50 flex items-center justify-center">
           <div className="bg-white rounded-lg p-8 max-w-md text-center">
             <h2 className="text-2xl font-bold text-red-600 mb-4">Warning: Full Screen Exited!</h2>
-            <p className="mb-6">Your test will automatically be submitted in <span className="font-bold">{45 - Math.floor((Date.now() - fullScreenExitTime) / 1000)} seconds</span> if you don't return to full screen mode.</p>
+            <p className="mb-6">Your test will automatically be submitted in <span className="font-bold">{fullScreenExitTimeout - Math.floor((Date.now() - fullScreenExitTime) / 1000)} seconds</span> if you don't return to full screen mode.</p>
             <button 
               onClick={enterFullScreen}
               className="px-6 py-3 bg-red-600 text-white rounded-md hover:bg-red-700"
@@ -452,7 +308,7 @@ const MockTest = ({ questions = nsetQuestions }) => {
           {/* Header with timer and submit button */}
           <header className="bg-white shadow-md py-4 px-6 flex items-center justify-between">
             <div className="flex items-center">
-              <h1 className="text-xl font-bold text-gray-900">NSET Free Sample Test</h1>
+              <h1 className="text-xl font-bold text-gray-900">{testName}</h1>
             </div>
             <div className="flex items-center space-x-4">
               <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-md flex items-center">
@@ -512,7 +368,7 @@ const MockTest = ({ questions = nsetQuestions }) => {
                     <p className="text-gray-900">{currentQuestion.questionText}</p>
                   </div>
                   
-                  {currentQuestion.type === 'mcq' && currentQuestion.options.length > 0 ? (
+                  {currentQuestion.type === 'mcq' && currentQuestion.options && currentQuestion.options.length > 0 ? (
                     <div className="space-y-3">
                       {currentQuestion.options.map((option) => (
                         <label
@@ -663,6 +519,29 @@ const MockTest = ({ questions = nsetQuestions }) => {
       )}
     </div>
   );
+};
+
+MockTest.propTypes = {
+  questions: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      questionText: PropTypes.string.isRequired,
+      type: PropTypes.string.isRequired,
+      category: PropTypes.string,
+      correctAnswer: PropTypes.string,
+      options: PropTypes.arrayOf(
+        PropTypes.shape({
+          id: PropTypes.string,
+          text: PropTypes.string
+        })
+      )
+    })
+  ),
+  testDuration: PropTypes.number,
+  fullScreenRequired: PropTypes.bool,
+  fullScreenExitTimeout: PropTypes.number,
+  resultsPath: PropTypes.string,
+  testName: PropTypes.string
 };
 
 export default MockTest; 

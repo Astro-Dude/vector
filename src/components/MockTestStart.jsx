@@ -1,14 +1,36 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const MockTestStart = ({ testId, testName = "NSET Free Sample Test", duration = 60, questions = 21 }) => {
+const MockTestStart = ({ 
+  testId = "nset", 
+  testName = "NSET Free Sample Test", 
+  duration = 120, 
+  questions = 21,
+  testComponents = [
+    {
+      name: "Quantitative Aptitude",
+      description: "Probability & statistics, permutation & combination, number theory, ratios & percentages, exponentials & logarithms, sets (venn diagrams).",
+      bgColor: "bg-blue-50",
+      textColor: "text-blue-800"
+    },
+    {
+      name: "Logical Reasoning",
+      description: "Direction sense, coding-decoding, clocks & calendars, series, blood Relations, & family Tree, syllogism, simple and compound interest, puzzles, seating arrangements.",
+      bgColor: "bg-indigo-50",
+      textColor: "text-indigo-800"
+    }
+  ],
+  fullScreenRequired = true,
+  fullScreenTimeout = 45,
+  redirectTo = '/test/' // Base path for the test
+}) => {
   const [agreed, setAgreed] = useState(false);
   const navigate = useNavigate();
   
   const handleStartTest = () => {
     if (agreed) {
-      // Navigate to the actual test page
-      navigate(`/test/${testId}/questions`);
+      // Navigate to the actual test page with the testId
+      navigate(`${redirectTo}${testId}/questions`);
     }
   };
 
@@ -60,27 +82,29 @@ const MockTestStart = ({ testId, testName = "NSET Free Sample Test", duration = 
               <div className="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold text-sm mr-3">5</div>
               <p>The test will automatically submit when the time is up. You can also submit manually before time expires.</p>
             </div>
-            <div className="flex items-start">
-              <div className="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold text-sm mr-3">6</div>
-              <p><strong>Important:</strong> The test must be taken in full-screen mode. The test will automatically end if you exit full-screen mode for more than 45 seconds. Right-clicking and copy-pasting are disabled during the test.</p>
-            </div>
+            {fullScreenRequired && (
+              <div className="flex items-start">
+                <div className="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold text-sm mr-3">6</div>
+                <p><strong>Important:</strong> The test must be taken in full-screen mode. The test will automatically end if you exit full-screen mode for more than {fullScreenTimeout} seconds. Right-clicking and copy-pasting are disabled during the test.</p>
+              </div>
+            )}
           </div>
         </div>
         
         {/* Test components and syllabus */}
-        <div className="bg-white shadow-md p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Test Components</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="border rounded-lg p-4 bg-blue-50">
-              <h3 className="text-lg font-medium text-blue-800 mb-2">Quantitative Aptitude</h3>
-              <p className="text-gray-600">Probability & statistics, permutation & combination, number theory, ratios & profileOpen, exponentials & logarithms, sets (venn diagrams).</p>
-            </div>
-            <div className="border rounded-lg p-4 bg-indigo-50">
-              <h3 className="text-lg font-medium text-indigo-800 mb-2">Logical Reasoning</h3>
-              <p className="text-gray-600">Direction sense, coding-decoding, clocks & calendars, series, blood Relations, & family Tree, syllogism, simplle and compound interest, puzzles, seating arrangements, venn diagrams, data sufficiency, pie charts, bar graphs & line graphs, sets & caselets, percentages, profit & loss, speed, time & distance, work & time.</p>
+        {testComponents && testComponents.length > 0 && (
+          <div className="bg-white shadow-md p-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Test Components</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {testComponents.map((component, index) => (
+                <div key={index} className={`border rounded-lg p-4 ${component.bgColor || 'bg-gray-50'}`}>
+                  <h3 className={`text-lg font-medium ${component.textColor || 'text-gray-800'} mb-2`}>{component.name}</h3>
+                  <p className="text-gray-600">{component.description}</p>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
+        )}
         
         {/* Checkpoint and start button */}
         <div className="bg-white shadow-md rounded-b-lg p-6">

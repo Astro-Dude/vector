@@ -1,280 +1,277 @@
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useLocation, useParams, useNavigate } from 'react-router-dom';
 
-const TestResults = () => {
+/**
+ * Generic test results component that can be used with any question set
+ * and displays a summary of the test results
+ */
+const TestResults = ({ 
+  resultsTitle = "Test Results",
+  allowRetake = true,
+  returnPath = '/dashboard',
+  customFeedback = null,
+  passScore = 35 // Percentage to pass
+}) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { testId } = useParams();
   
-  // Extract data from location state (should be passed from test page)
-  const { answers = {}, questions = [], timeSpent = 0, endedDueToFullScreenViolation = false } = location.state || {};
+  const [score, setScore] = useState(0);
+  const [percentage, setPercentage] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [questions, setQuestions] = useState([]);
+  const [timeSpent, setTimeSpent] = useState(0);
+  const [resultStatus, setResultStatus] = useState('');
+  const [endedDueToViolation, setEndedDueToViolation] = useState(false);
   
-  // Calculate results
-  const totalQuestions = questions.length;
-  const attemptedQuestions = Object.keys(answers).length;
-  
-  // Check correct answers based on question type
-  const correctAnswers = questions.filter(question => {
-    const userAnswer = answers[question.id];
-    
-    if (!userAnswer) return false;
-    
-    if (question.type === 'mcq') {
-      return userAnswer === question.correctOptionId;
-    } else {
-      // For text answers, do a case-insensitive comparison
-      const correctAnswer = question.correctAnswer || '';
-      if (!correctAnswer) return false;
+  // Process test results from location state
+  useEffect(() => {
+    if (location.state) {
+      const { answers, questions, timeSpent, endedDueToFullScreenViolation } = location.state;
       
-      return userAnswer.toString().toLowerCase().trim() === correctAnswer.toLowerCase().trim();
-    }
-  }).length;
-  
-  // Calculate score as percentage
-  const scorePercentage = totalQuestions > 0 
-    ? Math.round((correctAnswers / totalQuestions) * 100) 
-    : 0;
-    
-  // Format time spent
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins} min ${secs} sec`;
-  };
-  
-  // Performance feedback based on score
-  const getFeedback = () => {
-    if (endedDueToFullScreenViolation) {
-      return {
-        title: "Test Terminated",
-        message: "Your test was automatically terminated because you exited full-screen mode for more than 45 seconds. Full-screen mode is required for test integrity.",
-        color: "text-red-600"
-      };
-    }
-    
-    if (scorePercentage >= 80) {
-      return {
-        title: "Excellent Performance!",
-        message: "You're well-prepared for the NSET exam. Keep up the great work!",
-        color: "text-green-600"
-      };
-    } else if (scorePercentage >= 60) {
-      return {
-        title: "Good Performance!",
-        message: "You have a solid foundation. Some targeted practice will make you fully ready for NSET.",
-        color: "text-blue-600"
-      };
-    } else if (scorePercentage >= 40) {
-      return {
-        title: "Average Performance",
-        message: "You're on the right track, but need more practice in key areas to excel in NSET.",
-        color: "text-yellow-600"
-      };
-    } else {
-      return {
-        title: "Needs Improvement",
-        message: "Don't worry! With structured practice and our resources, you can significantly improve your NSET readiness.",
-        color: "text-red-600"
-      };
-    }
-  };
-  
-  // Calculate performance by category
-  const getCategoryPerformance = () => {
-    const categories = [...new Set(questions.map(q => q.category))];
-    
-    return categories.map(category => {
-      const categoryQuestions = questions.filter(q => q.category === category);
-      const categoryCorrect = categoryQuestions.filter(question => {
-        const userAnswer = answers[question.id];
-        if (!userAnswer) return false;
+      setAnswers(answers || {});
+      setQuestions(questions || []);
+      setTimeSpent(timeSpent || 0);
+      setEndedDueToViolation(!!endedDueToFullScreenViolation);
+      
+      // Calculate score and percentage
+      if (questions && questions.length > 0 && answers) {
+        let correctCount = 0;
         
-        if (question.type === 'mcq') {
-          return userAnswer === question.correctOptionId;
+        // Count correct answers
+        questions.forEach(question => {
+          if (
+            question.correctAnswer && 
+            answers[question.id] && 
+            (
+              answers[question.id].toLowerCase() === question.correctAnswer.toLowerCase() || 
+              answers[question.id] === question.correctAnswer
+            )
+          ) {
+            correctCount++;
+          }
+        });
+        
+        const finalScore = correctCount;
+        const finalPercentage = (correctCount / questions.length) * 100;
+        
+        setScore(finalScore);
+        setPercentage(parseFloat(finalPercentage.toFixed(2)));
+        
+        // Determine result status
+        if (endedDueToFullScreenViolation) {
+          setResultStatus('violation');
+        } else if (finalPercentage >= passScore) {
+          setResultStatus('pass');
         } else {
-          const correctAnswer = question.correctAnswer || '';
-          if (!correctAnswer) return false;
-          
-          return userAnswer.toString().toLowerCase().trim() === correctAnswer.toLowerCase().trim();
+          setResultStatus('fail');
         }
-      }).length;
-      
-      const percentage = categoryQuestions.length > 0 
-        ? Math.round((categoryCorrect / categoryQuestions.length) * 100) 
-        : 0;
-      
-      return {
-        name: category,
-        percentage
-      };
+      }
+    }
+  }, [location.state, passScore]);
+  
+  // Function to format time from seconds
+  const formatTime = (seconds) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    return `${hrs > 0 ? hrs + 'h ' : ''}${mins}m ${secs}s`;
+  };
+  
+  // Handle retake test
+  const handleRetakeTest = () => {
+    navigate(`/test/${testId}`);
+  };
+  
+  // Handle return to dashboard
+  const handleReturnHome = () => {
+    navigate(returnPath);
+  };
+  
+  // Function to handle viewing solutions
+  const handleViewSolutions = () => {
+    navigate(`/test/${testId}/solutions`, { 
+      state: { questions, answers }
     });
   };
   
-  const feedback = getFeedback();
-  const categoryPerformance = getCategoryPerformance();
-  
-  const handleRetakeTest = () => {
-    // Navigate back to test start page
-    navigate('/test/sample/start');
+  // Get appropriate status message and color classes
+  const getStatusInfo = () => {
+    if (endedDueToViolation) {
+      return {
+        title: 'Test Terminated',
+        message: 'Your test was terminated due to a full-screen violation.',
+        color: 'text-red-600',
+        bgColor: 'bg-red-100',
+        iconColor: 'text-red-500',
+        icon: (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        )
+      };
+    } else if (resultStatus === 'pass') {
+      return {
+        title: 'Congratulations!',
+        message: 'You have passed the test.',
+        color: 'text-green-600',
+        bgColor: 'bg-green-100',
+        iconColor: 'text-green-500',
+        icon: (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        )
+      };
+    } else {
+      return {
+        title: 'Better Luck Next Time',
+        message: 'You did not meet the passing criteria for this test.',
+        color: 'text-yellow-600',
+        bgColor: 'bg-yellow-100',
+        iconColor: 'text-yellow-500',
+        icon: (
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        )
+      };
+    }
   };
   
-  const handleViewSolutions = () => {
-    // Navigate to solutions page
-    navigate('/test/sample/solutions', { state: { answers, questions } });
+  const statusInfo = getStatusInfo();
+  
+  // Render custom feedback if provided
+  const renderFeedback = () => {
+    if (customFeedback) {
+      return typeof customFeedback === 'function' 
+        ? customFeedback({ score, percentage, questions, answers, resultStatus, endedDueToViolation }) 
+        : customFeedback;
+    }
+    
+    return null;
   };
   
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          {/* Header with score */}
-          <div className="p-6 sm:p-8 border-b border-gray-200">
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Test Results</h1>
-            <p className="text-gray-600">NSET Free Sample Test</p>
-            
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center sm:justify-between">
-              <div className="relative w-48 h-48 mb-6 sm:mb-0">
-                <svg className="w-full h-full" viewBox="0 0 36 36">
-                  <path
-                    d="M18 2.0845
-                      a 15.9155 15.9155 0 0 1 0 31.831
-                      a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="#E5E7EB"
-                    strokeWidth="3"
-                    strokeDasharray="100, 100"
-                  />
-                  <path
-                    d="M18 2.0845
-                      a 15.9155 15.9155 0 0 1 0 31.831
-                      a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke={scorePercentage >= 80 ? "#10B981" : scorePercentage >= 60 ? "#3B82F6" : scorePercentage >= 40 ? "#F59E0B" : "#EF4444"}
-                    strokeWidth="3"
-                    strokeDasharray={`${scorePercentage}, 100`}
-                  />
-                  <text x="18" y="20.5" className="text-5xl font-bold" textAnchor="middle" fill="#374151">
-                    {scorePercentage}%
-                  </text>
-                </svg>
-              </div>
-              
-              <div className="text-center sm:text-left">
-                <h2 className={`text-2xl font-bold ${feedback.color} mb-2`}>{feedback.title}</h2>
-                <p className="text-gray-600 max-w-md">{feedback.message}</p>
-              </div>
-            </div>
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          {/* Header */}
+          <div className="px-6 py-4 bg-gray-100 border-b border-gray-200">
+            <h1 className="text-2xl font-bold text-gray-900">{resultsTitle}</h1>
           </div>
           
-          {/* Test statistics */}
-          <div className="p-6 sm:p-8 bg-gray-50 overflow-y-auto max-h-[calc(100vh-400px)]">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Test Statistics</h2>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="bg-white p-4 rounded-lg shadow-sm">
-                <p className="text-sm text-gray-500 mb-1">Total Questions</p>
-                <p className="text-2xl font-bold text-gray-900">{totalQuestions}</p>
-              </div>
-              <div className="bg-white p-4 rounded-lg shadow-sm">
-                <p className="text-sm text-gray-500 mb-1">Attempted</p>
-                <p className="text-2xl font-bold text-gray-900">{attemptedQuestions}</p>
-              </div>
-              <div className="bg-white p-4 rounded-lg shadow-sm">
-                <p className="text-sm text-gray-500 mb-1">Correct Answers</p>
-                <p className="text-2xl font-bold text-green-600">{correctAnswers}</p>
-              </div>
-              <div className="bg-white p-4 rounded-lg shadow-sm">
-                <p className="text-sm text-gray-500 mb-1">Time Spent</p>
-                <p className="text-2xl font-bold text-gray-900">{formatTime(timeSpent)}</p>
-              </div>
-            </div>
-            
-            <div className="mt-8 space-y-4">
-              <div className="bg-white p-5 rounded-lg shadow-sm">
-                <h3 className="text-lg font-medium text-gray-900 mb-3">Performance by Topic</h3>
-                
-                <div className="space-y-4 max-h-64 overflow-y-auto pr-2">
-                  {categoryPerformance.map((category) => (
-                    <div key={category.name}>
-                      <div className="flex justify-between mb-1">
-                        <span className="text-sm font-medium text-gray-700">{category.name}</span>
-                        <span className="text-sm font-medium text-gray-700">{category.percentage}%</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full" 
-                          style={{ width: `${category.percentage}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  ))}
+          {/* Result summary */}
+          <div className={`px-6 py-8 ${statusInfo.bgColor} border-b border-gray-200`}>
+            <div className="flex flex-col md:flex-row items-center justify-between">
+              <div className="flex items-center mb-4 md:mb-0">
+                <div className={`flex-shrink-0 mr-4 ${statusInfo.iconColor}`}>
+                  {statusInfo.icon}
+                </div>
+                <div>
+                  <h2 className={`text-xl font-bold ${statusInfo.color} mb-1`}>{statusInfo.title}</h2>
+                  <p className="text-gray-600">{statusInfo.message}</p>
                 </div>
               </div>
               
-              <div className="bg-blue-50 p-5 rounded-lg border border-blue-100">
-                <h3 className="text-lg font-medium text-blue-800 mb-3">Recommendations</h3>
-                <ul className="space-y-2 text-blue-700">
-                  <li className="flex items-start">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>Focus on improving your {getCategoryWithLowestScore()} with our targeted practice questions.</span>
-                  </li>
-                  <li className="flex items-start">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>Review the questions you got wrong to understand your weak areas.</span>
-                  </li>
-                  <li className="flex items-start">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>Schedule a mentorship session to get personalized guidance on your preparation.</span>
-                  </li>
-                </ul>
+              <div className="text-center">
+                <div className="text-4xl font-bold text-gray-900">{percentage}%</div>
+                <p className="text-gray-600">Final Score</p>
               </div>
             </div>
           </div>
           
-          {/* Action buttons */}
-          <div className="p-6 sm:p-8 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
+          {/* Score breakdown */}
+          <div className="px-6 py-6 border-b border-gray-200">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Score Breakdown</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-gray-50 rounded-lg p-4 text-center">
+                <div className="text-xl font-semibold text-gray-900">{score} / {questions.length}</div>
+                <p className="text-gray-600 text-sm">Questions Answered Correctly</p>
+              </div>
+              
+              <div className="bg-gray-50 rounded-lg p-4 text-center">
+                <div className="text-xl font-semibold text-gray-900">
+                  {Object.keys(answers).length} / {questions.length}
+                </div>
+                <p className="text-gray-600 text-sm">Questions Attempted</p>
+              </div>
+              
+              <div className="bg-gray-50 rounded-lg p-4 text-center">
+                <div className="text-xl font-semibold text-gray-900">{formatTime(timeSpent)}</div>
+                <p className="text-gray-600 text-sm">Time Spent</p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Custom feedback section */}
+          {renderFeedback()}
+          
+          {/* Actions */}
+          <div className="px-6 py-6 flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3">
             <button
-              onClick={handleRetakeTest}
-              className="w-full sm:w-auto px-6 py-3 bg-white border border-gray-300 rounded-md text-gray-700 font-medium hover:bg-gray-50"
+              onClick={handleReturnHome}
+              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              Retake Test
+              Back to Dashboard
             </button>
+            
             <button
               onClick={handleViewSolutions}
-              className="w-full sm:w-auto px-6 py-3 bg-blue-600 border border-transparent rounded-md text-white font-medium hover:bg-blue-700"
+              className="px-4 py-2 bg-green-600 border border-transparent rounded-md text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
             >
               View Solutions
             </button>
-            <a
-              href="#register"
-              className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-indigo-600 to-blue-600 border border-transparent rounded-md text-white font-medium hover:from-indigo-700 hover:to-blue-700"
-            >
-              Explore Full Test Series
-            </a>
+            
+            {allowRetake && !endedDueToViolation && (
+              <button
+                onClick={handleRetakeTest}
+                className="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Retake Test
+              </button>
+            )}
+          </div>
+        </div>
+        
+        {/* Additional resources section (optional) */}
+        <div className="mt-8 bg-white rounded-lg shadow-lg overflow-hidden">
+          <div className="px-6 py-4 bg-blue-50 border-b border-blue-100">
+            <h2 className="text-xl font-medium text-blue-800">Improve Your Skills</h2>
+          </div>
+          
+          <div className="px-6 py-6">
+            <p className="text-gray-600 mb-4">
+              Want to improve your performance? Check out these resources:
+            </p>
+            
+            <ul className="space-y-2 text-blue-600">
+              <li className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <a href="#" className="hover:underline">Download practice questions</a>
+              </li>
+              <li className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <a href="#" className="hover:underline">Watch tutorial videos</a>
+              </li>
+              <li className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+                <a href="#" className="hover:underline">Study guides and resources</a>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
     </div>
   );
-  
-  // Helper function to get the category with the lowest score
-  function getCategoryWithLowestScore() {
-    if (categoryPerformance.length === 0) return "skills";
-    
-    let lowestCategory = categoryPerformance[0];
-    
-    for (const category of categoryPerformance) {
-      if (category.percentage < lowestCategory.percentage) {
-        lowestCategory = category;
-      }
-    }
-    
-    return lowestCategory.name;
-  }
 };
 
 export default TestResults; 
