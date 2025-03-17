@@ -2,10 +2,10 @@ import { db } from '../firebase/firebase';
 import { collection, addDoc, serverTimestamp, query, where, getDocs, doc, setDoc, getDoc } from 'firebase/firestore';
 import { sendEmail } from './emailService';
 
-// Save test purchase to Firestore - with better error handling
-export const saveTestPurchase = async (userId, testId, testName, paymentId, amount) => {
+// Save test purchase to Firestore with user details
+export const saveTestPurchase = async (userId, testId, testName, paymentId, amount, userDetails) => {
   try {
-    console.log(`Attempting to save purchase for user ${userId}`);
+    console.log(`Saving purchase for user ${userId}`);
     
     // First check if user document exists and create if needed
     const userDocRef = doc(db, "users", userId);
@@ -15,11 +15,11 @@ export const saveTestPurchase = async (userId, testId, testName, paymentId, amou
       console.log("Creating user document");
       await setDoc(userDocRef, {
         createdAt: serverTimestamp(),
-        purchases: []
+        ...userDetails, // Save user details to the user document as well
       });
     }
     
-    // Then add to purchases collection
+    // Add to user's purchases collection
     const purchaseRef = collection(db, `users/${userId}/purchases`);
     
     const purchaseData = {
@@ -29,7 +29,12 @@ export const saveTestPurchase = async (userId, testId, testName, paymentId, amou
       paymentId,
       amount,
       type: 'test',
-      status: 'active'
+      status: 'active',
+      userDetails: {
+        name: userDetails.displayName || 'Unknown',
+        email: userDetails.email || 'Unknown',
+        phone: userDetails.phoneNumber || 'Not provided'
+      }
     };
     
     console.log("Saving purchase with data:", purchaseData);
@@ -39,10 +44,6 @@ export const saveTestPurchase = async (userId, testId, testName, paymentId, amou
     return true;
   } catch (error) {
     console.error("Error saving test purchase:", error);
-    // Log more details about the error
-    if (error.code === 'permission-denied') {
-      console.error("Permission denied. Check your Firebase rules.");
-    }
     throw error;
   }
 };
@@ -84,8 +85,8 @@ export const getUserPurchasedTests = async (userId) => {
   }
 };
 
-// Save mock interview booking
-export const saveMockInterviewBooking = async (userId, userName, userEmail, phoneNumber, paymentId, amount) => {
+// Save mock interview booking with user details
+export const saveMockInterviewBooking = async (userId, userDetails, paymentId, amount) => {
   try {
     // Create unique booking ID
     const bookingId = `booking_${Date.now()}`;
@@ -100,9 +101,9 @@ export const saveMockInterviewBooking = async (userId, userName, userEmail, phon
       amount,
       status: 'pending',
       userDetails: {
-        name: userName,
-        email: userEmail,
-        phone: phoneNumber
+        name: userDetails.displayName || 'Unknown',
+        email: userDetails.email || 'Unknown',
+        phone: userDetails.phoneNumber || 'Not provided'
       }
     });
     
@@ -112,9 +113,9 @@ export const saveMockInterviewBooking = async (userId, userName, userEmail, phon
       subject: 'New Mock Interview Booking',
       html: `
         <h2>New Mock Interview Booking</h2>
-        <p><strong>User:</strong> ${userName}</p>
-        <p><strong>Email:</strong> ${userEmail}</p>
-        <p><strong>Phone:</strong> ${phoneNumber}</p>
+        <p><strong>User:</strong> ${userDetails.displayName}</p>
+        <p><strong>Email:</strong> ${userDetails.email}</p>
+        <p><strong>Phone:</strong> ${userDetails.phoneNumber || 'Not provided'}</p>
         <p><strong>Payment ID:</strong> ${paymentId}</p>
         <p><strong>Amount:</strong> ₹${amount/100}</p>
       `
@@ -122,11 +123,11 @@ export const saveMockInterviewBooking = async (userId, userName, userEmail, phon
     
     // Send confirmation to user
     await sendEmail({
-      to: userEmail,
+      to: userDetails.email,
       subject: 'Mock Interview Booking Confirmation',
       html: `
         <h2>Thank you for booking a mock interview!</h2>
-        <p>Hello ${userName},</p>
+        <p>Hello ${userDetails.displayName},</p>
         <p>Your mock interview booking has been received.</p>
         <p>Our team will contact you within 12 hours to confirm the date and time for your interview session.</p>
         <p>Booking details:</p>

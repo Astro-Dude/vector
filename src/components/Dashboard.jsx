@@ -120,70 +120,23 @@ const Dashboard = () => {
     const priceString = testConfig.price || '₹499';
     const priceValue = parseInt(priceString.replace('₹', '')) * 100; // In paise
     
-    try {
-      // Show loading state
-      setIsLoading(true);
-      
-      // Create order options for Razorpay
-      const options = {
-        amount: priceValue,
-        currency: "INR",
-        name: "Vector NSET",
-        description: `Purchase: ${testConfig.testName}`,
-        image: "https://your-logo-url.com/logo.png", // Replace with your logo URL
-        prefill: {
-          name: currentUser.displayName || '',
-          email: currentUser.email || '',
-          contact: userProfile?.phoneNumber || ''
-        },
-        notes: {
-          testId: testId,
-          userId: currentUser.uid,
-          type: 'test'
-        },
-        theme: {
-          color: "#3399cc"
-        }
-      };
-      
-      // Initialize payment
-      await initiatePayment(
-        options,
-        async (response) => {
-          // Payment success handler
-          try {
-            await saveTestPurchase(
-              currentUser.uid,
-              testId,
-              testConfig.testName,
-              response.razorpay_payment_id,
-              priceValue
-            );
-            
-            // Reload purchases
-            const tests = await getUserPurchasedTests(currentUser.uid);
-            setPurchasedTests(tests);
-            
-            alert("Purchase successful! You can now access the test.");
-          } catch (error) {
-            console.error("Error processing purchase", error);
-            alert("Your payment was successful, but we had trouble updating your account. Please contact support.");
-          } finally {
-            setIsLoading(false);
-          }
-        },
-        (error) => {
-          // Payment failure handler
-          console.error("Payment failed", error);
-          alert("Payment failed: " + error.error.description);
-          setIsLoading(false);
-        }
-      );
-    } catch (error) {
-      console.error("Error initializing payment", error);
-      alert("Error initializing payment. Please try again.");
-      setIsLoading(false);
+    // Get user profile details
+    let phoneNumber = userProfile?.phoneNumber || '';
+    
+    // If no phone number found, prompt user for phone
+    if (!phoneNumber) {
+      setCurrentPurchaseItem({
+        type: 'test',
+        id: testId,
+        price: priceValue,
+        name: testConfig.testName
+      });
+      setShowPhonePrompt(true);
+      return;
     }
+    
+    // If we already have the phone, proceed directly
+    handleTestPurchaseWithPhone(testId, phoneNumber);
   };
   
   // Handle booking mock interview
@@ -216,6 +169,13 @@ const Dashboard = () => {
       setIsLoading(true);
       setShowPhonePrompt(false);
       
+      // Create user details object
+      const userDetails = {
+        displayName: currentUser.displayName || '',
+        email: currentUser.email || '',
+        phoneNumber: phone || ''
+      };
+      
       // Create order options for Razorpay
       const options = {
         amount: 59900, // 599 in paise
@@ -224,9 +184,9 @@ const Dashboard = () => {
         description: "Mock Interview Session Booking",
         image: "https://your-logo-url.com/logo.png", // Replace with your logo URL
         prefill: {
-          name: currentUser.displayName || '',
-          email: currentUser.email || '',
-          contact: phone || ''
+          name: userDetails.displayName,
+          email: userDetails.email,
+          contact: userDetails.phoneNumber
         },
         notes: {
           userId: currentUser.uid,
@@ -245,9 +205,7 @@ const Dashboard = () => {
           try {
             await saveMockInterviewBooking(
               currentUser.uid,
-              currentUser.displayName || 'User',
-              currentUser.email,
-              phone,
+              userDetails, // Pass complete user details object
               response.razorpay_payment_id,
               59900
             );
@@ -288,8 +246,100 @@ const Dashboard = () => {
       return;
     }
     
-    if (currentPurchaseItem.type === 'interview') {
-      proceedWithInterviewBooking(phoneNumber);
+    // Close the phone prompt modal
+    setShowPhonePrompt(false);
+    
+    // Handle different purchase types
+    if (currentPurchaseItem) {
+      if (currentPurchaseItem.type === 'interview') {
+        proceedWithInterviewBooking(phoneNumber);
+      } else if (currentPurchaseItem.type === 'test') {
+        // Continue with test purchase using the collected phone number
+        handleTestPurchaseWithPhone(currentPurchaseItem.id, phoneNumber);
+      }
+    }
+  };
+
+  // New function to handle test purchase after collecting phone
+  const handleTestPurchaseWithPhone = async (testId, phone) => {
+    const testConfig = testConfigs[testId];
+    if (!testConfig) return;
+    
+    // Convert price from string to number (remove ₹ symbol)
+    const priceString = testConfig.price || '₹499';
+    const priceValue = parseInt(priceString.replace('₹', '')) * 100; // In paise
+    
+    try {
+      // Show loading state
+      setIsLoading(true);
+      
+      // Create user details object
+      const userDetails = {
+        displayName: currentUser.displayName || '',
+        email: currentUser.email || '',
+        phoneNumber: phone
+      };
+      
+      // Create order options for Razorpay
+      const options = {
+        amount: priceValue,
+        currency: "INR",
+        name: "Vector NSET",
+        description: `Purchase: ${testConfig.testName}`,
+        image: "https://your-logo-url.com/logo.png", // Replace with your logo URL
+        prefill: {
+          name: userDetails.displayName,
+          email: userDetails.email,
+          contact: userDetails.phoneNumber
+        },
+        notes: {
+          testId: testId,
+          userId: currentUser.uid,
+          type: 'test'
+        },
+        theme: {
+          color: "#3399cc"
+        }
+      };
+      
+      // Initialize payment
+      await initiatePayment(
+        options,
+        async (response) => {
+          // Payment success handler
+          try {
+            await saveTestPurchase(
+              currentUser.uid,
+              testId,
+              testConfig.testName,
+              response.razorpay_payment_id,
+              priceValue,
+              userDetails // Pass user details to the function
+            );
+            
+            // Reload purchases
+            const tests = await getUserPurchasedTests(currentUser.uid);
+            setPurchasedTests(tests);
+            
+            alert("Purchase successful! You can now access the test.");
+          } catch (error) {
+            console.error("Error processing purchase", error);
+            alert("Your payment was successful, but we had trouble updating your account. Please contact support.");
+          } finally {
+            setIsLoading(false);
+          }
+        },
+        (error) => {
+          // Payment failure handler
+          console.error("Payment failed", error);
+          alert("Payment failed: " + (error.error?.description || "Unknown error"));
+          setIsLoading(false);
+        }
+      );
+    } catch (error) {
+      console.error("Error initializing payment", error);
+      alert("Error initializing payment. Please try again.");
+      setIsLoading(false);
     }
   };
 
