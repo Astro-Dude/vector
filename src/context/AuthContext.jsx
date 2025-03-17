@@ -6,7 +6,11 @@ import {
   signInWithPopup,
   setPersistence,
   browserLocalPersistence,
-  browserSessionPersistence
+  browserSessionPersistence,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  sendPasswordResetEmail,
+  updateProfile
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase/firebase';
@@ -144,84 +148,37 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Function to log out the current user
-  const logout = async () => {
+  // Function to create/update user document in Firestore
+  const saveUserToFirestore = async (user) => {
+    if (!user) return null;
+    
     try {
-      setError("");
-      await signOut(auth);
-      setUserProfile(null);
-      setCurrentUser(null);
+      const userRef = doc(db, 'users', user.uid);
+      const userSnap = await getDoc(userRef);
       
-      // Don't reload the page, just navigate
-      return true;
-    } catch (err) {
-      console.error("Logout error:", err);
-      setError(err.message);
-      throw err;
-    }
-  };
-
-  // Updated getUserProfile function
-  const getUserProfile = async (uid) => {
-    try {
-      // Get the user document
-      const userDocRef = doc(db, "users", uid);
-      const userDoc = await getDoc(userDocRef);
-      
-      let profileData = {};
-      
-      if (userDoc.exists()) {
-        profileData = userDoc.data();
-      } else {
-        // Create a new user profile document if it doesn't exist
-        const newUserData = {
-          displayName: currentUser?.displayName || '',
-          email: currentUser?.email || '',
+      if (!userSnap.exists()) {
+        // Create new user document if it doesn't exist
+        await setDoc(userRef, {
+          displayName: user.displayName || '',
+          email: user.email,
           createdAt: serverTimestamp(),
-        };
-        
-        await setDoc(userDocRef, newUserData);
-        profileData = newUserData;
+          lastLogin: serverTimestamp()
+        });
+        console.log("Created new user document in Firestore");
+      } else {
+        // Update last login time for existing users
+        await setDoc(userRef, {
+          lastLogin: serverTimestamp(),
+          // Also update these fields if they might have changed
+          displayName: user.displayName || userSnap.data().displayName || '',
+          email: user.email || userSnap.data().email
+        }, { merge: true });
+        console.log("Updated existing user document in Firestore");
       }
       
-      // Get purchased tests
-      const purchasedTests = await getUserPurchasedTests(uid);
-      
-      // Get booked interviews
-      const bookedInterviews = await getUserBookedInterviews(uid);
-      
-      // Combine all data
-      const fullProfile = {
-        ...profileData,
-        purchasedTests,
-        bookedInterviews
-      };
-      
-      setUserProfile(fullProfile);
-      setFirestoreConnected(true);
-      return fullProfile;
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      setFirestoreConnected(false);
-      return null;
-    }
-  };
-
-  // Retry user profile fetch with shorter backoff
-  const retryUserProfileFetch = async (uid) => {
-    if (retryCount.current >= MAX_RETRIES) {
-      return false;
-    }
-    
-    // Short backoff: 300ms, 600ms
-    const delay = 300 * (retryCount.current + 1);
-    
-    await new Promise(resolve => setTimeout(resolve, delay));
-    
-    try {
-      await getUserProfile(uid);
       return true;
-    } catch (err) {
+    } catch (error) {
+      console.error("Error saving user to Firestore:", error);
       return false;
     }
   };
@@ -245,6 +202,9 @@ export const AuthProvider = ({ children }) => {
           setTimeout(() => {
             getUserProfile(user.uid).catch(() => {});
           }, 1000);
+          
+          // Save user to Firestore whenever they log in
+          await saveUserToFirestore(user);
           
           return;
         }
@@ -275,6 +235,104 @@ export const AuthProvider = ({ children }) => {
     return unsubscribe;
   }, []);
 
+  // Get user profile data from Firestore
+  const getUserProfile = async (uid) => {
+    try {
+      // Get the user document
+      const userDocRef = doc(db, "users", uid);
+      const userDoc = await getDoc(userDocRef);
+      
+      if (userDoc.exists()) {
+        const profileData = userDoc.data();
+        setUserProfile(profileData);
+        setFirestoreConnected(true);
+        return profileData;
+      } else {
+        // If user document doesn't exist yet (rare case)
+        await saveUserToFirestore(currentUser);
+        return getUserProfile(uid); // Try again
+      }
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
+      setFirestoreConnected(false);
+      return null;
+    }
+  };
+
+  // Retry user profile fetch with shorter backoff
+  const retryUserProfileFetch = async (uid) => {
+    if (retryCount.current >= MAX_RETRIES) {
+      return false;
+    }
+    
+    // Short backoff: 300ms, 600ms
+    const delay = 300 * (retryCount.current + 1);
+    
+    await new Promise(resolve => setTimeout(resolve, delay));
+    
+    try {
+      await getUserProfile(uid);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  };
+
+  // Function to sign up a new user
+  const signup = async (email, password, name) => {
+    try {
+      // Create auth user
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      
+      // Set display name
+      await updateProfile(userCredential.user, {
+        displayName: name
+      });
+      
+      // Save to Firestore
+      await saveUserToFirestore({
+        ...userCredential.user,
+        displayName: name
+      });
+      
+      return userCredential;
+    } catch (error) {
+      throw error;
+    }
+  };
+  
+  // Function to log in
+  const login = async (email, password) => {
+    try {
+      return await signInWithEmailAndPassword(auth, email, password);
+      // saveUserToFirestore will be called by the onAuthStateChanged listener
+    } catch (error) {
+      throw error;
+    }
+  };
+  
+  // Function to log out
+  const logout = async () => {
+    try {
+      setError("");
+      await signOut(auth);
+      setUserProfile(null);
+      setCurrentUser(null);
+      
+      // Don't reload the page, just navigate
+      return true;
+    } catch (err) {
+      console.error("Logout error:", err);
+      setError(err.message);
+      throw err;
+    }
+  };
+
+  // Function to reset password
+  const resetPassword = (email) => {
+    return sendPasswordResetEmail(auth, email);
+  };
+
   // Value object provided to context consumers
   const value = {
     currentUser,
@@ -285,6 +343,9 @@ export const AuthProvider = ({ children }) => {
     firestoreConnected,
     signInWithGoogle,
     logout,
+    signup,
+    login,
+    resetPassword,
     getUserProfile,
     retryUserProfileFetch
   };
