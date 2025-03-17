@@ -8,6 +8,7 @@ import nsetQuestions from './nsetQuestions';
 // Define test IDs as constants for consistency
 export const TEST_IDS = {
   SAMPLE: 'nset-sample',
+  PAID_SAMPLE: 'nset-paid-sample', // New paid test ID
   // MOCK_TEST_1: 'nset-mock-1',
 };
 
@@ -51,6 +52,18 @@ export const testConfigs = {
     totalQuestions: 21,
     passScore: 60,
     isFree: true,
+    testComponents: testComponents
+  },
+  
+  // New paid test for payment testing
+  [TEST_IDS.PAID_SAMPLE]: {
+    questions: placeholderQuestions,
+    testName: "NSET Paid Sample Test",
+    testDuration: 60,
+    totalQuestions: 15,
+    passScore: 65,
+    isFree: false,
+    price: '₹49',
     testComponents: testComponents
   },
   

@@ -8,9 +8,13 @@ import {
   browserLocalPersistence,
   browserSessionPersistence
 } from 'firebase/auth';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase/firebase';
 import { enableFirestoreDebug } from '../firebase/firestore-debug';
+import { 
+  getUserPurchasedTests, 
+  getUserBookedInterviews 
+} from '../services/purchaseService';
 
 // Only enable Firestore debug in development when explicitly needed
 if (import.meta.env.DEV && false) { // Set to true only when debugging
@@ -157,52 +161,49 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Function to get user profile data from Firestore with caching
+  // Updated getUserProfile function
   const getUserProfile = async (uid) => {
-    // Check cache first (valid for 10 minutes)
-    const cachedProfile = profileCache.current.get(uid);
-    const CACHE_TTL = 10 * 60 * 1000; // 10 minutes in milliseconds
-    
-    if (cachedProfile && (Date.now() - cachedProfile.timestamp) < CACHE_TTL) {
-      setUserProfile(cachedProfile.data);
-      return cachedProfile.data;
-    }
-    
     try {
+      // Get the user document
       const userDocRef = doc(db, "users", uid);
-      const userDocSnap = await getDoc(userDocRef);
+      const userDoc = await getDoc(userDocRef);
       
-      if (userDocSnap.exists()) {
-        const userData = userDocSnap.data();
-        setUserProfile(userData);
-        setFirestoreConnected(true);
-        
-        // Update cache
-        profileCache.current.set(uid, {
-          data: userData,
-          timestamp: Date.now()
-        });
-        
-        return userData;
+      let profileData = {};
+      
+      if (userDoc.exists()) {
+        profileData = userDoc.data();
       } else {
-        // Create a basic profile if none exists
-        const basicProfile = createFallbackProfile(uid);
+        // Create a new user profile document if it doesn't exist
+        const newUserData = {
+          displayName: currentUser?.displayName || '',
+          email: currentUser?.email || '',
+          createdAt: serverTimestamp(),
+        };
         
-        setUserProfile(basicProfile);
-        return basicProfile;
+        await setDoc(userDocRef, newUserData);
+        profileData = newUserData;
       }
-    } catch (err) {
-      console.warn("Profile fetch failed, using fallback:", err);
+      
+      // Get purchased tests
+      const purchasedTests = await getUserPurchasedTests(uid);
+      
+      // Get booked interviews
+      const bookedInterviews = await getUserBookedInterviews(uid);
+      
+      // Combine all data
+      const fullProfile = {
+        ...profileData,
+        purchasedTests,
+        bookedInterviews
+      };
+      
+      setUserProfile(fullProfile);
+      setFirestoreConnected(true);
+      return fullProfile;
+    } catch (error) {
+      console.error("Error fetching user profile:", error);
       setFirestoreConnected(false);
-      
-      // Increment retry count
-      retryCount.current += 1;
-      
-      // Return a minimal profile based on auth data when Firestore is unavailable
-      const fallbackProfile = createFallbackProfile(uid);
-      
-      setUserProfile(fallbackProfile);
-      return fallbackProfile;
+      return null;
     }
   };
 
