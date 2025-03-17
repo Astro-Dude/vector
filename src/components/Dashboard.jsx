@@ -17,6 +17,7 @@ import {
   doc, 
   setDoc
 } from 'firebase/firestore';
+import { formatPrice } from '../data/testConfig';
 
 const Dashboard = () => {
   const { currentUser, userProfile, logout, firestoreConnected, getUserProfile } = useAuth();
@@ -97,10 +98,6 @@ const Dashboard = () => {
     setMenuOpen(false); // Close the menu when selecting syllabus
   };
 
-  const formatPrice = (price) => {
-    return typeof price === 'number' ? `₹${price}` : price;
-  };
-
   const handleStartTest = (testId) => {
     navigate(`/test/${testId}/start`);
   };
@@ -116,9 +113,8 @@ const Dashboard = () => {
     const testConfig = testConfigs[testId];
     if (!testConfig) return;
     
-    // Convert price from string to number (remove ₹ symbol)
-    const priceString = testConfig.price || '₹499';
-    const priceValue = parseInt(priceString.replace('₹', '')) * 100; // In paise
+    // Directly use the numeric price value (no need to parse)
+    const priceValue = (testConfig.price || 0) * 100; // Convert to paise
     
     // Get user profile details
     let phoneNumber = userProfile?.phoneNumber || '';
@@ -265,9 +261,8 @@ const Dashboard = () => {
     const testConfig = testConfigs[testId];
     if (!testConfig) return;
     
-    // Convert price from string to number (remove ₹ symbol)
-    const priceString = testConfig.price || '₹499';
-    const priceValue = parseInt(priceString.replace('₹', '')) * 100; // In paise
+    // Directly use the numeric price
+    const priceValue = (testConfig.price || 0) * 100; // Convert to paise
     
     try {
       // Show loading state
@@ -790,7 +785,9 @@ const Dashboard = () => {
                             </div>
                             
                             <div className="flex items-center gap-3">
-                              <span className="text-md font-medium text-gray-900">{test.isFree ? 'Free' : formatPrice(test.price)}</span>
+                              <span className="text-md font-medium text-gray-900">
+                                {test.isFree ? 'Free' : formatPrice(test.price)}
+                              </span>
                               {isPurchased || test.isFree ? (
                                 <button 
                                   onClick={() => handleStartTest(testId)}

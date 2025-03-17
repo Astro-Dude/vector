@@ -8,7 +8,6 @@ import nsetQuestions from './nsetQuestions';
 // Define test IDs as constants for consistency
 export const TEST_IDS = {
   SAMPLE: 'nset-sample',
-  PAID_SAMPLE: 'nset-paid-sample', // New paid test ID
   // MOCK_TEST_1: 'nset-mock-1',
 };
 
@@ -55,30 +54,22 @@ export const testConfigs = {
     testComponents: testComponents
   },
   
-  // New paid test for payment testing
-  [TEST_IDS.PAID_SAMPLE]: {
-    questions: placeholderQuestions,
-    testName: "NSET Paid Sample Test",
-    testDuration: 60,
-    totalQuestions: 15,
-    passScore: 65,
-    isFree: false,
-    price: '₹49',
-    testComponents: testComponents
-  },
-  
   // [TEST_IDS.MOCK_TEST_1]: {
-  //   // Use placeholder questions until real ones are available
   //   questions: placeholderQuestions,
   //   testName: "NSET 2024 Mock Test 1",
   //   testDuration: 120,
   //   totalQuestions: 50,
   //   passScore: 70,
   //   isFree: false,
-  //   price: '₹499',
+  //   price: 499,
   //   testComponents: testComponents
   // },
-  
+};
+
+// Helper function to format price with currency symbol
+export const formatPrice = (price) => {
+  if (price === undefined || price === null) return '';
+  return `₹${price}`;
 };
 
 // Helper function to get a test configuration by ID
