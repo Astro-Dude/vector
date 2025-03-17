@@ -17,9 +17,10 @@ import Dashboard from './components/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoadingScreen from './components/LoadingScreen';
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useAuth } from './context/AuthContext';
 import { testConfigs, TEST_IDS, placeholderQuestions } from './data/testConfig';
+import disableInspection from './utils/disableInspect';
 
 // Loading component for Suspense
 const LoadingFallback = () => <LoadingScreen message="Loading content..." />;
@@ -44,6 +45,11 @@ const PublicRoute = ({ children }) => {
 // Layout component to conditionally render navbar and footer
 const Layout = ({ children }) => {
   const location = useLocation();
+  
+  // Disable browser inspection tools
+  useEffect(() => {
+    disableInspection();
+  }, []);
   
   // Hide navbar and footer on test-related pages, auth pages, and dashboard
   const hideNavFooter = location.pathname.includes('/test/') || 
