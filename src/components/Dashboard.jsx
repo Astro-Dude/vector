@@ -864,28 +864,79 @@ const Dashboard = () => {
                               <div key={interview.id} className="border rounded-lg p-4">
                                 <h3 className="text-md font-medium text-gray-900">Mock Interview Session</h3>
                                 <div className="mt-2">
+                                  {/* Status badge with appropriate colors */}
                                   <div className="flex items-center">
                                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                                       interview.status === 'confirmed' 
                                         ? 'bg-green-100 text-green-800' 
+                                        : interview.status === 'completed'
+                                        ? 'bg-blue-100 text-blue-800'
+                                        : interview.status === 'cancelled'
+                                        ? 'bg-red-100 text-red-800'
                                         : 'bg-yellow-100 text-yellow-800'
                                     }`}>
-                                      {interview.status === 'confirmed' ? 'Confirmed' : 'Pending Confirmation'}
+                                      {interview.status === 'confirmed' ? 'Confirmed' : 
+                                       interview.status === 'completed' ? 'Completed' :
+                                       interview.status === 'cancelled' ? 'Cancelled' : 'Pending Confirmation'}
                                     </span>
                                   </div>
+                                  
+                                  {/* Booking date info */}
                                   <p className="mt-2 text-sm text-gray-500">
                                     Booked on {interview.bookingDate?.toDate?.() 
                                       ? new Date(interview.bookingDate.toDate()).toLocaleDateString() 
                                       : 'Recent'}
                                   </p>
-                                  {interview.scheduledDate && (
-                                    <p className="mt-1 text-sm font-medium text-gray-900">
-                                      Scheduled for: {new Date(interview.scheduledDate.toDate()).toLocaleString()}
+                                  
+                                  {/* Show scheduled date if available */}
+                                  {interview.scheduledDate && interview.status !== 'cancelled' && (
+                                    <p className="mt-2 text-sm font-medium text-gray-900">
+                                      {interview.status === 'completed' 
+                                        ? 'Completed on: ' 
+                                        : 'Scheduled for: '}
+                                      {new Date(interview.scheduledDate.toDate()).toLocaleString()}
                                     </p>
                                   )}
-                                  {!interview.scheduledDate && (
-                                    <p className="mt-1 text-sm text-gray-500">
+                                  
+                                  {/* Show Google Meet link if status is confirmed (not for completed or cancelled) */}
+                                  {interview.status === 'confirmed' && interview.meetLink && (
+                                    <div className="mt-3 bg-blue-50 p-3 rounded-md">
+                                      <p className="text-sm font-medium text-gray-900 mb-1">
+                                        Google Meet Link:
+                                      </p>
+                                      <a 
+                                        href={interview.meetLink}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+                                      >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                        Join Google Meet
+                                      </a>
+                                      <p className="text-xs text-gray-500 mt-1">
+                                        Click to join the meeting at the scheduled time
+                                      </p>
+                                    </div>
+                                  )}
+                                  
+                                  {/* Status-specific messages */}
+                                  {interview.status === 'pending' && !interview.scheduledDate && (
+                                    <p className="mt-2 text-sm text-gray-500">
                                       You will be contacted within 12 hours to schedule your interview.
+                                    </p>
+                                  )}
+                                  
+                                  {interview.status === 'completed' && (
+                                    <p className="mt-2 text-sm text-gray-600">
+                                      Thank you for participating in the mock interview. We hope it was helpful for your preparation!
+                                    </p>
+                                  )}
+                                  
+                                  {interview.status === 'cancelled' && (
+                                    <p className="mt-2 text-sm text-gray-600">
+                                      This interview booking has been cancelled. If you have any questions, please contact us.
                                     </p>
                                   )}
                                 </div>
