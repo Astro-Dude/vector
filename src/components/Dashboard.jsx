@@ -293,35 +293,6 @@ const Dashboard = () => {
     }
   };
 
-  // Add a function for debugging
-  const debugFirebasePermissions = async () => {
-    try {
-      // Test creating a user document
-      const userDocRef = doc(db, "users", currentUser.uid);
-      await setDoc(userDocRef, { 
-        lastActive: serverTimestamp(),
-        updatedAt: new Date().toISOString() 
-      }, { merge: true });
-      
-      alert("User document update successful!");
-      
-      // Test creating a purchase
-      const purchaseRef = collection(db, `users/${currentUser.uid}/purchases`);
-      const testDoc = await addDoc(purchaseRef, {
-        type: 'test',
-        testId: 'debug-test',
-        testName: 'Debug Test',
-        purchaseDate: serverTimestamp(),
-        status: 'debug'
-      });
-      
-      alert(`Successfully created test purchase: ${testDoc.id}`);
-    } catch (error) {
-      alert(`Firebase permission test failed: ${error.message}`);
-      console.error("Debug error:", error);
-    }
-  };
-
   // Show Firestore error component only if connection fails completely and it's not retrying
   if (!firestoreConnected && !isRetrying && !userProfile) {
     return <FirestoreError onRetry={handleRetry} />;
@@ -500,14 +471,6 @@ const Dashboard = () => {
       {/* Main content */}
       <main className="py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Debug button - remove in production */}
-          <button 
-            onClick={debugFirebasePermissions}
-            className="mb-4 px-3 py-1 text-xs bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
-          >
-            Debug Firebase Permissions
-          </button>
-          
           {/* Welcome section - only visible on home page */}
           {!showSyllabus && (
             <div className="bg-white overflow-hidden shadow rounded-lg mb-6">
