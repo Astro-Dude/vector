@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import FirestoreError from './FirestoreError';
@@ -19,6 +19,7 @@ import {
 } from 'firebase/firestore';
 import { formatPrice } from '../data/testConfig';
 import { getAppSettings } from '../services/settingsService';
+import ReactDOM from 'react-dom';
 
 const Dashboard = () => {
   const { currentUser, userProfile, logout, firestoreConnected, getUserProfile } = useAuth();
@@ -40,6 +41,9 @@ const Dashboard = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [networkError, setNetworkError] = useState(false);
   const [debugMode, setDebugMode] = useState(false);
+  const [interviewCodeCopied, setInterviewCodeCopied] = useState(false);
+  const interviewCodeRef = useRef(null);
+  const referralCode = "SHAUE061";
   
   // Load user's purchased tests and booked interviews
   useEffect(() => {
@@ -383,6 +387,39 @@ const Dashboard = () => {
 
   // Replace your existing rendering logic for the booking button with this simpler version
   const showBookingButton = appSettings.interviewBookingsEnabled !== false;
+
+  const copyInterviewCode = () => {
+    navigator.clipboard.writeText(referralCode).then(() => {
+      setInterviewCodeCopied(true);
+      setTimeout(() => setInterviewCodeCopied(false), 2000);
+    });
+  };
+
+  const InterviewCodeTooltip = () => {
+    if (!interviewCodeCopied || !interviewCodeRef.current) return null;
+    
+    const rect = interviewCodeRef.current.getBoundingClientRect();
+    
+    const style = {
+      position: 'fixed',
+      top: `${rect.bottom + 8}px`,
+      left: `${rect.left + rect.width/2}px`,
+      transform: 'translateX(-50%)',
+      backgroundColor: '#1F2937',
+      color: 'white',
+      padding: '4px 8px',
+      borderRadius: '4px',
+      fontSize: '0.75rem',
+      fontWeight: '500',
+      zIndex: 9999,
+      whiteSpace: 'nowrap'
+    };
+    
+    return ReactDOM.createPortal(
+      <div style={style}>Copied!</div>,
+      document.body
+    );
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -794,6 +831,35 @@ const Dashboard = () => {
                           <span className="text-gray-600">Improve your interview skills and confidence</span>
                         </li>
                       </ul>
+                      
+                      {/* Special Offer Box - NEW */}
+                      <div className="mt-4 bg-gradient-to-r from-green-50 to-emerald-50 p-3 border border-green-200 rounded-md">
+                        <div className="flex items-start">
+                          <div className="flex-shrink-0">
+                            <svg className="h-5 w-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <div className="ml-3">
+                            <h4 className="text-sm font-bold text-green-800">🔥 LIMITED TIME OFFER 🔥</h4>
+                            <p className="mt-1 text-sm text-green-700">
+                              Book this mock interview and use referral code 
+                              <button 
+                                ref={interviewCodeRef}
+                                onClick={copyInterviewCode}
+                                className="font-bold bg-white text-green-700 px-1.5 py-0.5 rounded mx-1 hover:bg-green-100 transition-colors cursor-pointer flex items-center inline-flex"
+                              >
+                                {referralCode}
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                              </button>
+                              for your NSET exam application to get a <span className="font-bold">100% REFUND</span> after your NSET exam!
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      
                       <div className="mt-3 flex items-center text-sm text-gray-500">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
                           30 min
@@ -819,7 +885,11 @@ const Dashboard = () => {
                     </div>
                     
                     <div className="flex flex-col items-center">
-                      <span className="text-2xl font-bold text-gray-900 mb-2">₹599</span>
+                      <div className="flex items-center mb-1">
+                        <span className="text-2xl font-bold text-gray-900">₹599</span>
+                        <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded-full">Refundable!</span>
+                      </div>
+                      <p className="text-xs text-gray-600 mb-2">With referral code & NSET exam</p>
                       {showBookingButton ? (
                         <button 
                           onClick={handleBookInterview}
@@ -942,7 +1012,7 @@ const Dashboard = () => {
                       
                       <div className="max-h-[30vh] overflow-y-auto pr-2">
                         {bookedInterviews.length > 0 ? (
-                          <div className="space-y-4">
+                          <div className="space-y-4 py-4">
                             {bookedInterviews.map((interview) => (
                               <div key={interview.id} className="border rounded-lg p-4">
                                 <h3 className="text-md font-medium text-gray-900">Mock Interview Session</h3>
@@ -1088,6 +1158,7 @@ const Dashboard = () => {
           </div>
         )}
       </div>
+      <InterviewCodeTooltip />
     </div>
   );
 };
