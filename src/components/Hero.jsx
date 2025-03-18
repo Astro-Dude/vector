@@ -58,7 +58,7 @@ const Hero = () => {
         <div className="absolute left-0 bottom-0 w-1/2 h-1/2 bg-gradient-to-tr from-indigo-50 opacity-50 rounded-tr-full transform -translate-x-1/4 translate-y-1/4"></div>
       </div>
       
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center">
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center py-10">
         <div className="flex-1 text-center lg:text-left mb-10 lg:mb-0 lg:pr-10">
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-6 tracking-tight">
             <span className="block">Ace the</span>
