@@ -185,7 +185,7 @@ const Dashboard = () => {
     // Set current purchase to interview
     setCurrentPurchaseItem({
       type: 'interview',
-      price: 59900, // 599 in paise
+      price: 39900, // 599 in paise
       name: "1:1 Mock Interview Session"
     });
     
@@ -213,9 +213,9 @@ const Dashboard = () => {
       
       // Create order options for Razorpay
       const options = {
-        amount: 59900, // 599 in paise
+        amount: 39900, // 599 in paise
         currency: "INR",
-        name: "Vector NSET",
+        name: "Vector",
         description: "Mock Interview Session Booking",
         image: "https://your-logo-url.com/logo.png", // Replace with your logo URL
         prefill: {
@@ -242,7 +242,7 @@ const Dashboard = () => {
               currentUser.uid,
               userDetails, // Pass complete user details object
               response.razorpay_payment_id,
-              59900
+              39900
             );
             
             // Reload bookings
@@ -886,7 +886,7 @@ const Dashboard = () => {
                     
                     <div className="flex flex-col items-center">
                       <div className="flex items-center mb-1">
-                        <span className="text-2xl font-bold text-gray-900">₹599</span>
+                        <span className="text-2xl font-bold text-gray-900">₹399</span>
                         <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded-full">Refundable!</span>
                       </div>
                       <p className="text-xs text-gray-600 mb-2">With referral code & NSET exam</p>
