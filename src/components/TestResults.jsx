@@ -26,19 +26,10 @@ const TestResults = ({
   
   // Process test results from location state
   useEffect(() => {
-    console.log('TestResults - location.state:', location.state);
-    console.log('TestResults - testId param:', testId);
+    
     
     if (location.state) {
       const { answers, questions, timeSpent, endedDueToFullScreenViolation, passScore: testPassScore } = location.state;
-      
-      console.log('TestResults - Extracted data:', { 
-        answersLength: answers ? Object.keys(answers).length : 0,
-        questionsLength: questions ? questions.length : 0,
-        timeSpent,
-        endedDueToFullScreenViolation,
-        testPassScore
-      });
       
       setAnswers(answers || {});
       setQuestions(questions || []);
@@ -69,12 +60,6 @@ const TestResults = ({
         const finalScore = correctCount;
         const finalPercentage = (correctCount / questions.length) * 100;
         
-        console.log('TestResults - Calculated scores:', {
-          correctCount,
-          totalQuestions: questions.length,
-          finalPercentage
-        });
-        
         setScore(finalScore);
         setPercentage(parseFloat(finalPercentage.toFixed(2)));
         
@@ -86,13 +71,7 @@ const TestResults = ({
         } else {
           setResultStatus('fail');
         }
-      } else {
-        console.error('TestResults - Missing questions or answers:',
-          { hasQuestions: !!questions, questionsLength: questions?.length, hasAnswers: !!answers }
-        );
       }
-    } else {
-      console.error('TestResults - No location state provided');
     }
   }, [location.state, passScore, testId]);
   

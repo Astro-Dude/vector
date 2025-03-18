@@ -80,7 +80,6 @@ let db;
 try {
   // Use the simpler initialization method for better stability
   db = getFirestore(app);
-  console.log("Firestore initialized with standard settings");
 } catch (err) {
   console.warn("Firestore initialization failed, retrying with default settings");
   try {

@@ -8,16 +8,13 @@ export const loadRazorpayScript = () => {
       return;
     }
     
-    console.log("Loading Razorpay script...");
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
     script.onload = () => {
-      console.log("Razorpay script loaded successfully");
       resolve(true);
     };
     script.onerror = () => {
-      console.error("Failed to load Razorpay script");
       resolve(false);
     };
     document.body.appendChild(script);
@@ -33,17 +30,11 @@ export const initiatePayment = async (options, onSuccess, onError) => {
     return;
   }
   
-  try {
-    console.log("Creating Razorpay payment with options:", {
-      ...options,
-      key: options.key ? "KEY_PRESENT" : "KEY_MISSING" // Don't log the actual key
-    });
-    
+  try {  
     const razorpayOptions = {
       key: import.meta.env.VITE_RAZORPAY_KEY_ID,
       ...options,
       handler: function (response) {
-        console.log("Payment successful:", response);
         onSuccess(response);
       },
     };
@@ -51,14 +42,11 @@ export const initiatePayment = async (options, onSuccess, onError) => {
     const paymentObject = new window.Razorpay(razorpayOptions);
     
     paymentObject.on('payment.failed', function(response) {
-      console.error("Payment failed:", response.error);
       onError(response);
     });
     
-    console.log("Opening Razorpay payment form");
     paymentObject.open();
   } catch (error) {
-    console.error("Error in Razorpay payment initiation:", error);
     alert("Failed to initialize payment. Error: " + error.message);
     onError({ error: { description: error.message } });
   }

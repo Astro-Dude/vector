@@ -63,7 +63,6 @@ const MockTest = ({
         setTestStarted(true);
         setIsFullScreen(true);
       } catch (err) {
-        console.error("Error attempting to enable full-screen mode:", err);
         // If fullscreen fails but fullscreen is not required, still allow the test to start
         if (!fullScreenRequired) {
           setTestStarted(true);
@@ -169,7 +168,7 @@ const MockTest = ({
           
           // Check if testId exists
           if (!testId) {
-            console.error('Error: testId is undefined during fullscreen violation. Redirecting to dashboard.');
+  
             navigate('/dashboard');
             return;
           }
@@ -248,26 +247,14 @@ const MockTest = ({
       }, {})
     };
     
-    // Add console logs for debugging
-    console.log('Test submitted with testId:', testId);
-    console.log('ResultPath template:', resultsPath);
-    
     // Check if testId exists
     if (!testId) {
-      console.error('Error: testId is undefined. Cannot navigate to results page.');
       alert('An error occurred while submitting your test. Please try again or contact support.');
       return;
     }
     
     // Navigate to results using the template path
     const resultPath = resultsPath.replace(':testId', testId);
-    console.log('Navigating to:', resultPath);
-    console.log('Navigation state:', { 
-      answers: allAnswers,
-      questions: questions.length,
-      timeSpent: testDuration * 60 - timeRemaining,
-      passScore: passScore
-    });
     
     navigate(resultPath, { 
       state: { 

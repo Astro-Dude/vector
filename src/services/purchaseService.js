@@ -50,7 +50,6 @@ export const getUserPurchasedTests = async (userId) => {
     const userDoc = await getDoc(userDocRef);
     
     if (!userDoc.exists()) {
-      console.log("User document doesn't exist, returning empty array");
       return [];
     }
     
@@ -134,7 +133,6 @@ export const saveMockInterviewBooking = async (userId, userDetails, paymentId, a
     
     return bookingId;
   } catch (error) {
-    console.error("Error saving interview booking:", error);
     throw error;
   }
 };
@@ -156,7 +154,6 @@ export const getUserBookedInterviews = async (userId) => {
     
     return interviews;
   } catch (error) {
-    console.error("Error getting booked interviews:", error);
     return [];
   }
 }; 
