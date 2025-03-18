@@ -843,7 +843,7 @@ const Dashboard = () => {
                           <div className="ml-3">
                             <h4 className="text-sm font-bold text-green-800">🔥 LIMITED TIME OFFER 🔥</h4>
                             <p className="mt-1 text-sm text-green-700">
-                              Book this mock interview and use referral code 
+                              Use referral code 
                               <button 
                                 ref={interviewCodeRef}
                                 onClick={copyInterviewCode}
@@ -854,7 +854,7 @@ const Dashboard = () => {
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                 </svg>
                               </button>
-                              for your NSET exam application to get a <span className="font-bold">100% REFUND</span> after your NSET exam!
+                              for your Scaler NSET registration to get a 50% discount on registration fee + <span className="font-bold">100% REFUND</span> of your mock interview fee after your NSET exam!
                             </p>
                           </div>
                         </div>
@@ -889,7 +889,7 @@ const Dashboard = () => {
                         <span className="text-2xl font-bold text-gray-900">₹399</span>
                         <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded-full">Refundable!</span>
                       </div>
-                      <p className="text-xs text-gray-600 mb-2">With referral code & NSET exam</p>
+                      <p className="text-s text-gray-600 mb-2 line-through">₹599</p>
                       {showBookingButton ? (
                         <button 
                           onClick={handleBookInterview}
@@ -939,7 +939,7 @@ const Dashboard = () => {
                             
                             <div className="flex items-center gap-3">
                               <span className="text-md font-medium text-gray-900">
-                                {test.isFree ? 'Free' : formatPrice(test.price)}
+                                {test.isFree ? 'Free' : <><span className="line-through">₹169</span> {formatPrice(test.price)}</>}
                               </span>
                               {isPurchased || test.isFree ? (
                                 <button 
