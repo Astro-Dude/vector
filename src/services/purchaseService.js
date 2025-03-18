@@ -5,14 +5,11 @@ import { sendEmail } from './emailService';
 // Save test purchase to Firestore with user details
 export const saveTestPurchase = async (userId, testId, testName, paymentId, amount, userDetails) => {
   try {
-    console.log(`Saving purchase for user ${userId}`);
-    
     // First check if user document exists and create if needed
     const userDocRef = doc(db, "users", userId);
     const userDoc = await getDoc(userDocRef);
     
     if (!userDoc.exists()) {
-      console.log("Creating user document");
       await setDoc(userDocRef, {
         createdAt: serverTimestamp(),
         ...userDetails, // Save user details to the user document as well
@@ -37,10 +34,7 @@ export const saveTestPurchase = async (userId, testId, testName, paymentId, amou
       }
     };
     
-    console.log("Saving purchase with data:", purchaseData);
     const docRef = await addDoc(purchaseRef, purchaseData);
-    console.log("Purchase saved with ID:", docRef.id);
-    
     return true;
   } catch (error) {
     console.error("Error saving test purchase:", error);
@@ -51,8 +45,6 @@ export const saveTestPurchase = async (userId, testId, testName, paymentId, amou
 // Get user's purchased tests - with better error handling
 export const getUserPurchasedTests = async (userId) => {
   try {
-    console.log(`Fetching purchased tests for user ${userId}`);
-    
     // Check if the user document exists
     const userDocRef = doc(db, "users", userId);
     const userDoc = await getDoc(userDocRef);
@@ -74,7 +66,6 @@ export const getUserPurchasedTests = async (userId) => {
       });
     });
     
-    console.log(`Found ${tests.length} purchased tests`);
     return tests;
   } catch (error) {
     console.error("Error getting purchased tests:", error);

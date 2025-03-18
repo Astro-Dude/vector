@@ -18,6 +18,7 @@ import {
   setDoc
 } from 'firebase/firestore';
 import { formatPrice } from '../data/testConfig';
+import { getAppSettings } from '../services/settingsService';
 
 const Dashboard = () => {
   const { currentUser, userProfile, logout, firestoreConnected, getUserProfile } = useAuth();
@@ -32,6 +33,13 @@ const Dashboard = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [showPhonePrompt, setShowPhonePrompt] = useState(false);
   const [currentPurchaseItem, setCurrentPurchaseItem] = useState(null);
+  const [appSettings, setAppSettings] = useState({
+    interviewBookingsEnabled: true,
+    interviewBookingsMessage: ''
+  });
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [networkError, setNetworkError] = useState(false);
+  const [debugMode, setDebugMode] = useState(false);
   
   // Load user's purchased tests and booked interviews
   useEffect(() => {
@@ -53,6 +61,28 @@ const Dashboard = () => {
     
     loadUserPurchases();
   }, [currentUser]);
+  
+  // Load app settings once when component mounts + add refresh ability
+  useEffect(() => {
+    loadAppSettings();
+  }, []);
+
+  const loadAppSettings = async () => {
+    setIsRefreshing(true);
+    
+    try {
+      const settings = await getAppSettings();
+      setAppSettings(settings);
+    } catch (error) {
+      // Set default settings on error
+      setAppSettings({
+        interviewBookingsEnabled: true,
+        interviewBookingsMessage: ''
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
   
   // Sample upcoming events
   const upcomingEvents = [
@@ -137,6 +167,11 @@ const Dashboard = () => {
   
   // Handle booking mock interview
   const handleBookInterview = () => {
+    if (!appSettings.interviewBookingsEnabled) {
+      // Don't proceed if bookings are disabled
+      return;
+    }
+    
     if (!currentUser) {
       alert("Please log in to book an interview");
       navigate('/login');
@@ -338,10 +373,16 @@ const Dashboard = () => {
     }
   };
 
+  // Update the check for whether bookings are enabled
+  const bookingsEnabled = appSettings.interviewBookingsEnabled === true;
+
   // Show Firestore error component only if connection fails completely and it's not retrying
   if (!firestoreConnected && !isRetrying && !userProfile) {
     return <FirestoreError onRetry={handleRetry} />;
   }
+
+  // Replace your existing rendering logic for the booking button with this simpler version
+  const showBookingButton = appSettings.interviewBookingsEnabled !== false;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -706,11 +747,30 @@ const Dashboard = () => {
           ) : (
             /* Dashboard grid - only visible when syllabus is not shown */
             <>
-              {/* Mock Interview Section - Separate from other content */}
+              {/* Mock Interview Section */}
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 overflow-hidden shadow rounded-lg mb-6">
                 <div className="px-4 py-5 sm:p-6">
-                  <h2 className="text-lg font-medium text-gray-900 mb-4">Interview Preparation</h2>
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-lg font-medium text-gray-900">Interview Preparation</h2>
+                    <button
+                      onClick={loadAppSettings}
+                      className="text-xs text-gray-500 flex items-center"
+                      disabled={isRefreshing}
+                    >
+                      {isRefreshing ? (
+                        <span>Refreshing...</span>
+                      ) : (
+                        <>
+                          <svg className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                          </svg>
+                          Refresh
+                        </>
+                      )}
+                    </button>
+                  </div>
                   
+                  {/* Interview Content */}
                   <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold text-blue-800">1:1 Mock Interview Session</h3>
@@ -742,16 +802,39 @@ const Dashboard = () => {
                           With SST Students
                         </span>
                       </div>
+                      
+                      {/* Message when bookings are disabled */}
+                      {!bookingsEnabled && appSettings.interviewBookingsMessage && (
+                        <div className="mt-3 p-2 bg-amber-50 border border-amber-200 rounded-md">
+                          <p className="text-sm text-amber-800">
+                            <span className="flex items-center">
+                              <svg className="h-4 w-4 text-amber-600 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              {appSettings.interviewBookingsMessage || "Due to high demand, interview bookings are temporarily disabled."}
+                            </span>
+                          </p>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="flex flex-col items-center">
                       <span className="text-2xl font-bold text-gray-900 mb-2">₹599</span>
-                      <button 
-                        onClick={handleBookInterview}
-                        className="inline-flex items-center px-5 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                      >
-                        Book Now
-                      </button>
+                      {showBookingButton ? (
+                        <button 
+                          onClick={handleBookInterview}
+                          className="inline-flex items-center px-5 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                          Book Now
+                        </button>
+                      ) : (
+                        <button 
+                          disabled
+                          className="inline-flex items-center px-5 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-gray-400 bg-gray-200 cursor-not-allowed"
+                        >
+                          Temporarily Unavailable
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -942,7 +1025,7 @@ const Dashboard = () => {
                                 </div>
                               </div>
                             ))}
-                          </div>
+                            </div>
                         ) : (
                           <div className="text-center py-6 bg-gray-50 rounded-lg">
                             <p className="text-gray-500">You haven't booked any mock interviews yet.</p>
@@ -962,6 +1045,49 @@ const Dashboard = () => {
       </main>
       
       {/* No footer as requested */}
+      <div className="mt-8 text-right">
+        <button
+          onClick={() => setDebugMode(!debugMode)}
+          className="text-xs text-gray-400 hover:text-gray-600"
+        >
+          {debugMode ? 'Hide Debug Info' : 'Show Debug Info'}
+        </button>
+        
+        {debugMode && (
+          <div className="mt-2 p-4 border border-gray-200 rounded bg-gray-50 text-left">
+            <h3 className="text-lg font-medium text-gray-900">Debug Information</h3>
+            <div className="mt-2 space-y-2">
+              <p className="text-sm">
+                <strong>Raw interviewBookingsEnabled:</strong> {String(appSettings.interviewBookingsEnabled)}
+              </p>
+              <p className="text-sm">
+                <strong>Type:</strong> {typeof appSettings.interviewBookingsEnabled}
+              </p>
+              <p className="text-sm">
+                <strong>bookingStatusString:</strong> {appSettings.bookingStatusString || 'Not set'}
+              </p>
+              <p className="text-sm">
+                <strong>Is disabled (===false):</strong> {appSettings.interviewBookingsEnabled === false ? 'true' : 'false'}
+              </p>
+              <p className="text-sm">
+                <strong>Is disabled (string check):</strong> {appSettings.bookingStatusString === "DISABLED" ? 'true' : 'false'}
+              </p>
+              <p className="text-sm">
+                <strong>Message:</strong> "{appSettings.interviewBookingsMessage}"
+              </p>
+              <p className="text-sm">
+                <strong>Last updated:</strong> {appSettings.lastUpdated?.toLocaleString?.() || 'Unknown'}
+              </p>
+              <button
+                onClick={loadAppSettings}
+                className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md text-sm"
+              >
+                Refresh Settings
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

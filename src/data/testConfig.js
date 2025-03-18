@@ -8,7 +8,7 @@ import nsetQuestions from './nsetQuestions';
 // Define test IDs as constants for consistency
 export const TEST_IDS = {
   SAMPLE: 'nset-sample',
-  // MOCK_TEST_1: 'nset-mock-1',
+  MOCK_TEST_1: 'nset-mock-1',
 };
 
 // Define test components that will be shown in the MockTestStart page
@@ -49,21 +49,21 @@ export const testConfigs = {
     testName: "NSET Free Sample Test",
     testDuration: 120,
     totalQuestions: 21,
-    passScore: 60,
+    passScore: 35,
     isFree: true,
     testComponents: testComponents
   },
   
-  // [TEST_IDS.MOCK_TEST_1]: {
-  //   questions: placeholderQuestions,
-  //   testName: "NSET 2024 Mock Test 1",
-  //   testDuration: 120,
-  //   totalQuestions: 50,
-  //   passScore: 70,
-  //   isFree: false,
-  //   price: 499,
-  //   testComponents: testComponents
-  // },
+  [TEST_IDS.MOCK_TEST_1]: {
+    questions: placeholderQuestions,
+    testName: "NSET 2024 Mock Test 1",
+    testDuration: 10,
+    totalQuestions: 1,
+    passScore: 70,
+    isFree: false,
+    price: 1,
+    testComponents: testComponents
+  },
 };
 
 // Helper function to format price with currency symbol
