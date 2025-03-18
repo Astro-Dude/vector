@@ -1,12 +1,57 @@
 // import { useTheme } from '../hooks/useTheme';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 
 const Hero = () => {
   // Remove theme references
   // const { theme } = useTheme();
+  const [copied, setCopied] = useState(false);
+  
+  const copyCode = () => {
+    navigator.clipboard.writeText('SHAUE061');
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   return (
     <section id="hero" className="relative bg-white pt-24 pb-16 overflow-hidden">
+      {/* Referral Banner - Fixed position below header */}
+      <div className="fixed top-16 left-0 right-0 z-40 w-full bg-gradient-to-r from-blue-600 to-indigo-600 shadow-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+          <div className="flex flex-col sm:flex-row items-center justify-center">
+            <div className="flex items-center mb-2 sm:mb-0">
+              <div 
+                className="bg-white p-1 rounded-md mr-3 cursor-pointer flex items-center" 
+                onClick={copyCode}
+                title="Click to copy"
+              >
+                <span className="font-mono text-base font-bold text-blue-600 px-2">SHAUE061</span>
+                {copied ? (
+                  <span className="text-green-600 text-xs px-1">Copied!</span>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-600 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                )}
+              </div>
+              <p className="text-white text-sm mr-3">Use this code for 50% OFF on NSET registration (₹500 instead of ₹1000)</p>
+              <a 
+                href="https://www.scaler.com/school-of-technology/application/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="inline-block px-3 py-1 bg-white text-blue-600 rounded-full font-bold text-sm hover:bg-blue-50 transition-colors"
+              >
+                Apply Now
+              </a>
+    
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Add some top padding to accommodate the fixed banner */}
+      <div className="h-16 sm:h-12"></div>
+      
       {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute right-0 top-0 w-1/2 h-1/2 bg-gradient-to-bl from-blue-50 opacity-50 rounded-bl-full transform translate-x-1/4 -translate-y-1/4"></div>
@@ -52,18 +97,6 @@ const Hero = () => {
                 <h2 className="text-4xl font-bold text-white mb-2">Vector</h2>
                 <p className="text-xl text-blue-100 italic">Direction to success</p>
               </div>
-            </div>
-          </div>
-          
-          {/* Stats - removed success rate */}
-          <div className="mt-8 grid grid-cols-2 gap-4 text-center">
-            <div className="bg-white p-4 rounded-lg shadow">
-              <p className="text-3xl font-bold text-blue-600">20+</p>
-              <p className="text-sm text-gray-500">Practice Tests</p>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <p className="text-3xl font-bold text-blue-600">15+</p>
-              <p className="text-sm text-gray-500">Expert Mentors</p>
             </div>
           </div>
         </div>
