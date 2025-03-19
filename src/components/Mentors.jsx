@@ -1,18 +1,48 @@
 import { useState } from 'react';
 import { FaLinkedin } from 'react-icons/fa';
+// Import images
+import shaurya from '../assets/images/shaurya.jpg';
+import hardik from '../assets/images/hardik.jpg';
+import rudhar from '../assets/images/rudhar.jpg';
+// Import other avatars similarly
 
 const Mentors = () => {
   const mentors = [
-    // {
-    //   id: 1,
-    //   name: "Ankit Verma",
-    //   role: "NSET Mentor & SST Computer Science Graduate",
-    //   achievements: "Secured 96/100 in NSET, Software Engineer at Google, 2+ years mentoring experience",
-    //   expertise: "Algorithms, Data Structures, Problem Solving",
-    //   linkedin: "https://linkedin.com/in/ankit-verma",
-    //   avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-    // }
+    {
+      id: 1,
+      name: "Shaurya Verma",
+      role: "Guided 25+ aspirants for NSET",
+      achievements: "Offered 20% scholorship at SST, Founder of Vector, 3⭐ at CodeChef - max rating 1649",
+      linkedin: "https://www.linkedin.com/in/astro-dude/",
+      avatar: shaurya,
+    },
+    {
+      id: 2,
+      name: "Hardik Jumnani",
+      role: "",
+      achievements: "Offered 25% scholorship at SST, President at SST ",
+      linkedin: "https://www.linkedin.com/in/hardik-jumnani/",
+      avatar: hardik,
+    },
+    {
+      id: 3,
+      name: "Rudhar Bajaj",
+      role: "",
+      achievements: "Offered 20% scholorship at SST, AIR 24k in JEE Advanced, AIR 5 in NSTSE",
+      linkedin: "https://www.linkedin.com/in/rudhar-bajaj/",
+      avatar: rudhar,
+    }
   ];
+
+  // Function to split achievements into array of points
+  const getAchievementPoints = (achievementsText) => {
+    return achievementsText.split(', ');
+  };
+
+  // Function to get initials for fallback avatar
+  const getInitials = (name) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
 
   return (
     <section id="mentors" className="py-16 bg-gradient-to-b from-white to-gray-50 overflow-hidden">
@@ -35,70 +65,99 @@ const Mentors = () => {
             <div className="w-64 h-64 bg-indigo-50 rounded-full opacity-30 blur-3xl"></div>
           </div>
 
-          {/* Mentors grid */}
-          <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {mentors.map((mentor) => (
-              <div key={mentor.id} className="bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl">
-                <div className="p-1 bg-gradient-to-r from-blue-500 to-indigo-600">
-                  <div className="bg-white p-4">
-                    <div className="flex justify-center">
-                      <div className="relative">
-                        <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-blue-100">
+          {/* Horizontal scrolling container for mentors */}
+          <div className="relative z-10 overflow-x-auto pb-4 hide-scrollbar">
+            <div className="flex space-x-6 pl-2 pr-8 py-4 min-w-max">
+              {mentors.map((mentor) => (
+                <div 
+                  key={mentor.id} 
+                  className="flex-shrink-0 w-80 bg-white rounded-xl shadow-md overflow-hidden transform transition-all duration-300 hover:-translate-y-2 hover:shadow-xl border border-gray-100"
+                >
+                  <div className="h-32 bg-gradient-to-r from-blue-600 to-indigo-600 flex items-center justify-center relative">
+                    {/* Center and enlarge the image */}
+                    <div className="absolute transform translate-y-1/2">
+                      <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg">
+                        {mentor.avatar ? (
                           <img
                             src={mentor.avatar}
                             alt={mentor.name}
                             className="w-full h-full object-cover"
                           />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-4 text-center">
-                      <h3 className="font-bold text-gray-900 text-lg">{mentor.name}</h3>
-                      <p className="text-blue-600 font-medium">{mentor.role}</p>
-                      
-                      <div className="mt-3 space-y-2">
-                        <div className="bg-blue-50 p-2 rounded-lg">
-                          <h4 className="text-sm font-semibold text-blue-800">Achievements</h4>
-                          <p className="text-sm text-gray-700">{mentor.achievements}</p>
-                        </div>
-                        
-                        <div className="bg-indigo-50 p-2 rounded-lg">
-                          <h4 className="text-sm font-semibold text-indigo-800">Expertise</h4>
-                          <p className="text-sm text-gray-700">{mentor.expertise}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-4">
-                        <a 
-                          href={mentor.linkedin} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                        >
-                          <FaLinkedin className="mr-2" /> Connect on LinkedIn
-                        </a>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-blue-100 text-blue-600 text-3xl font-bold">
+                            {getInitials(mentor.name)}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
+                  
+                  <div className="pt-20 px-6 pb-6">
+                    <div className="text-center mb-4">
+                      <h3 className="font-bold text-gray-900 text-xl">{mentor.name}</h3>
+                      {mentor.role && (
+                        <p className="text-blue-600 font-medium text-sm">
+                          {mentor.role}
+                        </p>
+                      )}
+                    </div>
+                    
+                    <div className="mb-5 bg-gray-50 p-4 rounded-lg">
+                      <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">Achievements</h4>
+                      <ul className="list-disc pl-5 space-y-1">
+                        {getAchievementPoints(mentor.achievements).map((point, index) => (
+                          <li key={index} className="text-gray-600">
+                            {point}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    
+                    <div className="text-center">
+                      <a 
+                        href={mentor.linkedin} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        <FaLinkedin className="mr-2" /> Connect on LinkedIn
+                      </a>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
           
-          <div className="text-center mt-12">
-            <p className="text-gray-600">
+          {/* Scroll indicator */}
+          <div className="mt-4 text-center text-gray-500 text-sm">
+            <span>← Scroll to see more mentors →</span>
+          </div>
+          
+          <div className="text-center mt-16">
+            <p className="text-gray-600 mb-6">
               Our mentors have successfully navigated the NSET journey and are passionate about helping you succeed.
             </p>
             <a 
               href="/signup" 
-              className="mt-4 inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
             >
               Register for Mentorship
             </a>
           </div>
         </div>
       </div>
+      
+      {/* CSS for hiding scrollbar but keeping functionality */}
+      <style jsx>{`
+        .hide-scrollbar {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;  /* Firefox */
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;  /* Chrome, Safari and Opera */
+        }
+      `}</style>
     </section>
   );
 };
