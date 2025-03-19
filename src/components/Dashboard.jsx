@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import FirestoreError from './FirestoreError';
-import NameLogo from '../assets/images/NameLogo.png';
+import Name from '../assets/images/Name.png';
 import { testConfigs } from '../data/testConfig';
 import { getUserPurchasedTests, getUserBookedInterviews, saveTestPurchase, saveMockInterviewBooking } from '../services/purchaseService';
 import { initiatePayment } from '../utils/razorpay';
@@ -440,7 +440,7 @@ const Dashboard = () => {
 
               {/* Logo moved next to menu icon */}
               <Link to="/" className="flex-shrink-0 flex items-center">
-                <img src={NameLogo} alt="Vector" className="h-22" />
+                <img src={Name} alt="Vector" className="h-22" />
               </Link>
             </div>
             

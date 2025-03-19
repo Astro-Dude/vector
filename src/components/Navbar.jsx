@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import NameLogo from '../assets/images/NameLogo.png';
+import Name from '../assets/images/Name.png';
 
 const Navbar = () => {
   const { currentUser, logout } = useAuth();
@@ -32,7 +32,7 @@ const Navbar = () => {
           <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center">
               <Link to="/">
-                <img src={NameLogo} alt="Vector" className="h-22" />
+                <img src={Name} alt="Vector" className="h-22" />
               </Link>
             </div>
           </div>
