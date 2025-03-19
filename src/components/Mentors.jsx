@@ -11,7 +11,7 @@ const Mentors = () => {
   const mentors = [
     {
       id: 1,
-      name: "Shaurya Verma",
+      name: "Shaurya Verma (Founder)",
       role: "Guided 25+ aspirants for NSET",
       achievements: "Offered 20% scholorship at SST, Member @NlogN-Club-SST, 3⭐ @CodeChef",
       linkedin: "https://www.linkedin.com/in/astro-dude/",
@@ -19,19 +19,19 @@ const Mentors = () => {
     },
     {
       id: 2,
+      name: "Rudhar Bajaj (Co-Founder)",
+      role: "",
+      achievements: "Offered 20% scholorship at SST, AIR 24k in JEE Advanced, AIR 5 in NSTSE",
+      linkedin: "https://www.linkedin.com/in/rudhar-bajaj/",
+      avatar: rudhar,
+    },
+    {
+      id: 3,
       name: "Hardik Jumnani",
       role: "",
       achievements: "Offered 25% scholorship at SST, President at SST ",
       linkedin: "https://www.linkedin.com/in/hardik-jumnani/",
       avatar: hardik,
-    },
-    {
-      id: 3,
-      name: "Rudhar Bajaj",
-      role: "",
-      achievements: "Offered 20% scholorship at SST, AIR 24k in JEE Advanced, AIR 5 in NSTSE",
-      linkedin: "https://www.linkedin.com/in/rudhar-bajaj/",
-      avatar: rudhar,
     },
     {
       id: 4,
