@@ -1,14 +1,13 @@
 import nsetQuestions from './nsetQuestions';
+import mock1 from './mock1';
 
 // Import other question sets when they're ready
-// You can uncomment these lines when you create the question files
-// import mockTest1Questions from './mockTest1Questions';
-// import mockTest2Questions from './mockTest2Questions';
+
 
 // Define test IDs as constants for consistency
 export const TEST_IDS = {
   SAMPLE: 'nset-sample',
-  MOCK_TEST_1: 'nset-mock-1',
+  MOCK_TEST_1: 'mock1',
 };
 
 // Define test components that will be shown in the MockTestStart page
@@ -55,13 +54,13 @@ export const testConfigs = {
   },
   
   [TEST_IDS.MOCK_TEST_1]: {
-    questions: placeholderQuestions,
+    questions: mock1,
     testName: "NSET 2024 Mock Test 1",
-    testDuration: 10,
+    testDuration: 120,
     totalQuestions: 1,
-    passScore: 70,
+    passScore: 35,
     isFree: false,
-    price: 1,
+    price: 49,
     testComponents: testComponents
   },
 };

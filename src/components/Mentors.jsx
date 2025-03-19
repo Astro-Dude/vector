@@ -11,7 +11,7 @@ const Mentors = () => {
   const mentors = [
     {
       id: 1,
-      name: "Shaurya Verma (Founder)",
+      name: `Shaurya Verma (Co-Founder)`,
       role: "Guided 25+ aspirants for NSET",
       achievements: "Offered 20% scholorship at SST, Member @NlogN-Club-SST, 3⭐ @CodeChef",
       linkedin: "https://www.linkedin.com/in/astro-dude/",
@@ -103,9 +103,9 @@ const Mentors = () => {
                   
                   <div className="pt-20 px-6 pb-6">
                     <div className="text-center mb-4">
-                      <h3 className="font-bold text-gray-900 text-xl">{mentor.name}</h3>
+                      <h3 className="font-bold text-gray-900 text-l">{mentor.name}</h3>
                       {mentor.role && (
-                        <p className="text-blue-600 font-medium text-sm">
+                        <p className="text-blue-600 font-medium text-xs">
                           {mentor.role}
                         </p>
                       )}
@@ -115,7 +115,7 @@ const Mentors = () => {
                       <h4 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">Achievements</h4>
                       <ul className="list-disc pl-5 space-y-1">
                         {getAchievementPoints(mentor.achievements).map((point, index) => (
-                          <li key={index} className="text-gray-600">
+                          <li key={index} className="text-gray-600 text-xs">
                             {point}
                           </li>
                         ))}

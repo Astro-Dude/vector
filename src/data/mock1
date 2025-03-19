@@ -1,0 +1,17 @@
+const mock1 = [
+  {
+    id: "q1",
+    questionText:
+      "The following number series follows a particular pattern. One of the numbers in the given series is wrong. Identify that wrong number: 3 15 63 129 1023 4095",
+    type: "text",
+    correctAnswer: "129",
+    explanation: `
+3, 15, 63, 129, 1023, 4095
+3 = 2^2 - 1, 15 = 2^4 - 1, 63 = 2^6 - 1, 129 = 2^7 + 1
+1023 = 2^10 - 1, 4095 = 2^12 - 1
+So wrong term is 129
+`,
+  },
+];
+
+export default mock1;
