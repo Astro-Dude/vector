@@ -47,13 +47,16 @@ const TestResults = ({
         questions.forEach(question => {
           if (
             question.correctAnswer && 
-            answers[question.id] && 
-            (
-              answers[question.id].toLowerCase() === question.correctAnswer.toLowerCase() || 
-              answers[question.id] === question.correctAnswer
-            )
+            answers[question.id] 
           ) {
-            correctCount++;
+            // Convert both answers to strings, lower case, and trim whitespace
+            const userAnswer = answers[question.id].toString().toLowerCase().trim();
+            const correctAnswer = question.correctAnswer.toString().toLowerCase().trim();
+            
+            // Compare the trimmed strings
+            if (userAnswer === correctAnswer) {
+              correctCount++;
+            }
           }
         });
         
