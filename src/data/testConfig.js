@@ -1,5 +1,5 @@
 import nsetQuestions from './nsetQuestions';
-import mock1 from './mock1';
+import mock1 from './mock1.js';
 
 // Import other question sets when they're ready
 
