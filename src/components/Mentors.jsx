@@ -4,6 +4,7 @@ import { FaLinkedin } from 'react-icons/fa';
 import shaurya from '../assets/images/shaurya.jpg';
 import hardik from '../assets/images/hardik.jpg';
 import rudhar from '../assets/images/rudhar.jpg';
+import krritin from '../assets/images/krritin.jpg';
 // Import other avatars similarly
 
 const Mentors = () => {
@@ -12,7 +13,7 @@ const Mentors = () => {
       id: 1,
       name: "Shaurya Verma",
       role: "Guided 25+ aspirants for NSET",
-      achievements: "Offered 20% scholorship at SST, Founder of Vector, 3⭐ at CodeChef - max rating 1649",
+      achievements: "Offered 20% scholorship at SST, Member @NlogN-Club-SST, 3⭐ @CodeChef",
       linkedin: "https://www.linkedin.com/in/astro-dude/",
       avatar: shaurya,
     },
@@ -31,6 +32,14 @@ const Mentors = () => {
       achievements: "Offered 20% scholorship at SST, AIR 24k in JEE Advanced, AIR 5 in NSTSE",
       linkedin: "https://www.linkedin.com/in/rudhar-bajaj/",
       avatar: rudhar,
+    },
+    {
+      id: 4,
+      name: "Krritin Keshan",
+      role: "",
+      achievements: "Core @ NlogN-Club-SST, Specialist @Codeforces, 3⭐ @CodeChef",
+      linkedin: "https://www.linkedin.com/in/krritin-keshan/",
+      avatar: krritin,
     }
   ];
 
