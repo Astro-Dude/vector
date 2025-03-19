@@ -144,7 +144,11 @@ const TestSolutions = () => {
             {currentQuestion.explanation && (
               <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
                 <h3 className="text-lg font-medium text-blue-800 mb-2">Explanation</h3>
-                <p className="text-blue-700">{currentQuestion.explanation}</p>
+                <div className="text-blue-700 prose prose-sm max-w-none">
+                  {currentQuestion.explanation.split('\n').map((paragraph, index) => (
+                    <p key={index} className="mb-2">{paragraph}</p>
+                  ))}
+                </div>
               </div>
             )}
           </div>

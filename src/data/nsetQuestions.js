@@ -10,7 +10,8 @@ const nsetQuestions = [
     type: "text",
     category: "Reasoning",
     correctAnswer: "09:52:30",
-    options: []
+    options: [],
+    explanation: "At 12 noon, the minute hand points South. One complete rotation is 360° in 60 minutes, so it moves at 6° per minute. South East is 135° from North, or 45° from South. To move 45° at 6° per minute takes 45/6 = 7.5 minutes. So the time is 09:45 + 7.5 minutes = 09:52:30."
   },
   {
     id: "q2",
