@@ -55,7 +55,7 @@ export const testConfigs = {
   
   [TEST_IDS.MOCK_TEST_1]: {
     questions: mock1,
-    testName: "NSET 2024 Mock Test 1",
+    testName: "Mock Test 1",
     testDuration: 120,
     totalQuestions: mock1.length,
     passScore: 35,

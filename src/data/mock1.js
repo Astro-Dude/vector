@@ -220,7 +220,43 @@ const mock1 = [
 
   Combining the results from both cases, the distinct exponents are 20, 21, 24, 27, and 30. Therefore, there are 5 distinct values possible for lcm(a^2, b^3).
 
-  The final answer is 5.`
+  The final answer is 5`
+  },
+  {
+    id: "q7",
+    questionText: `A box of chocolates contains 10 chocolates, of which 2 are poisonous. If you randomly eat two chocolates, what is the probability of eating at least one poisonous chocolate?\n\n**Note: Round off your answer to 3 decimal places. For example if the answer is 0.5 put 0.500 and if the answer is 0.5447 then put 0.545**`,
+    type: "text",
+    correctAnswer: "0.378",
+    explanation:`
+  The total ways to choose any 2 chocolates from the 10 chocolates: 
+  Total cases = C(10,2) = (10×9)/2 = 45. 
+
+  If none of the chocolates eaten are poisonous, then both chocolates must be chosen from the 8 non-poisonous chocolates: 
+  Non-poisonous cases = C(8,2) = (8×7)/2 = 28. 
+
+  The probability of not eating any poisonous chocolate is 
+  P(No Poisonous) = 28/45. 
+
+  Thus, the probability of eating at least one poisonous chocolate is 
+  P(At least one poisonous) = 1 - 28/45 = 17/45 ≈ 0.378. 
+
+  Final Answer: 0.378`
+  },
+  {
+    id: "q8",
+    questionText: `A project manager has a budget of $20,000 to allocate four different project initiatives, each requiring funding in multiple of $1000. Determine how many distinct ways the total budget can be completely utilize across the initiative ensuring that every dollar is allocated.\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
+    type: "text",
+    correctAnswer: "1771",
+    explanation:`This is a problem of distributing 20 identical units (each representing $1000) among 4 different initiatives. 
+  Using the stars and bars combinatorial method, the number of ways to distribute n identical objects among k groups is given by:
+  C(n + k - 1, k - 1).
+
+  Here, n = 20 (the 20 units of $1000), and k = 4 (the 4 initiatives).
+  So, the number of ways = C(20 + 4 - 1, 4 - 1) = C(23,3).
+
+  C(23,3) = (23 × 22 × 21) / (3 × 2 × 1) = 1771.
+
+  Final Answer: 1771.`
   }
 ];
 
