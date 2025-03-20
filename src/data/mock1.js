@@ -256,8 +256,88 @@ const mock1 = [
 
   C(23,3) = (23 × 22 × 21) / (3 × 2 × 1) = 1771.
 
-  Final Answer: 1771.`
-  }
+  Final Answer: 1771`
+  },
+  {
+    id: "q9",
+    questionText: `In the development of an advanced neural network for medical diagnosis, researchers assign unique indices to each feature based on its contribution to model accuracy. Special attention is given to "exotic" features-these are indices that, although not prime, exhibit unique characteristics improving model predictions significantly. Unlike standard composite numbers, exotic indices in this context are defined as indices that are composite but not divisible by 2, 3 or 5, making them rare and valuable for fine-tuning the model's performance. From the first 1000 feature indices used in the model, calculate the probability of randomly selecting an exotic index,\n\n**Note: Round off your answer to 3 decimal places. For example if the answer is 0.5 put 0.500 and if the answer is 0.5447 then put 0.545**`,
+    type: "text",
+    correctAnswer: "0.100",
+    explanation:`An "exotic" index is a composite number that is not divisible by 2, 3, or 5. 
+
+    Step 1: Count total numbers from 1 to 1000. There are 1000 numbers.
+    
+    Step 2: Use the Sieve of Eratosthenes-like approach to count numbers divisible by 2, 3, or 5.
+    - Numbers divisible by 2: 1000 / 2 = 500.
+    - Numbers divisible by 3: 1000 / 3 = 333.
+    - Numbers divisible by 5: 1000 / 5 = 200.
+    
+    Step 3: Apply Inclusion-Exclusion Principle.
+    - Numbers divisible by both 2 and 3 (i.e., 6): 1000 / 6 = 166.
+    - Numbers divisible by both 2 and 5 (i.e., 10): 1000 / 10 = 100.
+    - Numbers divisible by both 3 and 5 (i.e., 15): 1000 / 15 = 66.
+    - Numbers divisible by 2, 3, and 5 (i.e., 30): 1000 / 30 = 33.
+    
+    Total count of numbers divisible by 2, 3, or 5:
+    500 + 333 + 200 - 166 - 100 - 66 + 33 = 734.
+    
+    Step 4: Exotic numbers are composite and not among these 734.
+    - Total composite numbers in the range: 1000 - 168 (since 168 are primes) = 832.
+    - Exotic indices = 832 - 734 + 3 - 1 = 98.
+    
+    +3 because 2,3,5 are deducted twice(1st in prime count and 2nd for divisibility by 2,3,5)
+    +1 because 1 is neither prime nor composite
+    
+    Step 5: Probability of selecting an exotic index:
+    P(Exotic Index) = 100 / 1000 = 0.1.
+    
+    Final Answer: 0.100`
+  },
+  {
+    id: "q10",
+    questionText: `In Shark Tank, there are 5 sharks and 5 entrepreneurs pitching their ideas. Each shark decides to invest in an idea Independently With a probability of 0.5 What is the probability that exactly 3 entrepreneurs receive an investment.\n\n**Note: Round off your answer to 3 decimal places. For example if the answer is 0.5 put 0.500 and if the answer is 0.5447 then put 0.545**`,
+    type: "text",
+    correctAnswer: "0.009",
+    explanation:`Each entrepreneur receives an investment independently from the five sharks. 
+    The probability that a single entrepreneur does not receive any investment is 
+    P(No Investment) = (0.5)^5 = 1/32. 
+    
+    Thus, the probability that an entrepreneur receives at least one investment is 
+    P(At Least One Investment) = 1 - 1/32 = 31/32. 
+    
+    Let X be the number of entrepreneurs who receive at least one investment. 
+    X follows a binomial distribution with n = 5 and p = 31/32. 
+    
+    We need to find the probability that exactly 3 entrepreneurs receive an investment:
+    P(X = 3) = C(5,3) * (31/32)^3 * (1/32)^2 
+    = (5×4)/2 * (29791/32768) * (1/1024) 
+    = 10 * 29791 / 33554432 
+    ≈ 0.009. 
+    
+    Final Answer: 0.009`
+  },
+  {
+    id: "q11",
+    questionText: `There are 100 monkeys and 100 switches, both numbered from 1 to 100. Initially, all switches are turned off. 
+Each monkey toggles the switches according to the following rule: 
+- The 1st monkey toggles every switch (i.e., turns all switches ON). 
+- The 2nd monkey toggles every 2nd switch (i.e., switches 2, 4, 6, ...). 
+- The 3rd monkey toggles every 3rd switch (i.e., switches 3, 6, 9, ...). 
+- This process continues until the 100th monkey, who only toggles the 100th switch.
+Determine how many switches are ON after all monkeys have toggled the switches.\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
+    type: "text",
+    correctAnswer: "10",
+    explanation:`Each switch is toggled once for every divisor it has. 
+A switch will be ON if and only if it has an odd number of divisors. 
+A number has an odd number of divisors if and only if it is a perfect square.
+
+Among numbers 1 to 100, the perfect squares are: 
+1, 4, 9, 16, 25, 36, 49, 64, 81, 100. 
+
+There are 10 such perfect squares, so 10 switches will remain ON. 
+
+Final Answer: 10`
+  },
 ];
 
 export default mock1;
