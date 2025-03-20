@@ -338,6 +338,134 @@ There are 10 such perfect squares, so 10 switches will remain ON.
 
 Final Answer: 10`
   },
+  {
+    id: "q12",
+    questionText: `Due to a programming bug, a robot designed to process numerical data systematically skips any number that is divisible by 3 or ends with the digit 3. 
+This unintentional behavior generates a unique sequence of numbers starting with {1, 2, 4, 5, 7, 8, 10, 11, 14, 16, ...}. 
+Find the 100th term in this sequence based on the robot's quirky processing rule.\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
+    type: "text",
+    correctAnswer: "166",
+    explanation:`To determine the 100th term, we analyze how many numbers are skipped in a given range.
+
+  Within every block of 30 natural numbers:
+  - Numbers divisible by 3: 30 / 3 = 10.
+  - Numbers ending with 3: 3, 13, 23 (3 extra numbers).
+  - However, 3 is already counted in divisibility by 3.
+  - Total excluded numbers in 30: 10 + 2 = 12.
+  - Valid numbers in every 30: 30 - 12 = 18.
+
+  Now, to find the 100th valid number:
+  - Each full cycle of 30 contributes 18 valid numbers.
+  - Full cycles needed: 100 / 18 ≈ 5 full cycles (which gives 90 valid numbers).
+  - This covers up to: 5 × 30 = 150.
+
+  Now, we count the next 10 valid numbers beyond 150:
+  - 151 (valid), 152 (valid), 153 (skipped), 154 (valid), 155 (valid), 156 (skipped), 157 (valid), 158 (valid), 159 (skipped), 160 (valid), 161 (valid).
+
+  The 100th valid number is 166.
+
+  Final Answer: 166.`
+  },
+  {
+    id: "q13",
+    questionText: `The probability of a person not boarding a cab despite having paid for the seat is 0.4. A rideshare app always sells 6 seats in their cabs which can only accommodate 4 people.
+
+What is the probability that everyone who shows up for the ride gets a seat?\n\n**Note: Round off your answer to 3 decimal places. For example if the answer is 0.5 put 0.500 and if the answer is 0.5447 then put 0.545**`,
+    type: "text",
+    correctAnswer: "0.767",
+    explanation:`Let X be the number of people who actually show up for the ride.
+  Each person independently decides not to board with a probability of 0.4, meaning the probability of a person showing up is 1 - 0.4 = 0.6.
+
+  Since there are 6 people who booked, X follows a Binomial distribution:
+  X ~ Binomial(6, 0.6).
+
+  We need to find P(X ≤ 4), i.e., the probability that at most 4 people show up.
+
+  Using the binomial probability formula:
+  P(X = k) = C(n, k) * (p^k) * ((1-p)^(n-k))
+
+  where n = 6, p = 0.6.
+
+  Calculate probabilities:
+  P(X = 0) = C(6,0) * (0.6^0) * (0.4^6) = 1 * 1 * 0.004096 = 0.0041.
+  P(X = 1) = C(6,1) * (0.6^1) * (0.4^5) = 6 * 0.6 * 0.01024 = 0.0369.
+  P(X = 2) = C(6,2) * (0.6^2) * (0.4^4) = 15 * 0.36 * 0.0256 = 0.1382.
+  P(X = 3) = C(6,3) * (0.6^3) * (0.4^3) = 20 * 0.216 * 0.064 = 0.2765.
+  P(X = 4) = C(6,4) * (0.6^4) * (0.4^2) = 15 * 0.1296 * 0.16 = 0.3110.
+
+  Summing up:
+  P(X ≤ 4) = 0.0041 + 0.0369 + 0.1382 + 0.2765 + 0.3110 = 0.7667.
+
+  Final Answer: 0.767`
+  },
+  {
+    id: "q14",
+    questionText: `An AI developer licenses two neural network models for a total OF 6000 credits. The developer icenses one model at a loss of 20% below its original development cost and the other at a profit of 20% above its development cost, achieving an overall gain of 5% on the entire transaction.
+What is the combined original development cost oF these neural network models?\n\n**Note: Round off your answer to 3 decimal places. For example if the answer is 0.5 put 0.500 and if the answer is 0.5447 then put 0.545**`,
+    type: "text",
+    correctAnswer: "5714.286",
+    explanation:`Let the combined original development cost of the two neural network models be X.
+
+  Given that the overall gain is 5%, the total revenue can be expressed as:
+  1.05 * X = 6000
+
+  Solving for X:
+  X = 6000 / 1.05 = 5714.2857
+
+  Final Answer: 5714.286`
+  },
+  {
+    id: "q15",
+    questionText: `In an AI model's naming convention each model is assigned a unique identifier consisting of 3 characters selected from thc 26 letters of the English alphabet and the digits (0-9). However each identifier must include at least one vowel and one digit to ensure diversity. How many different identifiers are possible?\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
+    type: "text",
+    correctAnswer: "8550",
+    explanation:`The identifier consists of 3 characters chosen from 26 letters (A-Z) and 10 digits (0-9), making a total of 36 possible characters.
+    
+    Step 1: Total possible identifiers without restriction:
+    Total cases = 36^3 = 46656.
+    
+    Step 2: Identifiers that do not satisfy the given conditions:
+    
+    (a) Identifiers without any vowels:
+    There are 21 consonants + 10 digits = 31 choices per character.
+    Cases without vowels = 31^3 = 29791.
+    
+    (b) Identifiers without any digits:
+    There are 26 letters (including vowels and consonants).
+    Cases without digits = 26^3 = 17576.
+    
+    (c) Identifiers without vowels and digits (only consonants):
+    There are 21 consonants.
+    Cases without vowels and digits = 21^3 = 9261.
+    
+    Step 3: Applying Inclusion-Exclusion to count invalid cases:
+    Invalid cases = (29791 + 17576 - 9261) = 38106.
+    
+    Step 4: Valid identifiers:
+    Valid cases = Total cases - Invalid cases = 46656 - 38106 = 8550.
+    
+    Final Answer: 8550`
+  },
+  {
+    id: "q16",
+    questionText: `A school library has a rule that students can borrow a book for up to 1 year. The probability that a student will return the book in less than y months is given by y/24, where y can take any value from 0 to 12 months, If a student has not returned the book after 9 months, what is the conditional probability that they will return it after completion of a year?\n\n**Note: Round off your answer to 3 decimal places. For example if the answer is 0.5 put 0.500 and if the answer is 0.5447 then put 0.545**`,
+    type: "text",
+    correctAnswer: "0.800",
+    explanation:`We are given that the probability of returning the book within y months is P(Return ≤ y) = y/24 for 0 ≤ y ≤ 12.
+
+  Step 1: Find the probability that the book is not returned within 9 months:
+  P(Not returned by 9 months) = 1 - P(Return ≤ 9) = 1 - (9/24) = 15/24.
+
+  Step 2: Find the probability that the book is not returned within 12 months:
+  P(Not returned by 12 months) = 1 - P(Return ≤ 12) = 1 - (12/24) = 12/24.
+
+  Step 3: Compute the conditional probability that the book is still not returned after 12 months, given that it was not returned after 9 months:
+  P(Not returned by 12 | Not returned by 9) = P(Not returned by 12) / P(Not returned by 9)
+  = (12/24) / (15/24) = 12/15 = 4/5.
+
+  Final Answer: 0.800`
+  },
+  
 ];
 
 export default mock1;
