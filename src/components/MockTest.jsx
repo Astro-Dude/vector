@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PropTypes from 'prop-types';
+import ReactMarkdown from 'react-markdown';
 
 /**
  * A reusable test component that can be used with any set of questions
@@ -278,6 +279,42 @@ const MockTest = ({
   
   const currentQuestion = questions[currentQuestionIndex];
   
+  // Helper function to parse **bold** syntax 
+  const parseBoldText = (text) => {
+    const parts = [];
+    let lastIndex = 0;
+    const boldPattern = /\*\*(.*?)\*\*/g;
+    let match;
+
+    while ((match = boldPattern.exec(text)) !== null) {
+      // Add text before the match
+      if (match.index > lastIndex) {
+        parts.push({
+          type: 'text',
+          content: text.substring(lastIndex, match.index)
+        });
+      }
+      
+      // Add the bold text
+      parts.push({
+        type: 'bold',
+        content: match[1]
+      });
+      
+      lastIndex = match.index + match[0].length;
+    }
+    
+    // Add any remaining text
+    if (lastIndex < text.length) {
+      parts.push({
+        type: 'text',
+        content: text.substring(lastIndex)
+      });
+    }
+    
+    return parts;
+  };
+  
   return (
     <div ref={fullScreenRef} className="min-h-screen bg-gray-50 flex flex-col">
       {/* Fullscreen prompt if test not started */}
@@ -384,7 +421,15 @@ const MockTest = ({
                   </div>
                   
                   <div className="prose max-w-none mb-6">
-                    <p className="text-gray-900">{currentQuestion.questionText}</p>
+                    {currentQuestion.questionText.split('\n').map((paragraph, index) => (
+                      <p key={index} className="text-gray-900">
+                        {parseBoldText(paragraph).map((part, i) => (
+                          part.type === 'bold' 
+                            ? <strong key={i}>{part.content}</strong> 
+                            : <span key={i}>{part.content}</span>
+                        ))}
+                      </p>
+                    ))}
                   </div>
                   
                   {currentQuestion.type === 'mcq' && currentQuestion.options && currentQuestion.options.length > 0 ? (

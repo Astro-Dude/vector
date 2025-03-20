@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import FirestoreError from './FirestoreError';
 import Name from '../assets/images/Name.png';
+import Logo from '../assets/images/Logo.png';
 import { testConfigs } from '../data/testConfig';
 import { getUserPurchasedTests, getUserBookedInterviews, saveTestPurchase, saveMockInterviewBooking } from '../services/purchaseService';
 import { initiatePayment } from '../utils/razorpay';
@@ -438,10 +439,14 @@ const Dashboard = () => {
                 </svg>
               </button>
 
-              {/* Logo moved next to menu icon */}
-              <Link to="/" className="flex-shrink-0 flex items-center">
-                <img src={Name} alt="Vector" className="h-22" />
-              </Link>
+              <div className="flex items-center">
+                <Link to="/">
+                  <img src={Logo} alt="Logo" className="h-10" />
+                </Link>
+                <Link to="/" className="flex-shrink-0 flex items-center">
+                  <img src={Name} alt="Vector" className="h-20" />
+                </Link>
+              </div>
             </div>
             
             {/* Empty div to maintain flex spacing */}

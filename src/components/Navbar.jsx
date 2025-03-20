@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Name from '../assets/images/Name.png';
+import Logo from '../assets/images/Logo.png';
 
 const Navbar = () => {
   const { currentUser, logout } = useAuth();
@@ -32,7 +33,10 @@ const Navbar = () => {
           <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center">
               <Link to="/">
-                <img src={Name} alt="Vector" className="h-22" />
+                <img src={Logo} alt="Logo" className="h-10" />
+              </Link>
+              <Link to="/">
+                <img src={Name} alt="Vector" className="h-20" />
               </Link>
             </div>
           </div>

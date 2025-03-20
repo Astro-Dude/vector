@@ -47,7 +47,7 @@ export const testConfigs = {
     questions: nsetQuestions,
     testName: "NSET Free Sample Test",
     testDuration: 120,
-    totalQuestions: 21,
+    totalQuestions: nsetQuestions.length,
     passScore: 35,
     isFree: true,
     testComponents: testComponents
@@ -57,7 +57,7 @@ export const testConfigs = {
     questions: mock1,
     testName: "NSET 2024 Mock Test 1",
     testDuration: 120,
-    totalQuestions: 1,
+    totalQuestions: mock1.length,
     passScore: 35,
     isFree: false,
     price: 49,

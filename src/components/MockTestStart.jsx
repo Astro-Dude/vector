@@ -72,19 +72,23 @@ const MockTestStart = ({
             </div>
             <div className="flex items-start">
               <div className="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold text-sm mr-3">3</div>
-              <p>You can use the navigation panel to jump to any question. Unattempted questions will be marked in gray, attempted in green.</p>
+              <p><strong>Important:</strong> Make sure your answers don't have any extra spaces before or after the text. Answers with leading or trailing spaces may be marked as incorrect.</p>
             </div>
             <div className="flex items-start">
               <div className="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold text-sm mr-3">4</div>
-              <p>You can mark questions for review and come back to them later.</p>
+              <p>You can use the navigation panel to jump to any question. Unattempted questions will be marked in gray, attempted in green.</p>
             </div>
             <div className="flex items-start">
               <div className="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold text-sm mr-3">5</div>
+              <p>You can mark questions for review and come back to them later.</p>
+            </div>
+            <div className="flex items-start">
+              <div className="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold text-sm mr-3">6</div>
               <p>The test will automatically submit when the time is up. You can also submit manually before time expires.</p>
             </div>
             {fullScreenRequired && (
               <div className="flex items-start">
-                <div className="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold text-sm mr-3">6</div>
+                <div className="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-semibold text-sm mr-3">7</div>
                 <p><strong>Important:</strong> The test must be taken in full-screen mode. The test will automatically end if you exit full-screen mode for more than {fullScreenTimeout} seconds. Right-clicking and copy-pasting are disabled during the test.</p>
               </div>
             )}
