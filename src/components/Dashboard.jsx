@@ -816,7 +816,18 @@ const Dashboard = () => {
                       </ul>
                       <div className="mt-4 bg-white/10 p-3 rounded-md">
                         <p className="text-sm text-white">
-                          Use the <span className="font-bold bg-white/20 px-2 py-0.5 rounded">{referralCode}</span> referral code during registration 
+                          Use the 
+                          <button 
+                            ref={interviewCodeRef}
+                            onClick={copyInterviewCode}
+                            className="font-bold bg-white/20 px-2 py-0.5 rounded mx-1 hover:bg-white/30 transition-colors cursor-pointer flex items-center inline-flex"
+                          >
+                            {referralCode}
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                          </button> 
+                          referral code during registration 
                           for a <span className="font-bold underline">50% discount</span> on the registration fee!
                         </p>
                       </div>
@@ -897,7 +908,7 @@ const Dashboard = () => {
                           <div className="ml-3">
                             <h4 className="text-sm font-bold text-green-800">🔥 LIMITED TIME OFFER 🔥</h4>
                             <p className="mt-1 text-sm text-green-700">
-                              Use referral code 
+                              Get <span className="font-bold">100% REFUND</span> on your mock interview if you have used my referral code 
                               <button 
                                 ref={interviewCodeRef}
                                 onClick={copyInterviewCode}
@@ -908,7 +919,7 @@ const Dashboard = () => {
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                 </svg>
                               </button>
-                              for your Scaler NSET registration to get a 50% discount on registration fee + <span className="font-bold">100% REFUND</span> of your mock interview fee after your NSET exam!
+                              to register for NSET!
                             </p>
                           </div>
                         </div>

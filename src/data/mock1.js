@@ -539,26 +539,26 @@ What is the combined original development cost oF these neural network models?\n
     correctAnswer: "240000",
     explanation:`Let the distance between Station X and Station Y be 'd' km.
 
-  The time taken to travel from X to Y at 75 km/h is:
-  Time = d / 75.
-
-  The time taken to return from Y to X at 50 km/h is:
-  Time = d / 50.
-
-  The total travel time for both journeys is given as 8 hours:
-  (d / 75) + (d / 50) = 8.
-
-  To solve for 'd', take the LCM of 75 and 50, which is 150:
-  (2d / 150) + (3d / 150) = 8.
-  (5d / 150) = 8.
-  d / 30 = 8.
-  d = 8 × 30.
-  d = 240 km.
-
-  Since the answer is required in meters:
-  240 km = 240 × 1000 = 240000 meters.
-
-  Final Answer: 240000 meters.`
+    The time taken to travel from X to Y at 75 km/h is:
+    Time = d / 75.
+    
+    The time taken to return from Y to X at 50 km/h is:
+    Time = d / 50.
+    
+    The total travel time for both journeys is given as 8 hours:
+    (d / 75) + (d / 50) = 8.
+    
+    To solve for 'd', take the LCM of 75 and 50, which is 150:
+    (2d / 150) + (3d / 150) = 8.
+    (5d / 150) = 8.
+    d / 30 = 8.
+    d = 8 × 30.
+    d = 240 km.
+    
+    Since the answer is required in meters:
+    240 km = 240 × 1000 = 240000 meters.
+    
+    Final Answer: 240000 meters.`
   },
   {
     id: "q20",
@@ -566,90 +566,90 @@ What is the combined original development cost oF these neural network models?\n
     type: "text",
     correctAnswer: "240000",
     explanation:`Let the distance between Station X and Station Y be 'd' km.
-
-  The time taken to travel from X to Y at 75 km/h is:
-  Time = d / 75.
-
-  The time taken to return from Y to X at 50 km/h is:
-  Time = d / 50.
-
-  The total travel time for both journeys is given as 8 hours:
-  (d / 75) + (d / 50) = 8.
-
-  To solve for 'd', take the LCM of 75 and 50, which is 150:
-  (2d / 150) + (3d / 150) = 8.
-  (5d / 150) = 8.
-  d / 30 = 8.
-  d = 8 × 30.
-  d = 240 km.
-
-  Since the answer is required in meters:
-  240 km = 240 × 1000 = 240000 meters.
-
-  Final Answer: 240000 meters.`
+    
+    The time taken to travel from X to Y at 75 km/h is:
+    Time = d / 75.
+    
+    The time taken to return from Y to X at 50 km/h is:
+    Time = d / 50
+    
+    The total travel time for both journeys is given as 8 hours:
+    (d / 75) + (d / 50) = 8.
+    
+    To solve for 'd', take the LCM of 75 and 50, which is 150:
+    (2d / 150) + (3d / 150) = 8
+    (5d / 150) = 8
+    d / 30 = 8
+    d = 8 × 30
+    d = 240 km
+    
+    Since the answer is required in meters:
+    240 km = 240 × 1000 = 240000 meters.
+    
+    Final Answer: 240000 meters.`
   },
   {
     id: "q21",
     questionText: `An author writes a good book with a probability of 1/2. If it is good it is published with a probability of 2/3. If it is not, it is published with a probability of 1/4. The probability that he will get atleast one book published if he writes two is k, then the value of 576k is:
-\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
+    \n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
     type: "text",
     correctAnswer: "407",
     explanation:`Let A be the event that the author writes a good book.
-  P(A) = 1/2, so P(A') = 1 - 1/2 = 1/2.
-
-  Let P(P|A) be the probability of a good book being published.
-  P(P|A) = 2/3.
-
-  Let P(P|A') be the probability of a bad book being published.
-  P(P|A') = 1/4.
-
-  The probability that a single book gets published:
-  P(P) = P(A) * P(P|A) + P(A') * P(P|A')
-      = (1/2) * (2/3) + (1/2) * (1/4)
-      = 1/3 + 1/8
-      = 8/24 + 3/24
-      = 11/24.
-
-  If the author writes two books, the probability that at least one gets published is:
-  P(At least one) = 1 - P(None get published).
-
-  P(None get published) = (1 - 11/24) * (1 - 11/24)
-                        = (13/24) * (13/24)
-                        = 169/576.
-
-  Thus, P(At least one) = 1 - 169/576 = 407/576.
-
-  Since k = 407/576, the value of 576k is:
-  576 * (407/576) = 407.
-
-  Final Answer: 407`
+    P(A) = 1/2, so P(A') = 1 - 1/2 = 1/2.
+    
+    Let P(P|A) be the probability of a good book being published.
+    P(P|A) = 2/3.
+    
+    Let P(P|A') be the probability of a bad book being published.
+    P(P|A') = 1/4.
+    
+    The probability that a single book gets published:
+    P(P) = P(A) * P(P|A) + P(A') * P(P|A')
+    = (1/2) * (2/3) + (1/2) * (1/4)
+    = 1/3 + 1/8
+    = 8/24 + 3/24
+    = 11/24.
+    
+    If the author writes two books, the probability that at least one gets published is:
+    P(At least one) = 1 - P(None get published).
+    
+    P(None get published) = (1 - 11/24) * (1 - 11/24)
+    = (13/24) * (13/24)
+    = 169/576.
+    
+    Thus, P(At least one) = 1 - 169/576 = 407/576.
+    
+    Since k = 407/576, the value of 576k is:
+    576 * (407/576) = 407
+    
+    Final Answer: 407`
   },
   {
     id: "q22",
     questionText: `In the Legend's League edition of IPL cricket match, the only methods Of scoring runs ar through boundaries:
-  • if the ball crosses the boundary directly, it counts for 7 runs;
-  • otherwise, if the ball touches the ground before crossing the boundary, it scores 3 runs.
-  Determine the largest number of runs that cannot be scored by the team in an indefinitely long game.
-\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
+    • if the ball crosses the boundary directly, it counts for 7 runs;
+    • otherwise, if the ball touches the ground before crossing the boundary, it scores 3 runs.
+    Determine the largest number of runs that cannot be scored by the team in an indefinitely long game.
+    \n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
     type: "text",
     correctAnswer: "11",
     explanation:`This is a classic example of the Frobenius Coin Problem, where we need to find the largest number that cannot be represented as a non-negative integer combination of 7 and 3.
-
-  The formula for the largest number that cannot be formed using two relatively prime numbers a and b is:
-  Largest Unreachable Number = (a * b) - a - b.
-
-  Since 7 and 3 are relatively prime, we use the formula:
-  Largest Unreachable Number = (7 * 3) - 7 - 3
-                            = 21 - 7 - 3
-                            = 11.
-
-  Thus, the largest number of runs that cannot be scored by the team is:
-  Final Answer: 11.`
+    
+    The formula for the largest number that cannot be formed using two relatively prime numbers a and b is:
+    Largest Unreachable Number = (a * b) - a - b.
+    
+    Since 7 and 3 are relatively prime, we use the formula:
+    Largest Unreachable Number = (7 * 3) - 7 - 3
+    = 21 - 7 - 3
+    = 11.
+    
+    Thus, the largest number of runs that cannot be scored by the team is:
+    Final Answer: 11.`
   },
   {
     id: "q23",
     questionText: `how many unique palindromic number can be formed less than 4202093 ensuring that each digit in every number is prime? 
-\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
+    \n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
     type: "text",
     correctAnswer: "296",
     explanation: `Step 1: Identify Prime Digits
@@ -713,24 +713,24 @@ What is the combined original development cost oF these neural network models?\n
   {
     id: "q24",
     questionText: `You are given 8 identical glasses, one of which contains poison while the rest are safe. The poison acts exactly after 1 hour, meaning that if a mouse drinks from a poisoned glass, it will show symptoms after 1 hour.
-
-  You have only 1 hour to determine which glass contains the poison. To achieve this, what is the minimum number of mice you need to use?\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
-      type: "text",
-      correctAnswer: "3",
-      explanation: `
-  There are 8 identical glasses, and exactly one of them contains poison. The poison takes effect precisely after 1 hour, meaning that if a mouse drinks from the poisoned glass, it will show symptoms after 1 hour.
-
-  You have only 1 hour to determine which glass contains the poison. Given this constraint, you need to use the minimum number of mice to find the poisoned glass with certainty.
-
-  Solution & Explanation:
-
-  Step 1: Understanding the Total Possibilities
-  - Since there are 8 glasses, each glass can be assigned a unique binary number from 000 to 111 (which corresponds to numbers 1 to 8 in decimal).
-  - Using binary representation, we observe that we need 3 bits to uniquely identify 8 different glasses.
-
-  Step 2: Assigning Mice Based on Binary Representation
-  - Let’s label the glasses using 3-bit binary numbers:
-
+    
+    You have only 1 hour to determine which glass contains the poison. To achieve this, what is the minimum number of mice you need to use?\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
+    type: "text",
+    correctAnswer: "3",
+    explanation: `
+    There are 8 identical glasses, and exactly one of them contains poison. The poison takes effect precisely after 1 hour, meaning that if a mouse drinks from the poisoned glass, it will show symptoms after 1 hour.
+    
+    You have only 1 hour to determine which glass contains the poison. Given this constraint, you need to use the minimum number of mice to find the poisoned glass with certainty.
+    
+    Solution & Explanation:
+    
+    Step 1: Understanding the Total Possibilities
+    - Since there are 8 glasses, each glass can be assigned a unique binary number from 000 to 111 (which corresponds to numbers 1 to 8 in decimal).
+    - Using binary representation, we observe that we need 3 bits to uniquely identify 8 different glasses.
+    
+    Step 2: Assigning Mice Based on Binary Representation
+    - Let’s label the glasses using 3-bit binary numbers:
+    
     1 -> 000                    
     2 -> 001
     3 -> 010
@@ -739,134 +739,207 @@ What is the combined original development cost oF these neural network models?\n
     6 -> 101
     7 -> 110
     8 -> 111
-
-  - We now assign 3 mice, where each mouse is responsible for detecting a specific binary digit (bit):
+    
+    - We now assign 3 mice, where each mouse is responsible for detecting a specific binary digit (bit):
     - Mouse 1 drinks from all glasses where the rightmost bit is 1 → (Glasses 2, 4, 6, 8)
     - Mouse 2 drinks from all glasses where the middle bit is 1 → (Glasses 3, 4, 7, 8)
     - Mouse 3 drinks from all glasses where the leftmost bit is 1 → (Glasses 5, 6, 7, 8)
-
-  Step 3: Interpreting the Results
-  - After 1 hour, some mice will react based on which glass contained poison.
-  - The combination of which mice react and which don’t forms a 3-bit binary number, which corresponds to the poisoned glass.
-
-  Example Cases:
-  - If only Mouse 1 reacts, the result is 001 → Glass 2.
-  - If Mouse 1 and Mouse 2 react, but Mouse 3 does not, the result is 011 → Glass 4.
-  - If only Mouse 3 reacts, the result is 100 → Glass 5.
-  - If all three mice react, the result is 111 → Glass 8.
-
-  Since 3 mice are sufficient to uniquely determine which of the 8 glasses contains poison, the minimum number of mice required is 3.
-
-  Final Answer: 3`
+    
+    Step 3: Interpreting the Results
+    - After 1 hour, some mice will react based on which glass contained poison.
+    - The combination of which mice react and which don’t forms a 3-bit binary number, which corresponds to the poisoned glass.
+    
+    Example Cases:
+    - If only Mouse 1 reacts, the result is 001 → Glass 2.
+    - If Mouse 1 and Mouse 2 react, but Mouse 3 does not, the result is 011 → Glass 4.
+    - If only Mouse 3 reacts, the result is 100 → Glass 5.
+    - If all three mice react, the result is 111 → Glass 8.
+    
+    Since 3 mice are sufficient to uniquely determine which of the 8 glasses contains poison, the minimum number of mice required is 3.
+    
+    Final Answer: 3`
   },
   {
     id: "q25",
     questionText: `Find the remainder when 2^202310100100101 is divided by 15.\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
-      type: "text",
-      correctAnswer: "2",
-      explanation: `We need to find the remainder when 2^202310100100101 is divided by 15.
-  Step 1: Use Euler’s Theorem
-  ---------------------------
-  Euler’s theorem states that if gcd(a, m) = 1, then:
+    type: "text",
+    correctAnswer: "2",
+    explanation: `We need to find the remainder when 2^202310100100101 is divided by 15.
+    Step 1: Use Euler’s Theorem
+    ---------------------------
+    Euler’s theorem states that if gcd(a, m) = 1, then:
+    
+    a^φ(m) ≡ 1 (mod m)
+    
+    For m = 15:
+    φ(15) = (3-1) * (5-1) = 2 * 4 = 8
 
-      a^φ(m) ≡ 1 (mod m)
-
-  For m = 15:
-      φ(15) = (3-1) * (5-1) = 2 * 4 = 8
-
-  Thus, we get:
-
-      2^8 ≡ 1 (mod 15)
-
-  Step 2: Reduce the Exponent Modulo 8
-  -------------------------------------
-  Since 2^8 ≡ 1 (mod 15), we reduce the exponent:
-
-      202310100100101 mod 8
-
-  We check the last three binary digits of the exponent (since 2^8 cycles every 8):
-
-      202310100100101 in binary ends in **101**
-      101 in decimal = 5
-
-  Step 3: Compute 2^5 mod 15
-  ---------------------------
-  Now, we compute:
-
-      2^5 = 32
-
-      32 mod 15 = 2
-
-  Final Answer: 2`
+    Thus, we get:
+    
+    2^8 ≡ 1 (mod 15)
+    
+    Step 2: Reduce the Exponent Modulo 8
+    -------------------------------------
+    Since 2^8 ≡ 1 (mod 15), we reduce the exponent:
+    
+    202310100100101 mod 8
+    
+    We check the last three binary digits of the exponent (since 2^8 cycles every 8):
+    
+    202310100100101 in binary ends in **101**
+    101 in decimal = 5
+    
+    Step 3: Compute 2^5 mod 15
+    ---------------------------
+    Now, we compute:
+    
+    2^5 = 32
+    
+    32 mod 15 = 2
+    
+    Final Answer: 2`
   },
   {
     id: "q26",
     questionText: `Consider navigating a 2D grid where movement is permitted in three distinct ways:
-  1. Vertically: You can move from a cell (i, j) to (i+1, j) or (i-1, j).
-  2. Horizontally: You can move from (i, j) to (i, j+1) or (i, j-1).
-  3. Diagonally: You can move from (i, j) to any of the four diagonal neighbors – (i-1, j-1), (i+1, j+1), (i-1, j+1), or (i+1, j-1).
-
-  Given a starting point (10,10) and a destination (20,28) on this grid, calculate the number of possible paths to reach the destination using the minimum number of moves. The moves can be a combination of horizontal, vertical, and diagonal steps.\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
-        type: "text",
-        correctAnswer: "2",
-        explanation: `Step 1: Determine the Required Displacement:
+    1. Vertically: You can move from a cell (i, j) to (i+1, j) or (i-1, j).
+    2. Horizontally: You can move from (i, j) to (i, j+1) or (i, j-1).
+    3. Diagonally: You can move from (i, j) to any of the four diagonal neighbors – (i-1, j-1), (i+1, j+1), (i-1, j+1), or (i+1, j-1).
+    
+    Given a starting point (10,10) and a destination (20,28) on this grid, calculate the number of possible paths to reach the destination using the minimum number of moves. The moves can be a combination of horizontal, vertical, and diagonal steps.\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
+    type: "text",
+    correctAnswer: "2",
+    explanation: `Step 1: Determine the Required Displacement:
     - Vertical displacement (Δi) = 20 - 10 = 10.
     - Horizontal displacement (Δj) = 28 - 10 = 18.
-
-  Step 2: Use Diagonal Moves to Cover Both Displacements:
+    
+    Step 2: Use Diagonal Moves to Cover Both Displacements:
     - Each diagonal move increases both coordinates by 1.
     - Maximum diagonal moves possible = min(10, 18) = 10.
     - After 10 diagonal moves, the position becomes (20,20).
-
-  Step 3: Cover the Remaining Displacement:
+    
+    Step 3: Cover the Remaining Displacement:
     - After the diagonal moves, the remaining horizontal displacement = 28 - 20 = 8.
     - These 8 units must be covered by horizontal moves.
-
-  Thus, the minimum number of moves required is:
+    
+    Thus, the minimum number of moves required is:
     10 (diagonal moves) + 8 (horizontal moves) = 18 moves.
-
-  Step 4: Counting Distinct Strategies:
+    
+    Step 4: Counting Distinct Strategies:
     While one might compute the number of arrangements of 10 diagonal and 8 horizontal moves as C(18,10) = 43758,
     if we consider only the high-level strategies (i.e. the order in which the groups of moves occur), then there are 2:
-      - Strategy 1: Perform all 10 diagonal moves first, then all 8 horizontal moves.
-      - Strategy 2: Perform all 8 horizontal moves first, then all 10 diagonal moves.
-
-  Final Answer: 2.`
+    - Strategy 1: Perform all 10 diagonal moves first, then all 8 horizontal moves.
+    - Strategy 2: Perform all 8 horizontal moves first, then all 10 diagonal moves.
+    
+    Final Answer: 2.`
   },
   {
     id: "q27",
     questionText: `Find the sum of numbers from 500 to 1000 having exactly 3 divisors.\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
-        type: "text",
-        correctAnswer: "2331",
-        explanation: `A number has exactly 3 divisors if and only if it is the square of a prime number. This is because:
-  - For a number n = p^2 (where p is prime), the divisors are: 1, p, and p^2.
-
-  To find such numbers between 500 and 1000:
-
-  1. Determine the range for p:
+    type: "text",
+    correctAnswer: "2331",
+    explanation: `A number has exactly 3 divisors if and only if it is the square of a prime number. This is because:
+    - For a number n = p^2 (where p is prime), the divisors are: 1, p, and p^2.
+    
+    To find such numbers between 500 and 1000:
+    
+    1. Determine the range for p:
     - sqrt(500) ≈ 22.36
     - sqrt(1000) ≈ 31.62
     - Therefore, p must be a prime number between 23 and 31.
-
-  2. Identify prime numbers in this range:
+    
+    2. Identify prime numbers in this range:
     - The prime numbers between 23 and 31 are: 23, 29, and 31.
-
-  3. Calculate their squares:
+    
+    3. Calculate their squares:
     - 23^2 = 529
     - 29^2 = 841
     - 31^2 = 961
-
-  4. Sum these squares:
+    
+    4. Sum these squares:
     - 529 + 841 + 961 = 2331
-
-  Final Answer: 2331.`
+    
+    Final Answer: 2331.`
   },
   {
     id: "q28",
     questionText: `After leaving a 100g solution of water and sugar under the sun for an hour, the solution's composition changes from 98% water and 2% sugar to 90% water and 10% sugar. What is the updated weight of the solution (in grams)\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
-        type: "text",
-        correctAnswer: "20",
-        explanation: `Initially, the solution weighs 100 grams, with 98 grams of water and 2 grams of sugar. After evaporation, the sugar content remains at 2 grams, now constituting 10% of the solution's weight. Therefore, the total weight of the solution is calculated as 2 grams / 0.10 = 20 grams.`
+    type: "text",
+    correctAnswer: "20",
+    explanation: `Initially, the solution weighs 100 grams, with 98 grams of water and 2 grams of sugar. After evaporation, the sugar content remains at 2 grams, now constituting 10% of the solution's weight. Therefore, the total weight of the solution is calculated as 2 grams / 0.10 = 20 grams.`
+  },
+  {
+    id: "q29",
+    questionText: `Mr. Dupont is a professional wine taster. When given a French wine, he will identify it with probability ().9 correctly as French, and will mistake it for a Californian wine with probability 0.1. When given a Californian wine, he will identity it with probability 0.8 correctly as Californian, and will mistake it for  a French wine with probability 0.2. Suppose that Mr. Dupont is given ten unlabelled glasses of wine, three with French and seven with Californian wines.  He randomly picks a glass, tries the wine, and solemnly says: "French". The probability that the wine he tasted was Californian, is nearly equal to
+    \n\n**Note: Round off your answer to 3 decimal places. For example if the answer is 0.5 put 0.500 and if the answer is 0.5447 then put 0.545**`,
+    type: "text",
+    correctAnswer: "0.341",
+    explanation:`Let F be the event that the wine is French, and C be the event that the wine is Californian. The prior probabilities are:
+    P(F) = 3/10 = 0.3 and P(C) = 7/10 = 0.7. Dupont's identification probabilities:
+    If the wine is French, he says "French" with probability 0.9. If the wine is Californian, he mistakenly says "French" with probability 0.2. By Bayes' theorem, the probability that the wine is Californian given that he said "French" is:
+    P(C | "French") = (P("French" | C) * P(C)) / (P("French" | F)*P(F) + P("French" | C)*P(C))
+    = (0.2*0.7) / (0.9*0.3 + 0.2*0.7)
+    = (0.14) / (0.27 + 0.14)
+    = 0.14 / 0.41
+    ≈ 0.3414
+    Final Answer: 0.341`
+  },
+  {
+    id: "q30",
+    questionText: `Find the number of nonnegative integer solutions to the equation:
+    x₁ + x₂ + x₃ + x₄ = 20
+with the restrictions 0 ≤ xᵢ ≤ 7 for each i = 1, 2, 3, 4.\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
+    type: "text",
+    correctAnswer: "161",
+    explanation: `Step 1: Without restrictions, the number of nonnegative integer solutions to
+  x₁ + x₂ + x₃ + x₄ = 20 
+  is given by the stars and bars formula:
+    Total = C(20+4-1, 4-1) = C(23, 3) = 1771.
+
+  Step 2: We now impose the restrictions 0 ≤ xᵢ ≤ 7. Let Aᵢ be the event that xᵢ ≥ 8.
+  For any particular variable, say x₁, if x₁ ≥ 8, set y₁ = x₁ - 8 (so y₁ ≥ 0). Then the equation becomes:
+    y₁ + x₂ + x₃ + x₄ = 20 - 8 = 12.
+  The number of solutions for this modified equation is:
+    C(12+4-1, 4-1) = C(15, 3) = 455.
+  Since there are 4 variables, the total number of solutions with any one variable ≥ 8 is 4 × 455 = 1820.
+
+  Step 3: For any two variables, say x₁ and x₂, that are both ≥ 8, set y₁ = x₁ - 8 and y₂ = x₂ - 8. Then:
+    y₁ + y₂ + x₃ + x₄ = 20 - 16 = 4.
+  The number of solutions is:
+    C(4+4-1, 4-1) = C(7, 3) = 35.
+  There are C(4, 2) = 6 pairs of variables, so the total number for two variables violating is 6 × 35 = 210.
+
+  Step 4: For three or four variables violating (i.e., being ≥ 8), the right-hand side of the adjusted equation becomes negative, yielding no valid solutions.
+
+  Step 5: By the principle of inclusion–exclusion, the number of valid solutions is:
+    Valid = Total - (sum over one variable) + (sum over two variables)
+          = 1771 - 1820 + 210
+          = 161.
+
+  Final Answer: 161`
+  {
+    id: "q30",
+    questionText: `Find the number of circular arrangements of 12 persons (arrangements that are considered the same under rotation) 
+such that three specified persons A, B, and C are not seated adjacent to one another (i.e. no two of them are neighbors).
+\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
+    type: "text",
+    correctAnswer: "20321280",
+    explanation: `Step 1: Arrange the 9 other persons.
+  Since rotations are considered identical, fix one person and arrange the remaining 8 persons in a circle.
+  Number of arrangements = (9 - 1)! = 8! = 40320.
+
+  Step 2: Identify gaps for placing A, B, and C.
+  In a circular arrangement of 9 persons, there are 9 gaps (one between each pair of consecutive persons, including the gap between the last and first).
+  We need to choose 3 of these 9 gaps in which to place A, B, and C.
+  Number of ways = C(9, 3) = 84.
+
+  Step 3: Arrange A, B, and C in the chosen gaps.
+  They can be arranged in 3! = 6 ways.
+
+  Step 4: Compute the total number of valid arrangements.
+  Total = 8! × C(9, 3) × 3! = 40320 × 84 × 6 = 20321280.
+
+  Final Answer: 20321280.`
   },
 ];
 
