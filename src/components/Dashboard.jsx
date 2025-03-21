@@ -789,7 +789,56 @@ const Dashboard = () => {
           ) : (
             /* Dashboard grid - only visible when syllabus is not shown */
             <>
+              <div className="bg-gradient-to-r from-blue-600 to-indigo-700 overflow-hidden shadow rounded-lg mb-6 text-white">
+                <div className="px-4 py-5 sm:p-6">
+                  <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold text-white">Book Your Scaler NSET Exam</h3>
+                      <ul className="mt-2 space-y-1">
+                        <li className="flex items-start">
+                          <svg className="h-5 w-5 text-green-300 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="text-white">Register for the official Scaler NSET exam</span>
+                        </li>
+                        <li className="flex items-start">
+                          <svg className="h-5 w-5 text-green-300 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="text-white">Get 50% discount on registration fee using our referral code</span>
+                        </li>
+                        <li className="flex items-start">
+                          <svg className="h-5 w-5 text-green-300 mr-2 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span className="text-white">Secure your spot for the next NSET intake</span>
+                        </li>
+                      </ul>
+                      <div className="mt-4 bg-white/10 p-3 rounded-md">
+                        <p className="text-sm text-white">
+                          Use the <span className="font-bold bg-white/20 px-2 py-0.5 rounded">{referralCode}</span> referral code during registration 
+                          for a <span className="font-bold underline">50% discount</span> on the registration fee!
+                        </p>
+                      </div>
+                    </div>
+                    <div>
+                      <a 
+                        href="https://www.scaler.com/school-of-technology/application/?rce=4dd65cf3cf67&rcy=1&utm_source=SST_student_referral"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center px-5 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-indigo-700 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white focus:ring-offset-indigo-700 transition-all duration-200"
+                      >
+                        Book NSET Exam
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                        </svg>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              </div>
               {/* Mock Interview Section */}
+            
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 overflow-hidden shadow rounded-lg mb-6">
                 <div className="px-4 py-5 sm:p-6">
                   <div className="flex justify-between items-center mb-4">
@@ -914,6 +963,7 @@ const Dashboard = () => {
                   </div>
                 </div>
               </div>
+              {/* Add this new section above the Test Series section */}
             
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {/* Resources/Test Series section */}

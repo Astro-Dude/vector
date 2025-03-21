@@ -759,6 +759,115 @@ What is the combined original development cost oF these neural network models?\n
 
   Final Answer: 3`
   },
+  {
+    id: "q25",
+    questionText: `Find the remainder when 2^202310100100101 is divided by 15.\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
+      type: "text",
+      correctAnswer: "2",
+      explanation: `We need to find the remainder when 2^202310100100101 is divided by 15.
+  Step 1: Use Euler’s Theorem
+  ---------------------------
+  Euler’s theorem states that if gcd(a, m) = 1, then:
+
+      a^φ(m) ≡ 1 (mod m)
+
+  For m = 15:
+      φ(15) = (3-1) * (5-1) = 2 * 4 = 8
+
+  Thus, we get:
+
+      2^8 ≡ 1 (mod 15)
+
+  Step 2: Reduce the Exponent Modulo 8
+  -------------------------------------
+  Since 2^8 ≡ 1 (mod 15), we reduce the exponent:
+
+      202310100100101 mod 8
+
+  We check the last three binary digits of the exponent (since 2^8 cycles every 8):
+
+      202310100100101 in binary ends in **101**
+      101 in decimal = 5
+
+  Step 3: Compute 2^5 mod 15
+  ---------------------------
+  Now, we compute:
+
+      2^5 = 32
+
+      32 mod 15 = 2
+
+  Final Answer: 2`
+  },
+  {
+    id: "q26",
+    questionText: `Consider navigating a 2D grid where movement is permitted in three distinct ways:
+  1. Vertically: You can move from a cell (i, j) to (i+1, j) or (i-1, j).
+  2. Horizontally: You can move from (i, j) to (i, j+1) or (i, j-1).
+  3. Diagonally: You can move from (i, j) to any of the four diagonal neighbors – (i-1, j-1), (i+1, j+1), (i-1, j+1), or (i+1, j-1).
+
+  Given a starting point (10,10) and a destination (20,28) on this grid, calculate the number of possible paths to reach the destination using the minimum number of moves. The moves can be a combination of horizontal, vertical, and diagonal steps.\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
+        type: "text",
+        correctAnswer: "2",
+        explanation: `Step 1: Determine the Required Displacement:
+    - Vertical displacement (Δi) = 20 - 10 = 10.
+    - Horizontal displacement (Δj) = 28 - 10 = 18.
+
+  Step 2: Use Diagonal Moves to Cover Both Displacements:
+    - Each diagonal move increases both coordinates by 1.
+    - Maximum diagonal moves possible = min(10, 18) = 10.
+    - After 10 diagonal moves, the position becomes (20,20).
+
+  Step 3: Cover the Remaining Displacement:
+    - After the diagonal moves, the remaining horizontal displacement = 28 - 20 = 8.
+    - These 8 units must be covered by horizontal moves.
+
+  Thus, the minimum number of moves required is:
+    10 (diagonal moves) + 8 (horizontal moves) = 18 moves.
+
+  Step 4: Counting Distinct Strategies:
+    While one might compute the number of arrangements of 10 diagonal and 8 horizontal moves as C(18,10) = 43758,
+    if we consider only the high-level strategies (i.e. the order in which the groups of moves occur), then there are 2:
+      - Strategy 1: Perform all 10 diagonal moves first, then all 8 horizontal moves.
+      - Strategy 2: Perform all 8 horizontal moves first, then all 10 diagonal moves.
+
+  Final Answer: 2.`
+  },
+  {
+    id: "q27",
+    questionText: `Find the sum of numbers from 500 to 1000 having exactly 3 divisors.\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
+        type: "text",
+        correctAnswer: "2331",
+        explanation: `A number has exactly 3 divisors if and only if it is the square of a prime number. This is because:
+  - For a number n = p^2 (where p is prime), the divisors are: 1, p, and p^2.
+
+  To find such numbers between 500 and 1000:
+
+  1. Determine the range for p:
+    - sqrt(500) ≈ 22.36
+    - sqrt(1000) ≈ 31.62
+    - Therefore, p must be a prime number between 23 and 31.
+
+  2. Identify prime numbers in this range:
+    - The prime numbers between 23 and 31 are: 23, 29, and 31.
+
+  3. Calculate their squares:
+    - 23^2 = 529
+    - 29^2 = 841
+    - 31^2 = 961
+
+  4. Sum these squares:
+    - 529 + 841 + 961 = 2331
+
+  Final Answer: 2331.`
+  },
+  {
+    id: "q28",
+    questionText: `After leaving a 100g solution of water and sugar under the sun for an hour, the solution's composition changes from 98% water and 2% sugar to 90% water and 10% sugar. What is the updated weight of the solution (in grams)\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
+        type: "text",
+        correctAnswer: "20",
+        explanation: `Initially, the solution weighs 100 grams, with 98 grams of water and 2 grams of sugar. After evaporation, the sugar content remains at 2 grams, now constituting 10% of the solution's weight. Therefore, the total weight of the solution is calculated as 2 grams / 0.10 = 20 grams.`
+  },
 ];
 
 export default mock1;

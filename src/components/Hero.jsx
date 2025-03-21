@@ -36,7 +36,7 @@ const Hero = () => {
               </div>
               <p className="text-white text-sm mr-3">Use this code for 50% OFF on NSET registration (₹500 instead of ₹1000)</p>
               <a 
-                href="https://www.scaler.com/school-of-technology/application/" 
+                href="https://www.scaler.com/school-of-technology/application/?rce=4dd65cf3cf67&rcy=1&utm_source=SST_student_referral " 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="inline-block px-3 py-1 bg-white text-blue-600 rounded-full font-bold text-sm hover:bg-blue-50 transition-colors"
