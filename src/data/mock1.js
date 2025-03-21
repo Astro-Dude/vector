@@ -452,20 +452,313 @@ What is the combined original development cost oF these neural network models?\n
     type: "text",
     correctAnswer: "0.800",
     explanation:`We are given that the probability of returning the book within y months is P(Return ≤ y) = y/24 for 0 ≤ y ≤ 12.
-
-  Step 1: Find the probability that the book is not returned within 9 months:
-  P(Not returned by 9 months) = 1 - P(Return ≤ 9) = 1 - (9/24) = 15/24.
-
-  Step 2: Find the probability that the book is not returned within 12 months:
-  P(Not returned by 12 months) = 1 - P(Return ≤ 12) = 1 - (12/24) = 12/24.
-
-  Step 3: Compute the conditional probability that the book is still not returned after 12 months, given that it was not returned after 9 months:
-  P(Not returned by 12 | Not returned by 9) = P(Not returned by 12) / P(Not returned by 9)
-  = (12/24) / (15/24) = 12/15 = 4/5.
-
-  Final Answer: 0.800`
+    
+    Step 1: Find the probability that the book is not returned within 9 months:
+    P(Not returned by 9 months) = 1 - P(Return ≤ 9) = 1 - (9/24) = 15/24.
+    
+    Step 2: Find the probability that the book is not returned within 12 months:
+    P(Not returned by 12 months) = 1 - P(Return ≤ 12) = 1 - (12/24) = 12/24.
+    
+    Step 3: Compute the conditional probability that the book is still not returned after 12 months, given that it was not returned after 9 months:
+    P(Not returned by 12 | Not returned by 9) = P(Not returned by 12) / P(Not returned by 9)
+    = (12/24) / (15/24) = 12/15 = 4/5.
+    
+    Final Answer: 0.800`
   },
-  
+  {
+    id: "q17",
+    questionText: `In a large corporate office, each employee receives a unique entry code assigned to activate only on a specific day of the year, with a total of 365 possible activation days available-mirroring the number of days in a non-leap year. Given a scenario where ‘n’ employees are gathered in a conference room, determine the minimum number of employees, ‘n’, required such that the probability of no two employees sharing the same entry code activation day is less than 50%.\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
+    type: "text",
+    correctAnswer: "23",
+    explanation:`This is a variation of the famous Birthday Paradox problem.
+    
+    We define the probability that no two employees share the same activation day. The probability that the first employee gets a unique day is 365/365. The second employee must get a different day, which happens with probability 364/365. Similarly, the third employee must get a different day, which happens with probability 363/365, and so on.
+    
+    The probability that all ‘n’ employees have different activation days is:
+    
+    P(unique) = (365/365) × (364/365) × (363/365) × ... × (365-n+1)/365.
+    
+    We need to find the smallest ‘n’ such that P(unique) < 0.5.
+    
+    By computing iteratively:
+    
+    - For n = 22, P(unique) ≈ 0.524
+    - For n = 23, P(unique) ≈ 0.493 < 0.5
+    
+    Thus, the minimum number of employees required such that the probability of at least two employees sharing the same activation day is more than 50% is:
+    
+    Final Answer: 23.`
+  },
+  {
+    id: "q18",
+    questionText: `Starting her journey at the same time, Emily arrives at school at 7:20 am if she travels with a speed of 10 km/hr, and at 6:45 am if she travels with a speed of 18 km/hr If Emily leaves home at 6:30 am, what speed, in km/hr, should she maintain to reach school precisely at 7:00 am?\n\n**Note: Round off your answer to 3 decimal places. For example if the answer is 0.5 put 0.500 and if the answer is 0.5447 then put 0.545**`,
+    type: "text",
+    correctAnswer: "26.250",
+    explanation:`Let the distance from Emily's home to school be 'd' km, and let her original travel time at 10 km/hr be 't' hours.
+    
+    Using the formula Distance = Speed × Time, we get:
+    
+    d = 10t  ----(1)
+    
+    For the second case, when she travels at 18 km/hr, she reaches school at 6:45 am. This means she takes 35 minutes (or 35/60 = 7/12 hours) less than her original travel time 't'. So,
+    
+    d = 18(t - 7/12)  ----(2)
+    
+    Equating both equations:
+    
+    10t = 18(t - 7/12)
+    
+    Expanding:
+    
+    10t = 18t - (18 × 7/12)
+    
+    10t = 18t - 10.5
+    
+    8t = 10.5
+    
+    t = 10.5 / 8 = 1.3125 hours
+    
+    Now, substituting t in equation (1):
+    
+    d = 10 × 1.3125 = 13.125 km
+    
+    Emily leaves home at 6:30 am and wants to reach school at 7:00 am, meaning she has 30 minutes (or 0.5 hours) to travel.
+    
+    Let 'v' be the required speed:
+    
+    v × 0.5 = 13.125
+    
+    v = 13.125 / 0.5 = 26.25 km/hr
+    
+    Final Answer: 26.25 km/hr.`
+  },
+  {
+    id: "q19",
+    questionText: `A train travels from Station X to Station Y at an average speed of 75 km/h and returns to Station X at an average speed of 50 km/h. If the total travel time is 8 hours, find the distance between the two stations in meters.\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
+    type: "text",
+    correctAnswer: "240000",
+    explanation:`Let the distance between Station X and Station Y be 'd' km.
+
+  The time taken to travel from X to Y at 75 km/h is:
+  Time = d / 75.
+
+  The time taken to return from Y to X at 50 km/h is:
+  Time = d / 50.
+
+  The total travel time for both journeys is given as 8 hours:
+  (d / 75) + (d / 50) = 8.
+
+  To solve for 'd', take the LCM of 75 and 50, which is 150:
+  (2d / 150) + (3d / 150) = 8.
+  (5d / 150) = 8.
+  d / 30 = 8.
+  d = 8 × 30.
+  d = 240 km.
+
+  Since the answer is required in meters:
+  240 km = 240 × 1000 = 240000 meters.
+
+  Final Answer: 240000 meters.`
+  },
+  {
+    id: "q20",
+    questionText: `A train travels from Station X to Station Y at an average speed of 75 km/h and returns to Station X at an average speed of 50 km/h. If the total travel time is 8 hours, find the distance between the two stations in meters.\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
+    type: "text",
+    correctAnswer: "240000",
+    explanation:`Let the distance between Station X and Station Y be 'd' km.
+
+  The time taken to travel from X to Y at 75 km/h is:
+  Time = d / 75.
+
+  The time taken to return from Y to X at 50 km/h is:
+  Time = d / 50.
+
+  The total travel time for both journeys is given as 8 hours:
+  (d / 75) + (d / 50) = 8.
+
+  To solve for 'd', take the LCM of 75 and 50, which is 150:
+  (2d / 150) + (3d / 150) = 8.
+  (5d / 150) = 8.
+  d / 30 = 8.
+  d = 8 × 30.
+  d = 240 km.
+
+  Since the answer is required in meters:
+  240 km = 240 × 1000 = 240000 meters.
+
+  Final Answer: 240000 meters.`
+  },
+  {
+    id: "q21",
+    questionText: `An author writes a good book with a probability of 1/2. If it is good it is published with a probability of 2/3. If it is not, it is published with a probability of 1/4. The probability that he will get atleast one book published if he writes two is k, then the value of 576k is:
+\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
+    type: "text",
+    correctAnswer: "407",
+    explanation:`Let A be the event that the author writes a good book.
+  P(A) = 1/2, so P(A') = 1 - 1/2 = 1/2.
+
+  Let P(P|A) be the probability of a good book being published.
+  P(P|A) = 2/3.
+
+  Let P(P|A') be the probability of a bad book being published.
+  P(P|A') = 1/4.
+
+  The probability that a single book gets published:
+  P(P) = P(A) * P(P|A) + P(A') * P(P|A')
+      = (1/2) * (2/3) + (1/2) * (1/4)
+      = 1/3 + 1/8
+      = 8/24 + 3/24
+      = 11/24.
+
+  If the author writes two books, the probability that at least one gets published is:
+  P(At least one) = 1 - P(None get published).
+
+  P(None get published) = (1 - 11/24) * (1 - 11/24)
+                        = (13/24) * (13/24)
+                        = 169/576.
+
+  Thus, P(At least one) = 1 - 169/576 = 407/576.
+
+  Since k = 407/576, the value of 576k is:
+  576 * (407/576) = 407.
+
+  Final Answer: 407`
+  },
+  {
+    id: "q22",
+    questionText: `In the Legend's League edition of IPL cricket match, the only methods Of scoring runs ar through boundaries:
+  • if the ball crosses the boundary directly, it counts for 7 runs;
+  • otherwise, if the ball touches the ground before crossing the boundary, it scores 3 runs.
+  Determine the largest number of runs that cannot be scored by the team in an indefinitely long game.
+\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
+    type: "text",
+    correctAnswer: "11",
+    explanation:`This is a classic example of the Frobenius Coin Problem, where we need to find the largest number that cannot be represented as a non-negative integer combination of 7 and 3.
+
+  The formula for the largest number that cannot be formed using two relatively prime numbers a and b is:
+  Largest Unreachable Number = (a * b) - a - b.
+
+  Since 7 and 3 are relatively prime, we use the formula:
+  Largest Unreachable Number = (7 * 3) - 7 - 3
+                            = 21 - 7 - 3
+                            = 11.
+
+  Thus, the largest number of runs that cannot be scored by the team is:
+  Final Answer: 11.`
+  },
+  {
+    id: "q23",
+    questionText: `how many unique palindromic number can be formed less than 4202093 ensuring that each digit in every number is prime? 
+\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
+    type: "text",
+    correctAnswer: "296",
+    explanation: `Step 1: Identify Prime Digits
+    The single-digit prime numbers are: {2, 3, 5, 7}.
+    
+    Step 2: Consider the Number of Digits
+    Since 4,202,093 has 7 digits, we analyze palindromes with up to 7 digits.
+    
+    Case 1: 1-Digit Numbers
+    Each number is itself a palindrome:
+    - Possible numbers: {2, 3, 5, 7}.
+    - Count: 4.
+    
+    Case 2: 2-Digit Numbers
+    A 2-digit palindrome is of the form "aa":
+    - Choices for 'a': {2, 3, 5, 7}.
+    - Count: 4.
+    
+    Case 3: 3-Digit Numbers
+    A 3-digit palindrome is of the form "aba":
+    - Choices for 'a': {2, 3, 5, 7} (4 choices).
+    - Choices for 'b': {2, 3, 5, 7} (4 choices).
+    - Total count: 4 × 4 = 16.
+    
+    Case 4: 4-Digit Numbers
+    A 4-digit palindrome is of the form "abba":
+    - Choices for 'a': {2, 3, 5, 7} (4 choices).
+    - Choices for 'b': {2, 3, 5, 7} (4 choices).
+    - Total count: 4 × 4 = 16.
+    
+    Case 5: 5-Digit Numbers
+    A 5-digit palindrome is of the form "abcba":
+    - Choices for 'a': {2, 3, 5, 7} (4 choices).
+    - Choices for 'b': {2, 3, 5, 7} (4 choices).
+    - Choices for 'c': {2, 3, 5, 7} (4 choices).
+    - Total count: 4 × 4 × 4 = 64.
+    
+    Case 6: 6-Digit Numbers
+    A 6-digit palindrome is of the form "abccba":
+    - Choices for 'a': {2, 3, 5, 7} (4 choices).
+    - Choices for 'b': {2, 3, 5, 7} (4 choices).
+    - Choices for 'c': {2, 3, 5, 7} (4 choices).
+    - Total count: 4 × 4 × 4 = 64.
+    
+    Case 7: 7-Digit Numbers (Less than 4,202,093)
+    A 7-digit palindrome is of the form "abcdcba".
+    - The first digit must be ≤ 4 (only 2 and 3 are valid).
+    - Choices for 'a': {2, 3} (2 choices).
+    - Choices for 'b': {2, 3, 5, 7} (4 choices).
+    - Choices for 'c': {2, 3, 5, 7} (4 choices).
+    - Choices for 'd': {2, 3, 5, 7} (4 choices).
+    - Total count: 2 × 4 × 4 × 4 = 128.
+    
+    Step 3: Sum All Cases
+    Total unique palindromic numbers:
+    = 4 + 4 + 16 + 16 + 64 + 64 + 128
+    = 296.
+    
+    Final Answer: 296.`
+  },
+  {
+    id: "q24",
+    questionText: `You are given 8 identical glasses, one of which contains poison while the rest are safe. The poison acts exactly after 1 hour, meaning that if a mouse drinks from a poisoned glass, it will show symptoms after 1 hour.
+
+  You have only 1 hour to determine which glass contains the poison. To achieve this, what is the minimum number of mice you need to use?\n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
+      type: "text",
+      correctAnswer: "3",
+      explanation: `
+  There are 8 identical glasses, and exactly one of them contains poison. The poison takes effect precisely after 1 hour, meaning that if a mouse drinks from the poisoned glass, it will show symptoms after 1 hour.
+
+  You have only 1 hour to determine which glass contains the poison. Given this constraint, you need to use the minimum number of mice to find the poisoned glass with certainty.
+
+  Solution & Explanation:
+
+  Step 1: Understanding the Total Possibilities
+  - Since there are 8 glasses, each glass can be assigned a unique binary number from 000 to 111 (which corresponds to numbers 1 to 8 in decimal).
+  - Using binary representation, we observe that we need 3 bits to uniquely identify 8 different glasses.
+
+  Step 2: Assigning Mice Based on Binary Representation
+  - Let’s label the glasses using 3-bit binary numbers:
+
+    1 -> 000                    
+    2 -> 001
+    3 -> 010
+    4 -> 011
+    5 -> 100
+    6 -> 101
+    7 -> 110
+    8 -> 111
+
+  - We now assign 3 mice, where each mouse is responsible for detecting a specific binary digit (bit):
+    - Mouse 1 drinks from all glasses where the rightmost bit is 1 → (Glasses 2, 4, 6, 8)
+    - Mouse 2 drinks from all glasses where the middle bit is 1 → (Glasses 3, 4, 7, 8)
+    - Mouse 3 drinks from all glasses where the leftmost bit is 1 → (Glasses 5, 6, 7, 8)
+
+  Step 3: Interpreting the Results
+  - After 1 hour, some mice will react based on which glass contained poison.
+  - The combination of which mice react and which don’t forms a 3-bit binary number, which corresponds to the poisoned glass.
+
+  Example Cases:
+  - If only Mouse 1 reacts, the result is 001 → Glass 2.
+  - If Mouse 1 and Mouse 2 react, but Mouse 3 does not, the result is 011 → Glass 4.
+  - If only Mouse 3 reacts, the result is 100 → Glass 5.
+  - If all three mice react, the result is 111 → Glass 8.
+
+  Since 3 mice are sufficient to uniquely determine which of the 8 glasses contains poison, the minimum number of mice required is 3.
+
+  Final Answer: 3`
+  },
 ];
 
 export default mock1;
