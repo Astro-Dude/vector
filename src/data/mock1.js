@@ -917,8 +917,9 @@ with the restrictions 0 ≤ xᵢ ≤ 7 for each i = 1, 2, 3, 4.\n\n**Note: Put t
           = 161.
 
   Final Answer: 161`
+  },
   {
-    id: "q30",
+    id: "q31",
     questionText: `Find the number of circular arrangements of 12 persons (arrangements that are considered the same under rotation) 
 such that three specified persons A, B, and C are not seated adjacent to one another (i.e. no two of them are neighbors).
 \n\n**Note: Put the answer as an integer without any padded zeroes or decimal points. For example, if the answer is 1, then please put 1 as the answer and not 1.0 or 01 or 001.**`,
