@@ -5,6 +5,8 @@ import shaurya from '../assets/images/shaurya.jpg';
 import hardik from '../assets/images/hardik.jpg';
 import rudhar from '../assets/images/rudhar.jpg';
 import krritin from '../assets/images/krritin.jpg';
+import aatmik from '../assets/images/aatmik.jpg';
+import srinidhi from '../assets/images/srinidhi.jpg';
 // Import other avatars similarly
 
 const Mentors = () => {
@@ -27,20 +29,36 @@ const Mentors = () => {
     },
     {
       id: 3,
+      name: "Aatmik Panse",
+      role: "",
+      achievements: "Ex intern @Skai Lama, Core member @XR Club-SST, Founding member of innovation lab",
+      linkedin: "https://www.linkedin.com/in/aatmikpanse//",
+      avatar: aatmik,
+    },
+    {
+      id: 4,
+      name: "Srinidhi Narendran",
+      role: "",
+      achievements: "Girl president @SST, Member @NlogN-Club-SST, 3⭐ @CodeChef",
+      linkedin: "https://www.linkedin.com/in/srinidhinaren/",
+      avatar: srinidhi,
+    },
+    {
+      id: 5,
+      name: "Krritin Keshan",
+      role: "",
+      achievements: "Core @ NlogN-Club-SST, Specialist @Codeforces, 3⭐ @CodeChef",
+      linkedin: "https://www.linkedin.com/in/krritin-keshan/",
+      avatar: krritin,
+    },
+    {
+      id: 6,
       name: "Hardik Jumnani",
       role: "",
       achievements: "Offered 25% scholorship at SST, President at SST ",
       linkedin: "https://www.linkedin.com/in/hardik-jumnani/",
       avatar: hardik,
     },
-    {
-      id: 4,
-      name: "Krritin Keshan",
-      role: "",
-      achievements: "Core @ NlogN-Club-SST, Specialist @Codeforces, 3⭐ @CodeChef",
-      linkedin: "https://www.linkedin.com/in/krritin-keshan/",
-      avatar: krritin,
-    }
   ];
 
   // Function to split achievements into array of points
