@@ -39,7 +39,7 @@ const Mentors = () => {
       id: 4,
       name: "Srinidhi Narendran",
       role: "",
-      achievements: "Girl president @SST, Member @NlogN-Club-SST, 3⭐ @CodeChef",
+      achievements: "Female president @SST, Member @NlogN-Club-SST, 3⭐ @CodeChef",
       linkedin: "https://www.linkedin.com/in/srinidhinaren/",
       avatar: srinidhi,
     },
