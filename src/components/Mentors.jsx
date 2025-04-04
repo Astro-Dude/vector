@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { FaLinkedin } from 'react-icons/fa';
 // Import images
 import shaurya from '../assets/images/shaurya.jpg';
-import hardik from '../assets/images/hardik.jpg';
 import rudhar from '../assets/images/rudhar.jpg';
 import krritin from '../assets/images/krritin.jpg';
 import aatmik from '../assets/images/aatmik.jpg';
 import srinidhi from '../assets/images/srinidhi.jpg';
+import kushal from '../assets/images/kushal.jpg';
 // Import other avatars similarly
 
 const Mentors = () => {
@@ -53,11 +53,11 @@ const Mentors = () => {
     },
     {
       id: 6,
-      name: "Hardik Jumnani",
+      name: "Kushal Talati",
       role: "",
-      achievements: "Offered 25% scholorship at SST, President at SST ",
-      linkedin: "https://www.linkedin.com/in/hardik-jumnani/",
-      avatar: hardik,
+      achievements: "Got selected for HPAIR’25 in Harvard University, Pupil @Codeforces, Shaastra’25 IIT Madras Finalist",
+      linkedin: "https://www.linkedin.com/in/kushaltalati/",
+      avatar: kushal,
     },
   ];
 
