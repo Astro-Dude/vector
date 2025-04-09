@@ -43,15 +43,15 @@ export const placeholderQuestions = [
 
 // Main test configuration object
 export const testConfigs = {
-  [TEST_IDS.SAMPLE]: {
-    questions: nsetQuestions,
-    testName: "NSET Free Sample Test",
-    testDuration: 120,
-    totalQuestions: nsetQuestions.length,
-    passScore: 35,
-    isFree: true,
-    testComponents: testComponents
-  },
+  // [TEST_IDS.SAMPLE]: {
+  //   questions: nsetQuestions,
+  //   testName: "NSET Free Sample Test",
+  //   testDuration: 120,
+  //   totalQuestions: nsetQuestions.length,
+  //   passScore: 35,
+  //   isFree: true,
+  //   testComponents: testComponents
+  // },
   
   [TEST_IDS.MOCK_TEST_1]: {
     questions: mock1,
@@ -59,7 +59,7 @@ export const testConfigs = {
     testDuration: 120,
     totalQuestions: mock1.length,
     passScore: 35,
-    isFree: false,
+    isFree: true,
     price: 49,
     testComponents: testComponents
   },
