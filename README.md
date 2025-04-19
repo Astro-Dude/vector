@@ -1,78 +1,181 @@
-# Vector - NSET Preparation Platform
+# Vector - NSET Exam Preparation Platform
 
-Vector is a comprehensive platform designed to help students prepare for the Scaler School of Technology's entrance exam (NSET). The platform offers practice tests, resources, and personalized feedback to maximize students' chances of success.
+A comprehensive web application designed to help students prepare for the **Scaler School of Technology (SST)** NSET entrance examination with mock tests, interview practice, and detailed solutions.
 
-## Features
+---
 
-- **User Authentication**: Secure login and registration system using Firebase Authentication
-- **Protected Routes**: Access control for authenticated users
-- **Dashboard**: Personalized dashboard showing purchased tests, progress, and upcoming events
-- **Test Interface**: Full-screen test environment with anti-cheating measures
-- **Results Analysis**: Detailed performance analysis with topic-wise breakdown
-- **Solutions Viewer**: Review correct answers and explanations
+## 🚀 Overview
 
-## Authentication System
+**Vector** provides a complete preparation solution for NSET aspirants:
 
-The authentication system is built using Firebase Authentication and includes:
+- Take full-length mock tests simulating the actual NSET exam
+- Schedule 1-on-1 mock interviews with current SST students
+- Get detailed explanations and solutions to practice questions
+- Track your performance and progress over time
+- Access curated test series with increasing difficulty levels
 
-- Email/password authentication
-- User profile management
-- Protected routes for authenticated content
-- Password reset functionality
+---
 
-### Authentication Flow
+## 🔑 Features
 
-1. Users can sign up with email, password, and display name
-2. User data is stored in Firebase Authentication and Firestore
-3. Protected routes check authentication status before rendering
-4. Navbar and CTA sections adapt based on authentication state
+### Authentication System
+- Secure login with Google OAuth integration
+- User profile management and session handling
+- Protected routes for authenticated users
 
-## Development
+### Dashboard
+- Personalized welcome screen with user information
+- View purchased tests and booked interviews
+- Access NSET exam syllabus and preparation materials
+- Track progress and performance metrics
+
+### Mock Test System
+- Full-screen test environment with anti-cheating measures
+- Automated timer with countdown and auto-submission
+- Question navigation panel with attempt status tracking
+- Mark questions for review functionality
+- Support for multiple question types (MCQs and text answers)
+
+### Interview Preparation
+- Book mock interviews with current SST students
+- Schedule management and booking confirmation system
+- Interview status tracking (pending, confirmed, completed)
+- Google Meet integration for virtual interviews
+- Personalized interview feedback
+
+### Payment Integration
+- Seamless Razorpay payment gateway integration
+- Secure processing for test purchases and interview bookings
+- Order management and transaction history
+- Responsive error handling for payment failures
+
+### Content Management
+- Detailed NSET exam syllabus with topic breakdowns
+- Mock tests with varying difficulty levels
+- Advanced question rendering with rich text and formatting
+- Comprehensive solutions and explanations
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend**: React.js, Tailwind CSS
+- **Backend**: Firebase (Authentication, Firestore, Functions)
+- **Payment Gateway**: Razorpay
+- **State Management**: React Context API
+- **Routing**: React Router v6
+- **Hosting**: Firebase Hosting
+
+---
+
+## ⚙️ Getting Started
 
 ### Prerequisites
 
-- Node.js (v18 or higher)
+- Node.js (v14 or higher)
 - npm or yarn
+- Firebase account
+- Razorpay test account (for payment features)
 
 ### Installation
 
-1. Clone the repository
-2. Install dependencies:
-   ```
-   npm install
-   ```
-3. Start the development server:
-   ```
-   npm run dev
-   ```
+```bash
+git clone https://github.com/shauryaverma-astro/vector.git
+cd vector
 
-### Firebase Configuration
-
-The application uses Firebase for authentication and data storage. To set up your own Firebase project:
-
-1. Create a Firebase project at [firebase.google.com](https://firebase.google.com)
-2. Enable Authentication (Email/Password) and Firestore
-3. Update the Firebase configuration in `src/firebase/firebase.js`
-
-### Testing
-
-The project includes comprehensive tests for the authentication system:
-
-- Unit tests for authentication context
-- Component tests for login, signup, and protected routes
-
-Run tests with:
-```
-npm test
+# Install dependencies
+npm install
+# or
+yarn install
 ```
 
-Run tests with coverage:
-```
-npm run test:coverage
+### Environment Variables
+
+Create a `.env` file in the root directory and add:
+
+```env
+VITE_FIREBASE_API_KEY=your-api-key
+VITE_FIREBASE_AUTH_DOMAIN=your-auth-domain
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-storage-bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
+VITE_FIREBASE_APP_ID=your-app-id
+VITE_RAZORPAY_KEY_ID=your-razorpay-key-id
 ```
 
-## Project Structure
+### Start Development Server
+```bash
+npm run dev
+# or
+yarn dev
+```
 
+Visit: [http://localhost:5173](http://localhost:5173)
+
+---
+
+## 🔧 Firebase Setup
+
+1. Create a new Firebase project
+2. Enable Authentication (Google provider)
+3. Set up Firestore Database with collections:
+   - `users`: User profiles and authentication data
+   - `testPurchases`: Records of purchased tests
+   - `interviewBookings`: Scheduled interview appointments
+   - `settings`: Application-wide configuration
+
+---
+
+## 🚀 Deployment
+
+```bash
+# Build production version
+npm run build
+# or
+yarn build
+
+# Deploy to Firebase
+firebase deploy
+```
+
+---
+
+## 📁 Project Structure
+
+```bash
+/src
+  /assets              # Static assets (images, icons)
+  /components          # React components
+  /context             # Context providers (auth, etc.)
+  /data                # Test questions and configuration
+  /firebase            # Firebase initialization and services
+  /hooks               # Custom React hooks
+  /services            # API service layers
+  /utils               # Utility functions
+  App.jsx              # Main application component
+  main.jsx             # Entry point
+```
+
+---
+
+## 🔍 Key Components
+
+- `Dashboard.jsx`: User dashboard for accessing tests and interviews
+- `MockTest.jsx`: Interactive test-taking interface
+- `TestResults.jsx`: Results and performance analysis
+- `TestSolutions.jsx`: Detailed explanations for test questions
+- `Mentors.jsx`: Displays information about SST mentors
+
+---
+
+## 🧪 Test Configuration
+
+Tests are configured in `src/data/testConfig.js`. To add a new test:
+
+1. Create a new question set file in `src/data/`
+2. Import and register in `testConfig.js`
+
+# Project Structure
 ```
 vector/
 ├── public/
@@ -104,6 +207,36 @@ vector/
 └── README.md
 ```
 
-## License
+Example:
+```js
+export const testConfigs = {
+  'new-test-id': {
+    questions: newTestQuestions,
+    testName: "New Test Name",
+    testDuration: 120,
+    totalQuestions: newTestQuestions.length,
+    passScore: 35,
+    isFree: false,
+    price: 99,
+    testComponents: components
+  },
+};
+```
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+---
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+---
+
+## 📬 Contact
+
+For questions, suggestions, or feedback, please reach out to: **vector.scalernset@gmail.com**
+
+Made with ❤️ by [Shaurya Verma](https://www.linkedin.com/in/astro-dude)
