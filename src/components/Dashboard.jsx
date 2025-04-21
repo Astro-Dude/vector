@@ -27,6 +27,90 @@ import { formatPrice } from "../data/testConfig";
 import { getAppSettings } from "../services/settingsService";
 import ReactDOM from "react-dom";
 
+// Define resources for each topic
+const topicResources = {
+  "Probability and Statistics": [
+    {
+      title: "Probability",
+      url: "https://www.youtube.com/live/lWqcibMwKtk?si=adAHEiuwkMqzodVl",
+      icon: (
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          className="h-6 w-6 text-red-600" 
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+        </svg>
+      )
+    },
+    {
+      title: "Statistics",
+      url: "https://www.youtube.com/live/lWqcibMwKtk?si=XB1fRczBWLkmzbOm",
+      icon: (
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          className="h-6 w-6 text-red-600" 
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+        </svg>
+      )
+    }
+  ],
+  // Add other topics with empty resource arrays for now
+  "Number Theory": [
+    {
+      title: "Number Theory",
+      url: "https://youtube.com/playlist?list=PLLtQL9wSL16iRzTi2aKPiHO1f1UjTTkJD&si=gTGBHPIXdKP9KSkQ",
+      icon: (
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          className="h-6 w-6 text-red-600" 
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+        </svg>
+      )
+    }
+  ],
+  "Exponentials and Logarithms": [],
+  "Permutation and Combinations": [
+    {
+      title: "P&C part 1",
+      url: "https://www.youtube.com/live/THHeijYTfKs?si=I0OYtgMLHtLoHoLX",
+      icon: (
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          className="h-6 w-6 text-red-600" 
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+        </svg>
+      )
+    },
+    {
+      title: "P&C part 2",
+      url: "https://www.youtube.com/live/e7Is5-jBNDo?si=tr29glQm0p0mPID3",
+      icon: (
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          className="h-6 w-6 text-red-600" 
+          viewBox="0 0 24 24"
+          fill="currentColor"
+        >
+          <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
+        </svg>
+      )
+    }
+  ],
+  "Ratio and Proportion": [],
+  "Sets (Venn Diagrams)": []
+};
+
 const Dashboard = () => {
   const {
     currentUser,
@@ -56,6 +140,7 @@ const Dashboard = () => {
   const [interviewCodeCopied, setInterviewCodeCopied] = useState(false);
   const interviewCodeRef = useRef(null);
   const referralCode = "SHAUE061";
+  const [openResourceTopic, setOpenResourceTopic] = useState(null);
 
   // Load user's purchased tests and booked interviews
   useEffect(() => {
@@ -441,6 +526,14 @@ const Dashboard = () => {
       <div style={style}>Copied!</div>,
       document.body
     );
+  };
+
+  const toggleResourcePopup = (topic) => {
+    if (openResourceTopic === topic) {
+      setOpenResourceTopic(null);
+    } else {
+      setOpenResourceTopic(topic);
+    }
   };
 
   return (
@@ -1021,101 +1114,233 @@ const Dashboard = () => {
                       Topics covered:
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2">
-                      <div className="flex items-center">
-                        <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <svg
+                            className="h-4 w-4 text-blue-500 mr-2"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          <span className="text-gray-700">Number Theory</span>
+                        </div>
+                        <button
+                          onClick={() => toggleResourcePopup("Number Theory")}
+                          className="ml-2 inline-flex items-center text-xs px-2 py-1 bg-blue-100 text-blue-600 hover:text-blue-800 rounded-full transition-colors duration-150"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        <span>Number Theory</span>
+                          <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            className="h-3 w-3 mr-1" 
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round" 
+                              strokeWidth={2} 
+                              d="M12 6v6m0 0v6m0-6h6m-6 0H6" 
+                            />
+                          </svg>
+                          Resources
+                        </button>
                       </div>
-                      <div className="flex items-center">
-                        <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <svg
+                            className="h-4 w-4 text-blue-500 mr-2"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          <span className="text-gray-700">Exponentials and Logarithms</span>
+                        </div>
+                        <button
+                          onClick={() => toggleResourcePopup("Exponentials and Logarithms")}
+                          className="ml-2 inline-flex items-center text-xs px-2 py-1 bg-blue-100 text-blue-600 hover:text-blue-800 rounded-full transition-colors duration-150"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        <span>Exponentials and Logarithms</span>
+                          <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            className="h-3 w-3 mr-1" 
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round" 
+                              strokeWidth={2} 
+                              d="M12 6v6m0 0v6m0-6h6m-6 0H6" 
+                            />
+                          </svg>
+                          Resources
+                        </button>
                       </div>
-                      <div className="flex items-center">
-                        <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <svg
+                            className="h-4 w-4 text-blue-500 mr-2"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          <span className="text-gray-700">Probability and Statistics</span>
+                        </div>
+                        <button
+                          onClick={() => toggleResourcePopup("Probability and Statistics")}
+                          className="ml-2 inline-flex items-center text-xs px-2 py-1 bg-blue-100 text-blue-600 hover:text-blue-800 rounded-full transition-colors duration-150"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        <span>Probability and Statistics</span>
+                          <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            className="h-3 w-3 mr-1" 
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round" 
+                              strokeWidth={2} 
+                              d="M12 6v6m0 0v6m0-6h6m-6 0H6" 
+                            />
+                          </svg>
+                          Resources
+                        </button>
                       </div>
-                      <div className="flex items-center">
-                        <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <svg
+                            className="h-4 w-4 text-blue-500 mr-2"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          <span className="text-gray-700">Permutation and Combinations</span>
+                        </div>
+                        <button
+                          onClick={() => toggleResourcePopup("Permutation and Combinations")}
+                          className="ml-2 inline-flex items-center text-xs px-2 py-1 bg-blue-100 text-blue-600 hover:text-blue-800 rounded-full transition-colors duration-150"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        <span>Permutation and Combinations</span>
+                          <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            className="h-3 w-3 mr-1" 
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round" 
+                              strokeWidth={2} 
+                              d="M12 6v6m0 0v6m0-6h6m-6 0H6" 
+                            />
+                          </svg>
+                          Resources
+                        </button>
                       </div>
-                      <div className="flex items-center">
-                        <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <svg
+                            className="h-4 w-4 text-blue-500 mr-2"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          <span className="text-gray-700">Ratio and Proportion</span>
+                        </div>
+                        <button
+                          onClick={() => toggleResourcePopup("Ratio and Proportion")}
+                          className="ml-2 inline-flex items-center text-xs px-2 py-1 bg-blue-100 text-blue-600 hover:text-blue-800 rounded-full transition-colors duration-150"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        <span>Ratio and Proportion</span>
+                          <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            className="h-3 w-3 mr-1" 
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round" 
+                              strokeWidth={2} 
+                              d="M12 6v6m0 0v6m0-6h6m-6 0H6" 
+                            />
+                          </svg>
+                          Resources
+                        </button>
                       </div>
-                      <div className="flex items-center">
-                        <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <svg
+                            className="h-4 w-4 text-blue-500 mr-2"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                          <span className="text-gray-700">Sets (Venn Diagrams)</span>
+                        </div>
+                        <button
+                          onClick={() => toggleResourcePopup("Sets (Venn Diagrams)")}
+                          className="ml-2 inline-flex items-center text-xs px-2 py-1 bg-blue-100 text-blue-600 hover:text-blue-800 rounded-full transition-colors duration-150"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
-                        <span>Sets (Venn Diagrams)</span>
+                          <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            className="h-3 w-3 mr-1" 
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round" 
+                              strokeWidth={2} 
+                              d="M12 6v6m0 0v6m0-6h6m-6 0H6" 
+                            />
+                          </svg>
+                          Resources
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -1786,6 +2011,87 @@ const Dashboard = () => {
         )}
       </div>
       <InterviewCodeTooltip />
+      {Object.keys(topicResources).map(topic => (
+        <ResourcePopup
+          key={topic}
+          topic={topic}
+          resources={topicResources[topic]}
+          isOpen={openResourceTopic === topic}
+          onClose={() => setOpenResourceTopic(null)}
+        />
+      ))}
+    </div>
+  );
+};
+
+const ResourcePopup = ({ topic, resources, isOpen, onClose }) => {
+  if (!isOpen) return null;
+  
+  // Reference for detecting clicks outside the popup
+  const popupRef = useRef(null);
+  
+  // Close if clicked outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (popupRef.current && !popupRef.current.contains(event.target)) {
+        onClose();
+      }
+    };
+    
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [onClose]);
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+      <div 
+        ref={popupRef}
+        className="bg-white rounded-lg shadow-xl w-full max-w-md p-4 pointer-events-auto"
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-medium text-gray-900">{topic} Resources</h3>
+          <button 
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-500"
+          >
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <div className="space-y-3">
+          {resources.length > 0 ? (
+            resources.map((resource, index) => (
+              <a 
+                key={index}
+                href={resource.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center p-3 bg-gray-50 hover:bg-gray-100 rounded-md transition-colors"
+              >
+                {resource.icon}
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">{resource.title}</p>
+                </div>
+              </a>
+            ))
+          ) : (
+            <p className="text-sm text-gray-500 text-center py-4">No resources available yet. Check back later!</p>
+          )}
+        </div>
+        
+        <div className="mt-5 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+          >
+            Close
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
