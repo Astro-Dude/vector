@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getTestHistory } from '../firebase/firebase';
 import { useAuth } from '../context/AuthContext';
+import { TEST_IDS } from '../data/testConfig';
 
 const TestHistory = () => {
   const [testHistory, setTestHistory] = useState([]);
@@ -68,6 +69,17 @@ const TestHistory = () => {
     return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Unknown</span>;
   };
 
+  // Function to get the test name from TEST_IDS
+  const getTestName = (testId) => {
+    if (!testId) return 'Unknown Test';
+    
+    // Find the key in TEST_IDS that matches the testId value
+    const testKey = Object.keys(TEST_IDS).find(key => TEST_IDS[key] === testId);
+    
+    // Return the key (which is more readable) or fallback to the testId
+    return testKey || `Test ${testId}`;
+  };
+
   return (
     <div className="bg-white overflow-hidden shadow rounded-lg mb-6">
       <div className="px-4 py-5 sm:p-6">
@@ -108,7 +120,7 @@ const TestHistory = () => {
                   {testHistory.map((test) => (
                     <tr key={test.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {test.testName || `Test ${test.testId}`}
+                        {test.testName || getTestName(test.testId)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatDate(test.timestamp)}

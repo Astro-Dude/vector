@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import { saveTestResult } from '../firebase/firebase';
 import { useAuth } from '../context/AuthContext';
+import { TEST_IDS } from '../data/testConfig';
 
 /**
  * Generic test results component that can be used with any question set
@@ -86,9 +87,22 @@ const TestResults = ({
           // Mark that we've attempted a save
           saveAttemptedRef.current = true;
           
+          // Get the appropriate test name
+          let displayTestName = testName;
+          
+          // If no testName provided, try to get it from TEST_IDS
+          if (!displayTestName && testId) {
+            const testKey = Object.keys(TEST_IDS).find(key => TEST_IDS[key] === testId);
+            if (testKey) {
+              displayTestName = testKey;
+            } else {
+              displayTestName = `Test ${testId}`;
+            }
+          }
+          
           const testData = {
             testId,
-            testName: testName || resultsTitle,
+            testName: displayTestName,
             score: finalScore,
             percentage: parseFloat(finalPercentage.toFixed(2)),
             questionsTotal: questions.length,

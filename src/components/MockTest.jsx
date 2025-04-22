@@ -262,7 +262,9 @@ const MockTest = ({
         answers: allAnswers,
         questions,
         timeSpent: testDuration * 60 - timeRemaining,
-        passScore: passScore
+        passScore: passScore,
+        testName: testName,
+        testId: testId
       }
     });
     
