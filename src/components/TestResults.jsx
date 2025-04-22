@@ -1,5 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
+import { saveTestResult } from '../firebase/firebase';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * Generic test results component that can be used with any question set
@@ -15,6 +17,7 @@ const TestResults = ({
   const location = useLocation();
   const navigate = useNavigate();
   const { testId } = useParams();
+  const { currentUser } = useAuth();
   
   const [score, setScore] = useState(0);
   const [percentage, setPercentage] = useState(0);
@@ -23,13 +26,16 @@ const TestResults = ({
   const [timeSpent, setTimeSpent] = useState(0);
   const [resultStatus, setResultStatus] = useState('');
   const [endedDueToViolation, setEndedDueToViolation] = useState(false);
+  const [resultSaved, setResultSaved] = useState(false);
+  
+  // Use a ref to track whether we've attempted to save this test result
+  const saveAttemptedRef = useRef(false);
   
   // Process test results from location state
   useEffect(() => {
-    
-    
-    if (location.state) {
-      const { answers, questions, timeSpent, endedDueToFullScreenViolation, passScore: testPassScore } = location.state;
+    // Only process if we have location state and haven't already saved
+    if (location.state && !saveAttemptedRef.current) {
+      const { answers, questions, timeSpent, endedDueToFullScreenViolation, passScore: testPassScore, testName } = location.state;
       
       setAnswers(answers || {});
       setQuestions(questions || []);
@@ -74,9 +80,37 @@ const TestResults = ({
         } else {
           setResultStatus('fail');
         }
+        
+        // Save results to Firebase if user is logged in
+        if (currentUser) {
+          // Mark that we've attempted a save
+          saveAttemptedRef.current = true;
+          
+          const testData = {
+            testId,
+            testName: testName || resultsTitle,
+            score: finalScore,
+            percentage: parseFloat(finalPercentage.toFixed(2)),
+            questionsTotal: questions.length,
+            questionsAttempted: Object.keys(answers).length,
+            timeSpent,
+            resultStatus: endedDueToFullScreenViolation ? 'violation' : (finalPercentage >= effectivePassScore ? 'pass' : 'fail')
+          };
+          
+          saveTestResult(currentUser.uid, testData)
+            .then(() => {
+              console.log("Test result saved successfully");
+              setResultSaved(true);
+            })
+            .catch(error => {
+              console.error("Error saving test result:", error);
+              // Allow another save attempt if needed
+              saveAttemptedRef.current = false;
+            });
+        }
       }
     }
-  }, [location.state, passScore, testId]);
+  }, [location.state, passScore, testId, currentUser, resultsTitle]);
   
   // Function to format time from seconds
   const formatTime = (seconds) => {

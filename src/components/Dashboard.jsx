@@ -26,6 +26,7 @@ import {
 import { formatPrice } from "../data/testConfig";
 import { getAppSettings } from "../services/settingsService";
 import ReactDOM from "react-dom";
+import TestHistory from "./TestHistory";
 
 // Define resources for each topic
 const topicResources = {
@@ -141,6 +142,7 @@ const Dashboard = () => {
   const interviewCodeRef = useRef(null);
   const referralCode = "SHAUE061";
   const [openResourceTopic, setOpenResourceTopic] = useState(null);
+  const [showTestHistory, setShowTestHistory] = useState(false);
 
   // Load user's purchased tests and booked interviews
   useEffect(() => {
@@ -536,6 +538,12 @@ const Dashboard = () => {
     }
   };
 
+  // Toggle test history popup
+  const toggleTestHistory = () => {
+    setShowTestHistory(!showTestHistory);
+    setMenuOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Simplified Header/Navbar */}
@@ -692,6 +700,12 @@ const Dashboard = () => {
                     className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-100 hover:text-blue-600"
                   >
                     Syllabus
+                  </button>
+                  <button
+                    onClick={toggleTestHistory}
+                    className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-100 hover:text-blue-600"
+                  >
+                    Test History
                   </button>
                   {/* Additional menu items can be added here later */}
                 </div>
@@ -2020,6 +2034,10 @@ const Dashboard = () => {
           onClose={() => setOpenResourceTopic(null)}
         />
       ))}
+      <TestHistory
+        isOpen={showTestHistory}
+        onClose={toggleTestHistory}
+      />
     </div>
   );
 };

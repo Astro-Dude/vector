@@ -10,7 +10,14 @@ import {
   CACHE_SIZE_UNLIMITED,
   persistentLocalCache,
   persistentMultipleTabManager,
-  setLogLevel
+  setLogLevel,
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  serverTimestamp,
+  orderBy
 } from "firebase/firestore";
 
 // Reduce Firestore logging in production
@@ -120,4 +127,75 @@ export const getCurrentUser = (timeoutMs = 5000) => {
       }
     );
   });
+};
+
+// Function to save test results to Firestore
+export const saveTestResult = async (userId, testData) => {
+  try {
+    // Create a unique hash/key for this test attempt
+    const testFingerprint = `${userId}_${testData.testId}_${testData.score}_${testData.questionsTotal}_${testData.timeSpent}`;
+    
+    // Check if this exact test result already exists with this fingerprint
+    const testResultsRef = collection(db, "testResults");
+    const existingTestQuery = query(
+      testResultsRef,
+      where("userId", "==", userId),
+      where("testFingerprint", "==", testFingerprint)
+    );
+    
+    const existingTestSnapshot = await getDocs(existingTestQuery);
+    
+    // If this exact test already exists, don't save again
+    if (!existingTestSnapshot.empty) {
+      console.log("Exact same test result already exists, not saving duplicate");
+      return existingTestSnapshot.docs[0].id;
+    }
+    
+    // No duplicate found, save the new result
+    const result = await addDoc(testResultsRef, {
+      userId,
+      testId: testData.testId,
+      testName: testData.testName,
+      score: testData.score,
+      percentage: testData.percentage,
+      questionsTotal: testData.questionsTotal,
+      questionsAttempted: testData.questionsAttempted,
+      timeSpent: testData.timeSpent,
+      resultStatus: testData.resultStatus,
+      timestamp: serverTimestamp(),
+      testFingerprint: testFingerprint // Store the fingerprint to check for duplicates
+    });
+    return result.id;
+  } catch (error) {
+    console.error("Error saving test result:", error);
+    throw error;
+  }
+};
+
+// Function to get test history for a user
+export const getTestHistory = async (userId) => {
+  try {
+    const testResultsRef = collection(db, "testResults");
+    const q = query(
+      testResultsRef, 
+      where("userId", "==", userId),
+      orderBy("timestamp", "desc")
+    );
+    
+    const querySnapshot = await getDocs(q);
+    const testHistory = [];
+    
+    querySnapshot.forEach((doc) => {
+      testHistory.push({
+        id: doc.id,
+        ...doc.data(),
+        timestamp: doc.data().timestamp?.toDate() || new Date()
+      });
+    });
+    
+    return testHistory;
+  } catch (error) {
+    console.error("Error fetching test history:", error);
+    throw error;
+  }
 }; 
