@@ -17,6 +17,7 @@ const SSTChatBot = ({ isOpen, onClose }) => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const chatContainerRef = useRef(null);
 
   // Auto-scroll to the bottom of the chat
   const scrollToBottom = () => {
@@ -34,6 +35,21 @@ const SSTChatBot = ({ isOpen, onClose }) => {
         inputRef.current?.focus();
       }, 100);
     }
+  }, [isOpen]);
+
+  // Handle window focus to ensure the bot stays functional during navigation
+  useEffect(() => {
+    const handleFocus = () => {
+      if (isOpen && inputRef.current) {
+        inputRef.current.focus();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
   }, [isOpen]);
 
   const handleSendMessage = async (e) => {
@@ -72,7 +88,10 @@ const SSTChatBot = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed bottom-0 right-0 w-full md:w-96 h-[500px] md:h-[600px] md:mr-4 md:mb-4 bg-white rounded-t-lg md:rounded-lg shadow-xl flex flex-col z-50 overflow-hidden">
+    <div 
+      ref={chatContainerRef}
+      className="fixed bottom-0 right-0 w-full md:w-96 h-[500px] md:h-[600px] md:mr-4 md:mb-4 bg-white rounded-t-lg md:rounded-lg shadow-xl flex flex-col z-50 overflow-hidden"
+    >
       {/* Header */}
       <div className="flex justify-between items-center bg-blue-600 text-white px-4 py-3">
         <div className="flex items-center">

@@ -125,7 +125,7 @@ const TestHistory = () => {
                         {test.testName || getTestName(test.testId)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {test.studentName || currentUser.displayName || "Unknown"}
+                        {test.studentName || currentUser.displayName || "Unknown Student"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {test.phoneNumber || userProfile?.phoneNumber || <span className="italic text-gray-400">Not provided</span>}

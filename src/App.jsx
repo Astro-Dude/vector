@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { SSTBotProvider } from './context/SSTBotContext';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Features from './components/Features';
@@ -204,11 +205,13 @@ function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <Router>
-          <Layout>
-            <AppContent />
-          </Layout>
-        </Router>
+        <SSTBotProvider>
+          <Router>
+            <Layout>
+              <AppContent />
+            </Layout>
+          </Router>
+        </SSTBotProvider>
       </AuthProvider>
     </ErrorBoundary>
   );

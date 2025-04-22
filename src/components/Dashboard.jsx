@@ -2,12 +2,12 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import ReactDOM from "react-dom";
 import { useAuth } from "../context/AuthContext";
+import { useSST } from "../context/SSTBotContext";
 import Name from "../assets/images/Name.png";
 import Logo from "../assets/images/Logo.png";
 import { testConfigs, TEST_IDS } from "../data/testConfig";
 import FirestoreError from "./FirestoreError";
 import TestHistory from "./TestHistory";
-import SSTChatBot from "./SSTChatBot";
 import { getAppSettings } from "../services/settingsService";
 import {
   getUserPurchasedTests,
@@ -17,90 +17,6 @@ import {
 } from "../services/purchaseService";
 import { initiatePayment } from "../utils/razorpay";
 import { formatPrice } from "../data/testConfig";
-
-// Define resources for each topic
-const topicResources = {
-  "Probability and Statistics": [
-    {
-      title: "Probability",
-      url: "https://www.youtube.com/live/lWqcibMwKtk?si=adAHEiuwkMqzodVl",
-      icon: (
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          className="h-6 w-6 text-red-600" 
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
-        </svg>
-      )
-    },
-    {
-      title: "Statistics",
-      url: "https://www.youtube.com/live/lWqcibMwKtk?si=XB1fRczBWLkmzbOm",
-      icon: (
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          className="h-6 w-6 text-red-600" 
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
-        </svg>
-      )
-    }
-  ],
-  // Add other topics with empty resource arrays for now
-  "Number Theory": [
-    {
-      title: "Number Theory",
-      url: "https://youtube.com/playlist?list=PLLtQL9wSL16iRzTi2aKPiHO1f1UjTTkJD&si=gTGBHPIXdKP9KSkQ",
-      icon: (
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          className="h-6 w-6 text-red-600" 
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
-        </svg>
-      )
-    }
-  ],
-  "Exponentials and Logarithms": [],
-  "Permutation and Combinations": [
-    {
-      title: "P&C part 1",
-      url: "https://www.youtube.com/live/THHeijYTfKs?si=I0OYtgMLHtLoHoLX",
-      icon: (
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          className="h-6 w-6 text-red-600" 
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
-        </svg>
-      )
-    },
-    {
-      title: "P&C part 2",
-      url: "https://www.youtube.com/live/e7Is5-jBNDo?si=tr29glQm0p0mPID3",
-      icon: (
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          className="h-6 w-6 text-red-600" 
-          viewBox="0 0 24 24"
-          fill="currentColor"
-        >
-          <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/>
-        </svg>
-      )
-    }
-  ],
-  "Ratio and Proportion": [],
-  "Sets (Venn Diagrams)": []
-};
 
 const Dashboard = () => {
   const {
@@ -112,6 +28,9 @@ const Dashboard = () => {
     needsPhoneNumber,
     updatePhoneNumber
   } = useAuth();
+
+  const { toggleBot } = useSST();
+  
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
@@ -134,7 +53,6 @@ const Dashboard = () => {
   const referralCode = "SHAUE061";
   const [openResourceTopic, setOpenResourceTopic] = useState(null);
   const [showTestHistory, setShowTestHistory] = useState(false);
-  const [showSSTBot, setShowSSTBot] = useState(false);
 
   // Load user's purchased tests and booked interviews
   useEffect(() => {
@@ -562,12 +480,6 @@ const Dashboard = () => {
     setMenuOpen(false);
   };
 
-  // Toggle SST AI Bot
-  const toggleSSTBot = () => {
-    setShowSSTBot(!showSSTBot);
-    setMenuOpen(false); // Close menu when opening bot
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Simplified Header/Navbar */}
@@ -732,7 +644,7 @@ const Dashboard = () => {
                     Test History
                   </button>
                   <button
-                    onClick={toggleSSTBot}
+                    onClick={toggleBot}
                     className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-100 hover:text-blue-600"
                   >
                     <div className="flex items-center">
@@ -747,20 +659,6 @@ const Dashboard = () => {
           </div>
         </div>
       )}
-
-      {/* Add SST AI Bot button in the bottom right */}
-      <button
-        onClick={toggleSSTBot}
-        className="fixed bottom-4 right-4 bg-blue-600 text-white rounded-full p-3 shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 z-40"
-        aria-label="Open AI Bot"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-        </svg>
-      </button>
-
-      {/* SST AI Bot Component */}
-      <SSTChatBot isOpen={showSSTBot} onClose={() => setShowSSTBot(false)} />
 
       {/* Phone number prompt modal */}
       {showPhonePrompt && (
