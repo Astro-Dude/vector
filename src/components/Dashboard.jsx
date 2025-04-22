@@ -1,10 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import ReactDOM from "react-dom";
 import { useAuth } from "../context/AuthContext";
-import FirestoreError from "./FirestoreError";
 import Name from "../assets/images/Name.png";
 import Logo from "../assets/images/Logo.png";
-import { testConfigs } from "../data/testConfig";
+import { testConfigs, TEST_IDS } from "../data/testConfig";
+import FirestoreError from "./FirestoreError";
+import TestHistory from "./TestHistory";
+import SSTChatBot from "./SSTChatBot";
+import { getAppSettings } from "../services/settingsService";
 import {
   getUserPurchasedTests,
   getUserBookedInterviews,
@@ -12,21 +16,7 @@ import {
   saveMockInterviewBooking,
 } from "../services/purchaseService";
 import { initiatePayment } from "../utils/razorpay";
-import { db } from "../firebase/firebase";
-import {
-  collection,
-  addDoc,
-  serverTimestamp,
-  query,
-  where,
-  getDocs,
-  doc,
-  setDoc,
-} from "firebase/firestore";
 import { formatPrice } from "../data/testConfig";
-import { getAppSettings } from "../services/settingsService";
-import ReactDOM from "react-dom";
-import TestHistory from "./TestHistory";
 
 // Define resources for each topic
 const topicResources = {
@@ -144,6 +134,7 @@ const Dashboard = () => {
   const referralCode = "SHAUE061";
   const [openResourceTopic, setOpenResourceTopic] = useState(null);
   const [showTestHistory, setShowTestHistory] = useState(false);
+  const [showSSTBot, setShowSSTBot] = useState(false);
 
   // Load user's purchased tests and booked interviews
   useEffect(() => {
@@ -571,6 +562,12 @@ const Dashboard = () => {
     setMenuOpen(false);
   };
 
+  // Toggle SST AI Bot
+  const toggleSSTBot = () => {
+    setShowSSTBot(!showSSTBot);
+    setMenuOpen(false); // Close menu when opening bot
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Simplified Header/Navbar */}
@@ -734,6 +731,15 @@ const Dashboard = () => {
                   >
                     Test History
                   </button>
+                  <button
+                    onClick={toggleSSTBot}
+                    className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-100 hover:text-blue-600"
+                  >
+                    <div className="flex items-center">
+                      SST AI Bot
+                      <span className="ml-2 px-1.5 py-0.5 bg-blue-100 text-blue-800 text-xs font-medium rounded">New</span>
+                    </div>
+                  </button>
                   {/* Additional menu items can be added here later */}
                 </div>
               </nav>
@@ -741,6 +747,20 @@ const Dashboard = () => {
           </div>
         </div>
       )}
+
+      {/* Add SST AI Bot button in the bottom right */}
+      <button
+        onClick={toggleSSTBot}
+        className="fixed bottom-4 right-4 bg-blue-600 text-white rounded-full p-3 shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 z-40"
+        aria-label="Open AI Bot"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+      </button>
+
+      {/* SST AI Bot Component */}
+      <SSTChatBot isOpen={showSSTBot} onClose={() => setShowSSTBot(false)} />
 
       {/* Phone number prompt modal */}
       {showPhonePrompt && (
