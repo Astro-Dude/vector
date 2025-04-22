@@ -137,7 +137,6 @@ const Dashboard = () => {
   });
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [networkError, setNetworkError] = useState(false);
-  const [debugMode, setDebugMode] = useState(false);
   const [interviewCodeCopied, setInterviewCodeCopied] = useState(false);
   const interviewCodeRef = useRef(null);
   const referralCode = "SHAUE061";
@@ -228,6 +227,7 @@ const Dashboard = () => {
 
   const toggleSyllabus = () => {
     setShowSyllabus(!showSyllabus);
+    setShowTestHistory(false); // Turn off test history when toggling syllabus
     setMenuOpen(false); // Close the menu when selecting syllabus
   };
 
@@ -541,6 +541,7 @@ const Dashboard = () => {
   // Toggle test history popup
   const toggleTestHistory = () => {
     setShowTestHistory(!showTestHistory);
+    setShowSyllabus(false); // Turn off syllabus when toggling test history
     setMenuOpen(false);
   };
 
@@ -798,7 +799,7 @@ const Dashboard = () => {
       <main className="py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Welcome section - only visible on home page */}
-          {!showSyllabus && (
+          {!showSyllabus && !showTestHistory && (
             <div className="bg-white overflow-hidden shadow rounded-lg mb-6">
               <div className="px-4 py-5 sm:p-6">
                 <h1 className="text-2xl font-bold text-gray-900">
@@ -1361,8 +1362,11 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
+          ) : showTestHistory ? (
+            <TestHistory />
           ) : (
-            /* Dashboard grid - only visible when syllabus is not shown */
+            // ... existing dashboard content (test series, etc.) ...
+            // Keep all the existing dashboard content here
             <>
               <div className="bg-gradient-to-r from-blue-600 to-indigo-700 overflow-hidden shadow rounded-lg mb-6 text-white">
                 <div className="px-4 py-5 sm:p-6">
@@ -1968,61 +1972,8 @@ const Dashboard = () => {
       </main>
 
       {/* No footer as requested */}
-      <div className="mt-8 text-right">
-        <button
-          onClick={() => setDebugMode(!debugMode)}
-          className="text-xs text-gray-400 hover:text-gray-600"
-        >
-          {debugMode ? "Hide Debug Info" : "Show Debug Info"}
-        </button>
-
-        {debugMode && (
-          <div className="mt-2 p-4 border border-gray-200 rounded bg-gray-50 text-left">
-            <h3 className="text-lg font-medium text-gray-900">
-              Debug Information
-            </h3>
-            <div className="mt-2 space-y-2">
-              <p className="text-sm">
-                <strong>Raw interviewBookingsEnabled:</strong>{" "}
-                {String(appSettings.interviewBookingsEnabled)}
-              </p>
-              <p className="text-sm">
-                <strong>Type:</strong>{" "}
-                {typeof appSettings.interviewBookingsEnabled}
-              </p>
-              <p className="text-sm">
-                <strong>bookingStatusString:</strong>{" "}
-                {appSettings.bookingStatusString || "Not set"}
-              </p>
-              <p className="text-sm">
-                <strong>Is disabled (===false):</strong>{" "}
-                {appSettings.interviewBookingsEnabled === false
-                  ? "true"
-                  : "false"}
-              </p>
-              <p className="text-sm">
-                <strong>Is disabled (string check):</strong>{" "}
-                {appSettings.bookingStatusString === "DISABLED"
-                  ? "true"
-                  : "false"}
-              </p>
-              <p className="text-sm">
-                <strong>Message:</strong> "
-                {appSettings.interviewBookingsMessage}"
-              </p>
-              <p className="text-sm">
-                <strong>Last updated:</strong>{" "}
-                {appSettings.lastUpdated?.toLocaleString?.() || "Unknown"}
-              </p>
-              <button
-                onClick={loadAppSettings}
-                className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md text-sm"
-              >
-                Refresh Settings
-              </button>
-            </div>
-          </div>
-        )}
+      <div className="mt-8 text-center text-xs text-gray-400">
+        &copy; {new Date().getFullYear()} Vector. All rights reserved.
       </div>
       <InterviewCodeTooltip />
       {Object.keys(topicResources).map(topic => (
@@ -2034,10 +1985,6 @@ const Dashboard = () => {
           onClose={() => setOpenResourceTopic(null)}
         />
       ))}
-      <TestHistory
-        isOpen={showTestHistory}
-        onClose={toggleTestHistory}
-      />
     </div>
   );
 };

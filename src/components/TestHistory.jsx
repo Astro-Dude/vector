@@ -2,17 +2,15 @@ import { useState, useEffect } from 'react';
 import { getTestHistory } from '../firebase/firebase';
 import { useAuth } from '../context/AuthContext';
 
-const TestHistory = ({ isOpen, onClose }) => {
+const TestHistory = () => {
   const [testHistory, setTestHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const { currentUser } = useAuth();
 
   useEffect(() => {
-    if (isOpen && currentUser) {
-      fetchTestHistory();
-    }
-  }, [isOpen, currentUser]);
+    fetchTestHistory();
+  }, [currentUser]);
 
   const fetchTestHistory = async () => {
     if (!currentUser) {
@@ -70,24 +68,12 @@ const TestHistory = ({ isOpen, onClose }) => {
     return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">Unknown</span>;
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-gray-800 bg-opacity-75 flex items-center justify-center">
-      <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white px-6 py-4 border-b border-gray-200 flex justify-between items-center z-10">
-          <h2 className="text-xl font-bold text-gray-900">Test History</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-500 focus:outline-none"
-          >
-            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="px-6 py-4">
+    <div className="bg-white overflow-hidden shadow rounded-lg mb-6">
+      <div className="px-4 py-5 sm:p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Test History</h2>
+        
+        <div className="overflow-y-auto max-h-[70vh] pr-2">
           {loading ? (
             <div className="flex justify-center items-center py-8">
               <svg className="animate-spin h-8 w-8 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -98,7 +84,13 @@ const TestHistory = ({ isOpen, onClose }) => {
           ) : error ? (
             <div className="py-8 text-center text-red-500">{error}</div>
           ) : testHistory.length === 0 ? (
-            <div className="py-8 text-center text-gray-500">You haven't taken any tests yet.</div>
+            <div className="py-8 text-center text-gray-500">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12 mx-auto text-gray-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p className="font-medium">No test history found</p>
+              <p className="text-sm mt-1">You haven't taken any tests yet.</p>
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
@@ -114,7 +106,7 @@ const TestHistory = ({ isOpen, onClose }) => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {testHistory.map((test) => (
-                    <tr key={test.id}>
+                    <tr key={test.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                         {test.testName || `Test ${test.testId}`}
                       </td>
@@ -140,13 +132,13 @@ const TestHistory = ({ isOpen, onClose }) => {
             </div>
           )}
         </div>
-
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end">
-          <button
-            onClick={onClose}
+        
+        <div className="mt-4 flex justify-end">
+          <button 
+            onClick={fetchTestHistory}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
-            Close
+            Refresh
           </button>
         </div>
       </div>
