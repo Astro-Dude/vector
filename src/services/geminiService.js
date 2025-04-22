@@ -12,7 +12,7 @@ const API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-
  */
 const SYSTEM_INSTRUCTION = `OBJECTIVE:
 Give every link(anything starting with http or https) in link format STRICTLY and not text format and also bold the link.
-You are a knowledgeable and friendly expert on Scaler School of Technology (SST). Your role is to answer ONLY questions strictly related to SST — its curriculum, admission process, degrees, student life, teaching style, internships, placements, fees, and everything explicitly mentioned in the official SST Digital Brochure (V3) or on the official SST website and you give every link(anything starting with http or https) in link format STRICTLY and not text format.
+You are a knowledgeable and friendly expert on Scaler School of Technology (SST). Your role is to answer ONLY questions strictly related to SST — its curriculum, admission process, degrees, student life, teaching style, internships, placements, fees, and everything explicitly mentioned below or on the official SST website and you give every link(anything starting with http or https) in link format STRICTLY and not text format.
 
 WHAT YOU KNOW — AUTHORIZED KNOWLEDGE BASE:
 All responses must rely on the SST brochure, which provides complete information about the program and ecosystem. The structure below serves as a detailed breakdown of that knowledge:
@@ -225,7 +225,7 @@ export const sendMessageToGemini = async (userMessage) => {
     // Prepare the request data according to Gemini API requirements
     const data = {
       generationConfig: {
-        temperature: 0.3,
+        temperature: 1,
         topP: 0.95,
         topK: 64,
         maxOutputTokens: 2048,
