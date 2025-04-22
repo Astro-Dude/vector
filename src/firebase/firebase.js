@@ -17,7 +17,10 @@ import {
   getDocs,
   addDoc,
   serverTimestamp,
-  orderBy
+  orderBy,
+  doc,
+  getDoc,
+  setDoc
 } from "firebase/firestore";
 
 // Reduce Firestore logging in production
@@ -132,6 +135,39 @@ export const getCurrentUser = (timeoutMs = 5000) => {
 // Function to save test results to Firestore
 export const saveTestResult = async (userId, testData) => {
   try {
+    // First try to get the student name from the users collection
+    let studentName = "Unknown Student";
+    let phoneNumber = ""; // Add phone number variable
+    try {
+      const userRef = doc(db, "users", userId);
+      const userDoc = await getDoc(userRef);
+      
+      if (userDoc.exists()) {
+        if (userDoc.data().displayName) {
+          studentName = userDoc.data().displayName;
+        }
+        // Get phone number if available
+        if (userDoc.data().phoneNumber) {
+          phoneNumber = userDoc.data().phoneNumber;
+        }
+      } else {
+        // If no user doc or no display name, try to get it from auth
+        const authUser = auth.currentUser;
+        if (authUser && authUser.uid === userId && authUser.displayName) {
+          studentName = authUser.displayName;
+          
+          // Since we found the name in auth but not in Firestore, update it
+          await setDoc(userRef, {
+            displayName: authUser.displayName,
+            email: authUser.email,
+            lastUpdated: serverTimestamp()
+          }, { merge: true });
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to get student name:", err);
+    }
+    
     // Create a unique hash/key for this test attempt
     const testFingerprint = `${userId}_${testData.testId}_${testData.score}_${testData.questionsTotal}_${testData.timeSpent}`;
     
@@ -154,6 +190,8 @@ export const saveTestResult = async (userId, testData) => {
     // No duplicate found, save the new result
     const result = await addDoc(testResultsRef, {
       userId,
+      studentName, // Add the student name
+      phoneNumber, // Add the phone number
       testId: testData.testId,
       testName: testData.testName,
       score: testData.score,
@@ -197,5 +235,55 @@ export const getTestHistory = async (userId) => {
   } catch (error) {
     console.error("Error fetching test history:", error);
     throw error;
+  }
+};
+
+// Function to create/update user document in Firestore
+const saveUserToFirestore = async (user) => {
+  if (!user) return null;
+  
+  try {
+    const userRef = doc(db, 'users', user.uid);
+    const userSnap = await getDoc(userRef);
+    
+    if (!userSnap.exists()) {
+      // Create new user document if it doesn't exist
+      await setDoc(userRef, {
+        displayName: user.displayName || '',
+        email: user.email,
+        phoneNumber: user.phoneNumber || '', // May be empty for Google/email auth
+        createdAt: serverTimestamp(),
+        lastLogin: serverTimestamp(),
+        phoneNumberVerified: false, // Track if phone number has been verified
+        needsPhoneNumber: !user.phoneNumber // Flag to indicate if we need to ask for phone
+      });
+      console.log("Created new user document in Firestore");
+    } else {
+      // Update last login time for existing users
+      const updateData = {
+        lastLogin: serverTimestamp(),
+        // Update these fields if they might have changed
+        displayName: user.displayName || userSnap.data().displayName || '',
+        email: user.email || userSnap.data().email,
+      };
+      
+      // Only update phoneNumber if user has one and it's different from existing one
+      if (user.phoneNumber) {
+        updateData.phoneNumber = user.phoneNumber;
+        updateData.phoneNumberVerified = true; // If coming from Auth, it's verified
+        updateData.needsPhoneNumber = false;
+      } else if (!userSnap.data().phoneNumber) {
+        // User still doesn't have phone number, mark that we need to ask for it
+        updateData.needsPhoneNumber = true;
+      }
+      
+      await setDoc(userRef, updateData, { merge: true });
+      console.log("Updated existing user document in Firestore");
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Error saving user to Firestore:", error);
+    return false;
   }
 }; 

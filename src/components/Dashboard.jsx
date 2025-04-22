@@ -119,6 +119,8 @@ const Dashboard = () => {
     logout,
     firestoreConnected,
     getUserProfile,
+    needsPhoneNumber,
+    updatePhoneNumber
   } = useAuth();
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
@@ -376,7 +378,15 @@ const Dashboard = () => {
     }
   };
 
-  // Handle phone number submission
+  // Check if we need to prompt for phone number when component mounts or when needsPhoneNumber changes
+  useEffect(() => {
+    if (needsPhoneNumber || (userProfile && userProfile.needsPhoneNumber)) {
+      setShowPhonePrompt(true);
+      // No need to set currentPurchaseItem since we're just collecting the phone
+    }
+  }, [needsPhoneNumber, userProfile]);
+
+  // Handle phone number submission - updated to save phone to user profile
   const handlePhoneSubmit = (e) => {
     e.preventDefault();
 
@@ -386,10 +396,23 @@ const Dashboard = () => {
       return;
     }
 
+    // Always update the user's phone number in their profile
+    if (currentUser) {
+      updatePhoneNumber(currentUser.uid, phoneNumber)
+        .then(success => {
+          if (!success) {
+            console.warn("Failed to update phone number in profile");
+          }
+        })
+        .catch(err => {
+          console.error("Error updating phone number:", err);
+        });
+    }
+
     // Close the phone prompt modal
     setShowPhonePrompt(false);
 
-    // Handle different purchase types
+    // Handle different purchase types if this was triggered by a purchase
     if (currentPurchaseItem) {
       if (currentPurchaseItem.type === "interview") {
         proceedWithInterviewBooking(phoneNumber);
@@ -398,6 +421,9 @@ const Dashboard = () => {
         handleTestPurchaseWithPhone(currentPurchaseItem.id, phoneNumber);
       }
     }
+    
+    // Clear the current purchase item if it was just for phone collection
+    setCurrentPurchaseItem(null);
   };
 
   // New function to handle test purchase after collecting phone
@@ -721,11 +747,12 @@ const Dashboard = () => {
         <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 w-full max-w-md">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Enter Your Phone Number
+              {currentPurchaseItem ? "Enter Your Phone Number" : "Complete Your Profile"}
             </h3>
             <p className="text-sm text-gray-500 mb-4">
-              We need your phone number to contact you for scheduling the
-              interview.
+              {currentPurchaseItem 
+                ? "We need your phone number to contact you for scheduling the interview." 
+                : "Please provide your phone number to complete your profile. This helps us provide better support and updates about your tests and interview sessions."}
             </p>
             <form onSubmit={handlePhoneSubmit}>
               <div className="mb-4">
@@ -752,13 +779,13 @@ const Dashboard = () => {
                   onClick={() => setShowPhonePrompt(false)}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
                 >
-                  Cancel
+                  {currentPurchaseItem ? "Cancel" : "Later"}
                 </button>
                 <button
                   type="submit"
                   className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  Continue
+                  {currentPurchaseItem ? "Continue" : "Save"}
                 </button>
               </div>
             </form>

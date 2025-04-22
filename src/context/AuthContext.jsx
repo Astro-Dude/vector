@@ -56,6 +56,7 @@ export const AuthProvider = ({ children }) => {
   const [authChecked, setAuthChecked] = useState(false);
   const [error, setError] = useState("");
   const [firestoreConnected, setFirestoreConnected] = useState(true);
+  const [needsPhoneNumber, setNeedsPhoneNumber] = useState(false);
   
   // Add a retry counter to prevent infinite connection attempts
   const retryCount = useRef(0);
@@ -89,8 +90,19 @@ export const AuthProvider = ({ children }) => {
       setCurrentUser(userCredential.user);
       setAuthChecked(true);
       
+      // Immediately save user to Firestore and check if phone number is needed
+      const result = await saveUserToFirestore(userCredential.user);
+      
+      // Set the needs phone number flag
+      if (result && result.needsPhoneNumber) {
+        setNeedsPhoneNumber(true);
+      }
+      
       // Create a minimal profile immediately
-      const minimalProfile = createFallbackProfile(userCredential.user.uid);
+      const minimalProfile = {
+        ...createFallbackProfile(userCredential.user.uid),
+        needsPhoneNumber: result?.needsPhoneNumber || false
+      };
       setUserProfile(minimalProfile);
       
       // Try to fetch/create the Firestore profile in the background
@@ -122,6 +134,7 @@ export const AuthProvider = ({ children }) => {
           uid: user.uid,
           email: user.email,
           displayName: user.displayName,
+          phoneNumber: user.phoneNumber || '',
           photoURL: user.photoURL,
           createdAt: new Date().toISOString(),
           role: "student",
@@ -161,25 +174,48 @@ export const AuthProvider = ({ children }) => {
         await setDoc(userRef, {
           displayName: user.displayName || '',
           email: user.email,
+          phoneNumber: user.phoneNumber || '',
           createdAt: serverTimestamp(),
-          lastLogin: serverTimestamp()
+          lastLogin: serverTimestamp(),
+          phoneNumberVerified: false,
+          needsPhoneNumber: true // Always request phone number for new users
         });
         console.log("Created new user document in Firestore");
+        return { isNewUser: true, needsPhoneNumber: true };
       } else {
         // Update last login time for existing users
-        await setDoc(userRef, {
+        const updateData = {
           lastLogin: serverTimestamp(),
           // Also update these fields if they might have changed
           displayName: user.displayName || userSnap.data().displayName || '',
-          email: user.email || userSnap.data().email
-        }, { merge: true });
+          email: user.email || userSnap.data().email,
+        };
+        
+        // Check if we need to prompt for phone number
+        const needsPhoneNumber = !userSnap.data().phoneNumber || 
+                                userSnap.data().phoneNumber === '';
+        
+        // Only add phone number from auth if it exists
+        if (user.phoneNumber) {
+          updateData.phoneNumber = user.phoneNumber;
+          updateData.phoneNumberVerified = true;
+          updateData.needsPhoneNumber = false;
+        } else {
+          // Don't overwrite existing phone number
+          updateData.needsPhoneNumber = needsPhoneNumber;
+        }
+        
+        await setDoc(userRef, updateData, { merge: true });
         console.log("Updated existing user document in Firestore");
+        
+        return { 
+          isNewUser: false, 
+          needsPhoneNumber: needsPhoneNumber 
+        };
       }
-      
-      return true;
     } catch (error) {
       console.error("Error saving user to Firestore:", error);
-      return false;
+      return { error: true };
     }
   };
 
@@ -192,6 +228,13 @@ export const AuthProvider = ({ children }) => {
       setCurrentUser(user);
       
       if (user) {
+        // Always ensure user is saved to Firestore on sign-in
+        try {
+          await saveUserToFirestore(user);
+        } catch (err) {
+          console.warn("Error saving user to Firestore:", err);
+        }
+        
         // First try to use cached profile if available
         const cachedProfile = profileCache.current.get(user.uid);
         if (cachedProfile) {
@@ -202,9 +245,6 @@ export const AuthProvider = ({ children }) => {
           setTimeout(() => {
             getUserProfile(user.uid).catch(() => {});
           }, 1000);
-          
-          // Save user to Firestore whenever they log in
-          await saveUserToFirestore(user);
           
           return;
         }
@@ -279,7 +319,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Function to sign up a new user
-  const signup = async (email, password, name) => {
+  const signup = async (email, password, name, phoneNumber = '') => {
     try {
       // Create auth user
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
@@ -289,10 +329,11 @@ export const AuthProvider = ({ children }) => {
         displayName: name
       });
       
-      // Save to Firestore
+      // Save to Firestore with phone number
       await saveUserToFirestore({
         ...userCredential.user,
-        displayName: name
+        displayName: name,
+        phoneNumber: phoneNumber
       });
       
       return userCredential;
@@ -333,6 +374,44 @@ export const AuthProvider = ({ children }) => {
     return sendPasswordResetEmail(auth, email);
   };
 
+  // Function to update user's phone number
+  const updatePhoneNumber = async (uid, phoneNumber) => {
+    try {
+      if (!uid) throw new Error('User ID is required');
+      
+      const userRef = doc(db, 'users', uid);
+      await setDoc(userRef, { 
+        phoneNumber,
+        lastUpdated: serverTimestamp(),
+        needsPhoneNumber: false,
+        phoneNumberVerified: true
+      }, { merge: true });
+      
+      // Update local profile
+      if (userProfile) {
+        const updatedProfile = { 
+          ...userProfile, 
+          phoneNumber,
+          needsPhoneNumber: false,
+          phoneNumberVerified: true
+        };
+        setUserProfile(updatedProfile);
+        setNeedsPhoneNumber(false);
+        
+        // Update cache
+        profileCache.current.set(uid, {
+          data: updatedProfile,
+          timestamp: Date.now()
+        });
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating phone number:', error);
+      return false;
+    }
+  };
+
   // Value object provided to context consumers
   const value = {
     currentUser,
@@ -341,13 +420,15 @@ export const AuthProvider = ({ children }) => {
     authChecked,
     error,
     firestoreConnected,
+    needsPhoneNumber,
     signInWithGoogle,
     logout,
     signup,
     login,
     resetPassword,
     getUserProfile,
-    retryUserProfileFetch
+    retryUserProfileFetch,
+    updatePhoneNumber
   };
 
   return (
