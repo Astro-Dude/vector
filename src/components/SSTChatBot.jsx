@@ -133,7 +133,7 @@ const SSTChatBot = ({ isOpen, onClose }) => {
               ) : (
                 <div className="markdown-content">
                   <ReactMarkdown>{message.content}</ReactMarkdown>
-                  <a href="https://www.linkedin.com/in/astro-dude" target="_blank" rel="noopener noreferrer">Connect with Shaurya Verma – Founder of Vector</a>
+                  <a href="https://www.linkedin.com/in/astro-dude" target="_blank" rel="noopener noreferrer">Connect with Shaurya Verma – Co-Founder of Vector</a>
                 </div>
               )}
             </div>
