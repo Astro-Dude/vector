@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { SSTBotProvider } from './context/SSTBotContext';
+import { ThemeProvider } from './context/ThemeContext';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Features from './components/Features';
@@ -20,6 +21,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import LoadingScreen from './components/LoadingScreen';
 import { Suspense, useEffect } from 'react';
 import { useAuth } from './context/AuthContext';
+import { useTheme } from './context/ThemeContext';
 import { testConfigs, TEST_IDS, placeholderQuestions } from './data/testConfig';
 import disableInspection from './utils/disableInspect';
 
@@ -46,6 +48,7 @@ const PublicRoute = ({ children }) => {
 // Layout component to conditionally render navbar and footer
 const Layout = ({ children }) => {
   const location = useLocation();
+  const { theme } = useTheme();
   
   // Disable browser inspection tools
   useEffect(() => {
@@ -60,7 +63,7 @@ const Layout = ({ children }) => {
                         location.pathname === '/dashboard';
   
   return (
-    <div className="min-h-screen bg-white">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-white'}`}>
       {!hideNavFooter && <Navbar />}
       <ErrorBoundary>
         <Suspense fallback={<LoadingFallback />}>
@@ -205,13 +208,15 @@ function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <SSTBotProvider>
-          <Router>
-            <Layout>
-              <AppContent />
-            </Layout>
-          </Router>
-        </SSTBotProvider>
+        <ThemeProvider>
+          <SSTBotProvider>
+            <Router>
+              <Layout>
+                <AppContent />
+              </Layout>
+            </Router>
+          </SSTBotProvider>
+        </ThemeProvider>
       </AuthProvider>
     </ErrorBoundary>
   );

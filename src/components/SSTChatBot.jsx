@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { sendMessageToGemini } from '../services/geminiService';
+import { useTheme } from '../context/ThemeContext';
 
 /**
  * SST AI Bot component that provides a chat interface for interacting with
@@ -18,6 +19,7 @@ const SSTChatBot = ({ isOpen, onClose }) => {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const chatContainerRef = useRef(null);
+  const { theme } = useTheme();
 
   // Auto-scroll to the bottom of the chat
   const scrollToBottom = () => {
@@ -90,12 +92,12 @@ const SSTChatBot = ({ isOpen, onClose }) => {
   return (
     <div 
       ref={chatContainerRef}
-      className="fixed bottom-0 right-0 w-full md:w-96 h-[500px] md:h-[600px] md:mr-4 md:mb-4 bg-white rounded-t-lg md:rounded-lg shadow-xl flex flex-col z-50 overflow-hidden"
+      className={`fixed bottom-0 right-0 w-full md:w-96 h-[500px] md:h-[600px] md:mr-4 md:mb-4 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-t-lg md:rounded-lg shadow-xl flex flex-col z-50 overflow-hidden`}
     >
       {/* Header */}
       <div className="flex justify-between items-center bg-blue-600 text-white px-4 py-3">
         <div className="flex items-center">
-          <div className="bg-white rounded-full p-1 mr-2">
+          <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-full p-1 mr-2`}>
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
@@ -113,7 +115,7 @@ const SSTChatBot = ({ isOpen, onClose }) => {
       </div>
       
       {/* Messages */}
-      <div className="flex-1 p-4 overflow-y-auto bg-gray-50">
+      <div className={`flex-1 p-4 overflow-y-auto ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
         {messages.map((message, index) => (
           <div 
             key={index} 
@@ -124,16 +126,16 @@ const SSTChatBot = ({ isOpen, onClose }) => {
                 message.role === 'user' 
                   ? 'bg-blue-600 text-white rounded-br-none' 
                   : message.error 
-                    ? 'bg-red-100 text-red-700 rounded-bl-none' 
-                    : 'bg-white shadow-md rounded-bl-none'
+                    ? theme === 'dark' ? 'bg-red-900 bg-opacity-50 text-red-300 rounded-bl-none' : 'bg-red-100 text-red-700 rounded-bl-none' 
+                    : theme === 'dark' ? 'bg-gray-800 text-gray-200 shadow-md rounded-bl-none' : 'bg-white shadow-md rounded-bl-none'
               }`}
             >
               {message.role === 'user' ? (
                 message.content
               ) : (
-                <div className="markdown-content">
+                <div className={`markdown-content ${theme === 'dark' ? 'markdown-dark' : ''}`}>
                   <ReactMarkdown>{message.content}</ReactMarkdown>
-                  <a href="https://www.linkedin.com/in/astro-dude" target="_blank" rel="noopener noreferrer">Connect with Shaurya Verma – Co-Founder of Vector</a>
+                  <a href="https://www.linkedin.com/in/astro-dude" target="_blank" rel="noopener noreferrer" className={theme === 'dark' ? 'text-blue-400' : ''}>Connect with Shaurya Verma – Co-Founder of Vector</a>
                 </div>
               )}
             </div>
@@ -141,9 +143,9 @@ const SSTChatBot = ({ isOpen, onClose }) => {
         ))}
         {isLoading && (
           <div className="text-left mb-4">
-            <div className="inline-block px-4 py-2 rounded-lg bg-white shadow-md rounded-bl-none max-w-[80%]">
+            <div className={`inline-block px-4 py-2 rounded-lg ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} shadow-md rounded-bl-none max-w-[80%]`}>
               <div className="flex items-center">
-                <div className="dot-typing"></div>
+                <div className={`dot-typing ${theme === 'dark' ? 'dot-typing-dark' : ''}`}></div>
               </div>
             </div>
           </div>
@@ -154,7 +156,7 @@ const SSTChatBot = ({ isOpen, onClose }) => {
       {/* Input area */}
       <form 
         onSubmit={handleSendMessage}
-        className="p-3 border-t border-gray-200 bg-white"
+        className={`p-3 border-t ${theme === 'dark' ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}
       >
         <div className="flex">
           <input
@@ -163,7 +165,9 @@ const SSTChatBot = ({ isOpen, onClose }) => {
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             placeholder="Ask about SST..."
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className={`flex-1 px-4 py-2 border ${theme === 'dark' 
+              ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400' 
+              : 'bg-white border-gray-300 text-gray-900'} rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
             disabled={isLoading}
           />
           <button
@@ -176,7 +180,7 @@ const SSTChatBot = ({ isOpen, onClose }) => {
             </svg>
           </button>
         </div>
-        <div className="text-xs text-gray-500 mt-1 text-center">
+        <div className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mt-1 text-center`}>
           Information about Scaler School of Technology only
         </div>
       </form>
@@ -193,6 +197,12 @@ const SSTChatBot = ({ isOpen, onClose }) => {
           color: #3b82f6;
           box-shadow: 9984px 0 0 0 #3b82f6, 9999px 0 0 0 #3b82f6, 10014px 0 0 0 #3b82f6;
           animation: dot-typing 1.5s infinite linear;
+        }
+        
+        .dot-typing-dark {
+          background-color: #60a5fa;
+          color: #60a5fa;
+          box-shadow: 9984px 0 0 0 #60a5fa, 9999px 0 0 0 #60a5fa, 10014px 0 0 0 #60a5fa;
         }
 
         @keyframes dot-typing {
@@ -219,11 +229,43 @@ const SSTChatBot = ({ isOpen, onClose }) => {
           }
         }
         
+        .dot-typing-dark {
+          animation: dot-typing-dark 1.5s infinite linear;
+        }
+        
+        @keyframes dot-typing-dark {
+          0% {
+            box-shadow: 9984px 0 0 0 #60a5fa, 9999px 0 0 0 #60a5fa, 10014px 0 0 0 #60a5fa;
+          }
+          16.667% {
+            box-shadow: 9984px -10px 0 0 #60a5fa, 9999px 0 0 0 #60a5fa, 10014px 0 0 0 #60a5fa;
+          }
+          33.333% {
+            box-shadow: 9984px 0 0 0 #60a5fa, 9999px 0 0 0 #60a5fa, 10014px 0 0 0 #60a5fa;
+          }
+          50% {
+            box-shadow: 9984px 0 0 0 #60a5fa, 9999px -10px 0 0 #60a5fa, 10014px 0 0 0 #60a5fa;
+          }
+          66.667% {
+            box-shadow: 9984px 0 0 0 #60a5fa, 9999px 0 0 0 #60a5fa, 10014px 0 0 0 #60a5fa;
+          }
+          83.333% {
+            box-shadow: 9984px 0 0 0 #60a5fa, 9999px 0 0 0 #60a5fa, 10014px -10px 0 0 #60a5fa;
+          }
+          100% {
+            box-shadow: 9984px 0 0 0 #60a5fa, 9999px 0 0 0 #60a5fa, 10014px 0 0 0 #60a5fa;
+          }
+        }
+        
         /* Style markdown content */
         .markdown-content {
           font-size: 0.95rem;
           line-height: 1.5;
           color: #333;
+        }
+        
+        .markdown-content.markdown-dark {
+          color: #e5e7eb;
         }
         
         .markdown-content p {
@@ -258,12 +300,21 @@ const SSTChatBot = ({ isOpen, onClose }) => {
           text-decoration: underline;
         }
         
+        .markdown-dark a {
+          color: #60a5fa;
+        }
+        
         .markdown-content code {
           background-color: #f3f4f6;
           padding: 0.2rem 0.4rem;
           border-radius: 0.25rem;
           font-family: monospace;
           font-size: 0.9em;
+        }
+        
+        .markdown-dark code {
+          background-color: #374151;
+          color: #e5e7eb;
         }
         
         .markdown-content pre {
@@ -274,12 +325,21 @@ const SSTChatBot = ({ isOpen, onClose }) => {
           margin-bottom: 0.75rem;
         }
         
+        .markdown-dark pre {
+          background-color: #374151;
+          color: #e5e7eb;
+        }
+        
         .markdown-content blockquote {
           border-left: 3px solid #d1d5db;
           padding-left: 1rem;
           margin-left: 0;
           margin-right: 0;
           font-style: italic;
+        }
+        
+        .markdown-dark blockquote {
+          border-left: 3px solid #4b5563;
         }
         
         .markdown-content table {
@@ -295,8 +355,17 @@ const SSTChatBot = ({ isOpen, onClose }) => {
           text-align: left;
         }
         
+        .markdown-dark th,
+        .markdown-dark td {
+          border: 1px solid #4b5563;
+        }
+        
         .markdown-content th {
           background-color: #f3f4f6;
+        }
+        
+        .markdown-dark th {
+          background-color: #374151;
         }
       `}</style>
     </div>

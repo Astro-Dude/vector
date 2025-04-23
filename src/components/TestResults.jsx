@@ -3,6 +3,7 @@ import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import { saveTestResult } from '../firebase/firebase';
 import { useAuth } from '../context/AuthContext';
 import { TEST_IDS } from '../data/testConfig';
+import { useTheme } from '../context/ThemeContext';
 
 /**
  * Generic test results component that can be used with any question set
@@ -19,6 +20,7 @@ const TestResults = ({
   const navigate = useNavigate();
   const { testId } = useParams();
   const { currentUser } = useAuth();
+  const { theme } = useTheme();
   
   const [score, setScore] = useState(0);
   const [percentage, setPercentage] = useState(0);
@@ -158,9 +160,9 @@ const TestResults = ({
       return {
         title: 'Test Terminated',
         message: 'Your test was terminated due to a full-screen violation.',
-        color: 'text-red-600',
-        bgColor: 'bg-red-100',
-        iconColor: 'text-red-500',
+        color: theme === 'dark' ? 'text-red-400' : 'text-red-600',
+        bgColor: theme === 'dark' ? 'bg-red-900 bg-opacity-30' : 'bg-red-100',
+        iconColor: theme === 'dark' ? 'text-red-400' : 'text-red-500',
         icon: (
           <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
@@ -171,9 +173,9 @@ const TestResults = ({
       return {
         title: 'Congratulations!',
         message: 'You have passed the test.',
-        color: 'text-green-600',
-        bgColor: 'bg-green-100',
-        iconColor: 'text-green-500',
+        color: theme === 'dark' ? 'text-green-400' : 'text-green-600',
+        bgColor: theme === 'dark' ? 'bg-green-900 bg-opacity-30' : 'bg-green-100',
+        iconColor: theme === 'dark' ? 'text-green-400' : 'text-green-500',
         icon: (
           <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -184,9 +186,9 @@ const TestResults = ({
       return {
         title: 'Better Luck Next Time',
         message: 'You did not meet the passing criteria for this test.',
-        color: 'text-yellow-600',
-        bgColor: 'bg-yellow-100',
-        iconColor: 'text-yellow-500',
+        color: theme === 'dark' ? 'text-yellow-400' : 'text-yellow-600',
+        bgColor: theme === 'dark' ? 'bg-yellow-900 bg-opacity-30' : 'bg-yellow-100',
+        iconColor: theme === 'dark' ? 'text-yellow-400' : 'text-yellow-500',
         icon: (
           <svg xmlns="http://www.w3.org/2000/svg" className="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -210,16 +212,16 @@ const TestResults = ({
   };
   
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'} py-12`}>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-lg overflow-hidden`}>
           {/* Header */}
-          <div className="px-6 py-4 bg-gray-100 border-b border-gray-200">
-            <h1 className="text-2xl font-bold text-gray-900">{resultsTitle}</h1>
+          <div className={`px-6 py-4 ${theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-gray-100 border-gray-200'} border-b`}>
+            <h1 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{resultsTitle}</h1>
           </div>
           
           {/* Result summary */}
-          <div className={`px-6 py-8 ${statusInfo.bgColor} border-b border-gray-200`}>
+          <div className={`px-6 py-8 ${statusInfo.bgColor} border-b ${theme === 'dark' ? 'border-gray-600' : 'border-gray-200'}`}>
             <div className="flex flex-col md:flex-row items-center justify-between">
               <div className="flex items-center mb-4 md:mb-0">
                 <div className={`flex-shrink-0 mr-4 ${statusInfo.iconColor}`}>
@@ -227,37 +229,37 @@ const TestResults = ({
                 </div>
                 <div>
                   <h2 className={`text-xl font-bold ${statusInfo.color} mb-1`}>{statusInfo.title}</h2>
-                  <p className="text-gray-600">{statusInfo.message}</p>
+                  <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>{statusInfo.message}</p>
                 </div>
               </div>
               
               <div className="text-center">
-                <div className="text-4xl font-bold text-gray-900">{percentage}%</div>
-                <p className="text-gray-600">Final Score</p>
+                <div className={`text-4xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{percentage}%</div>
+                <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Final Score</p>
               </div>
             </div>
           </div>
           
           {/* Score breakdown */}
-          <div className="px-6 py-6 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Score Breakdown</h3>
+          <div className={`px-6 py-6 border-b ${theme === 'dark' ? 'border-gray-600' : 'border-gray-200'}`}>
+            <h3 className={`text-lg font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-4`}>Score Breakdown</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-gray-50 rounded-lg p-4 text-center">
-                <div className="text-xl font-semibold text-gray-900">{score} / {questions.length}</div>
-                <p className="text-gray-600 text-sm">Questions Answered Correctly</p>
+              <div className={`${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg p-4 text-center`}>
+                <div className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{score} / {questions.length}</div>
+                <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Questions Answered Correctly</p>
               </div>
               
-              <div className="bg-gray-50 rounded-lg p-4 text-center">
-                <div className="text-xl font-semibold text-gray-900">
+              <div className={`${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg p-4 text-center`}>
+                <div className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                   {Object.keys(answers).length} / {questions.length}
                 </div>
-                <p className="text-gray-600 text-sm">Questions Attempted</p>
+                <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Questions Attempted</p>
               </div>
               
-              <div className="bg-gray-50 rounded-lg p-4 text-center">
-                <div className="text-xl font-semibold text-gray-900">{formatTime(timeSpent)}</div>
-                <p className="text-gray-600 text-sm">Time Spent</p>
+              <div className={`${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg p-4 text-center`}>
+                <div className={`text-xl font-semibold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{formatTime(timeSpent)}</div>
+                <p className={`text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>Time Spent</p>
               </div>
             </div>
           </div>
@@ -266,17 +268,25 @@ const TestResults = ({
           {renderFeedback()}
           
           {/* Actions */}
-          <div className="px-6 py-6 flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3">
+          <div className={`px-6 py-6 flex flex-col sm:flex-row justify-end space-y-3 sm:space-y-0 sm:space-x-3 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
             <button
               onClick={handleReturnHome}
-              className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className={`px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                theme === 'dark' 
+                  ? 'border-gray-600 text-gray-300 hover:bg-gray-700 focus:ring-offset-gray-800' 
+                  : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
             >
               Back to Dashboard
             </button>
             
             <button
               onClick={handleViewSolutions}
-              className="px-4 py-2 bg-green-600 border border-transparent rounded-md text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+              className={`px-4 py-2 border border-transparent rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 ${
+                theme === 'dark'
+                  ? 'bg-green-700 hover:bg-green-600 focus:ring-offset-gray-800'
+                  : 'bg-green-600 hover:bg-green-700'
+              }`}
             >
               View Solutions
             </button>
@@ -284,7 +294,11 @@ const TestResults = ({
             {allowRetake && !endedDueToViolation && (
               <button
                 onClick={handleRetakeTest}
-                className="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className={`px-4 py-2 border border-transparent rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                  theme === 'dark'
+                    ? 'bg-blue-700 hover:bg-blue-600 focus:ring-offset-gray-800'
+                    : 'bg-blue-600 hover:bg-blue-700'
+                }`}
               >
                 Retake Test
               </button>
@@ -292,18 +306,18 @@ const TestResults = ({
           </div>
         </div>
         
-        {/* Additional resources section (optional) */}
-        <div className="mt-8 bg-white rounded-lg shadow-lg overflow-hidden">
-          <div className="px-6 py-4 bg-blue-50 border-b border-blue-100">
-            <h2 className="text-xl font-medium text-blue-800">Improve Your Skills</h2>
+        {/* Additional resources section */}
+        <div className={`mt-8 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-lg overflow-hidden`}>
+          <div className={`px-6 py-4 ${theme === 'dark' ? 'bg-blue-900 bg-opacity-30 border-blue-800' : 'bg-blue-50 border-blue-100'} border-b`}>
+            <h2 className={`text-xl font-medium ${theme === 'dark' ? 'text-blue-300' : 'text-blue-800'}`}>Improve Your Skills</h2>
           </div>
           
           <div className="px-6 py-6">
-            <p className="text-gray-600 mb-4">
+            <p className={`mb-4 ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
               Want to improve your performance? Check out these resources:
             </p>
             
-            <ul className="space-y-2 text-blue-600">
+            <ul className={`space-y-2 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}>
               <li className="flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

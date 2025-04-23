@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 import ReactDOM from "react-dom";
 import { useAuth } from "../context/AuthContext";
 import { useSST } from "../context/SSTBotContext";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "./ThemeToggle";
 import Name from "../assets/images/Name.png";
 import Logo from "../assets/images/Logo.png";
 import { testConfigs, TEST_IDS } from "../data/testConfig";
@@ -30,6 +32,7 @@ const Dashboard = () => {
   } = useAuth();
 
   const { toggleBot } = useSST();
+  const { theme } = useTheme();
   
   const navigate = useNavigate();
   const [profileOpen, setProfileOpen] = useState(false);
@@ -564,16 +567,16 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
       {/* Simplified Header/Navbar */}
-      <header className="bg-white shadow-sm">
+      <header className={`${theme === 'dark' ? 'bg-gray-800 shadow-md' : 'bg-white shadow-sm'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
             {/* Left side with menu icon and logo */}
             <div className="flex items-center space-x-4">
               <button
                 onClick={toggleMenu}
-                className="p-2 rounded-md text-gray-700 hover:text-blue-600 focus:outline-none"
+                className={`p-2 rounded-md ${theme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-blue-600'} focus:outline-none`}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -593,10 +596,14 @@ const Dashboard = () => {
 
               <div className="flex items-center">
                 <Link to="/">
-                  <img src={Logo} alt="Logo" className="h-10" />
+                  <div className={`${theme === 'dark' ? 'logo-dark-filter' : ''}`}>
+                    <img src={Logo} alt="Logo" className="h-10" />
+                  </div>
                 </Link>
                 <Link to="/" className="flex-shrink-0 flex items-center">
-                  <img src={Name} alt="Vector" className="h-20" />
+                  <div className={`${theme === 'dark' ? 'logo-name-dark-filter' : ''}`}>
+                    <img src={Name} alt="Vector" className="h-20" />
+                  </div>
                 </Link>
               </div>
             </div>
@@ -604,67 +611,71 @@ const Dashboard = () => {
             {/* Empty div to maintain flex spacing */}
             <div className="flex-1"></div>
 
-            {/* Profile on right */}
-            <div className="relative">
-              <button
-                onClick={toggleProfile}
-                className="max-w-xs bg-white flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <span className="sr-only">Open user menu</span>
-                <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium">
-                  {currentUser?.displayName?.charAt(0) || "U"}
-                </div>
-                <span className="ml-2 text-gray-700 hidden sm:inline">
-                  {currentUser?.displayName || "User"}
-                </span>
-                <svg
-                  className="ml-1 h-5 w-5 text-gray-400"
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  aria-hidden="true"
+            {/* Theme toggle and profile on right */}
+            <div className="flex items-center space-x-4">
+              <ThemeToggle className={theme === 'dark' ? 'text-gray-200 hover:text-white' : 'text-gray-700 hover:text-blue-600'} />
+              
+              <div className="relative">
+                <button
+                  onClick={toggleProfile}
+                  className={`max-w-xs flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}
                 >
-                  <path
-                    fillRule="evenodd"
-                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
-
-              {profileOpen && (
-                <div className="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-xl bg-white ring-1 ring-gray-200 focus:outline-none z-10 overflow-hidden">
-                  <div className="p-2">
-                    <div className="px-3 py-2 border-b border-gray-100">
-                      <p className="text-sm font-medium text-gray-900">
-                        {currentUser?.displayName || "User"}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">
-                        {currentUser?.email || ""}
-                      </p>
-                    </div>
-                    <button
-                      onClick={handleLogout}
-                      className="flex w-full items-center px-3 py-2.5 mt-1 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md group transition-colors duration-150"
-                    >
-                      <svg
-                        className="mr-2 h-5 w-5 text-red-500 group-hover:text-red-600"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                        />
-                      </svg>
-                      Sign out
-                    </button>
+                  <span className="sr-only">Open user menu</span>
+                  <div className="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium">
+                    {currentUser?.displayName?.charAt(0) || "U"}
                   </div>
-                </div>
-              )}
+                  <span className={`ml-2 hidden sm:inline ${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
+                    {currentUser?.displayName || "User"}
+                  </span>
+                  <svg
+                    className={`ml-1 h-5 w-5 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-400'}`}
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+
+                {profileOpen && (
+                  <div className={`origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-xl ${theme === 'dark' ? 'bg-gray-800 ring-gray-700' : 'bg-white ring-gray-200'} ring-1 focus:outline-none z-10 overflow-hidden`}>
+                    <div className="p-2">
+                      <div className={`px-3 py-2 border-b ${theme === 'dark' ? 'border-gray-700' : 'border-gray-100'}`}>
+                        <p className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                          {currentUser?.displayName || "User"}
+                        </p>
+                        <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} truncate`}>
+                          {currentUser?.email || ""}
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleLogout}
+                        className={`flex w-full items-center px-3 py-2.5 mt-1 text-sm font-medium text-red-600 ${theme === 'dark' ? 'hover:bg-gray-700' : 'hover:bg-red-50'} rounded-md group transition-colors duration-150`}
+                      >
+                        <svg
+                          className="mr-2 h-5 w-5 text-red-500 group-hover:text-red-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                          />
+                        </svg>
+                        Sign out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -681,12 +692,12 @@ const Dashboard = () => {
           ></div>
 
           {/* Menu panel */}
-          <div className="relative flex-1 flex flex-col max-w-xs w-full bg-white border-r border-gray-200 shadow-xl transform transition-transform duration-300 ease-in-out">
-            <div className="p-4 flex items-center justify-between">
-              <span className="text-xl font-bold text-blue-600">Menu</span>
+          <div className={`relative flex-1 flex flex-col max-w-xs w-full ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'} border-r shadow-xl transform transition-transform duration-300 ease-in-out`}>
+            <div className={`p-4 flex items-center justify-between ${theme === 'dark' ? 'border-b border-gray-700' : ''}`}>
+              <span className={`text-xl font-bold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`}>Menu</span>
               <button
                 onClick={toggleMenu}
-                className="p-2 rounded-md text-gray-700 hover:text-blue-600 focus:outline-none"
+                className={`p-2 rounded-md ${theme === 'dark' ? 'text-gray-300 hover:text-white' : 'text-gray-700 hover:text-blue-600'} focus:outline-none`}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -710,29 +721,29 @@ const Dashboard = () => {
                 <div className="px-2 space-y-1">
                   <Link
                     to="/"
-                    className="block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-100 hover:text-blue-600"
+                    className={`block px-3 py-2 rounded-md text-base font-medium ${theme === 'dark' ? 'text-gray-200 hover:bg-gray-700 hover:text-white' : 'text-gray-900 hover:bg-gray-100 hover:text-blue-600'}`}
                   >
                     Home
                   </Link>
                   <button
                     onClick={toggleSyllabus}
-                    className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-100 hover:text-blue-600"
+                    className={`w-full text-left block px-3 py-2 rounded-md text-base font-medium ${theme === 'dark' ? 'text-gray-200 hover:bg-gray-700 hover:text-white' : 'text-gray-900 hover:bg-gray-100 hover:text-blue-600'}`}
                   >
                     Syllabus
                   </button>
                   <button
                     onClick={toggleTestHistory}
-                    className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-100 hover:text-blue-600"
+                    className={`w-full text-left block px-3 py-2 rounded-md text-base font-medium ${theme === 'dark' ? 'text-gray-200 hover:bg-gray-700 hover:text-white' : 'text-gray-900 hover:bg-gray-100 hover:text-blue-600'}`}
                   >
                     Test History
                   </button>
                   <button
                     onClick={toggleBot}
-                    className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-gray-900 hover:bg-gray-100 hover:text-blue-600"
+                    className={`w-full text-left block px-3 py-2 rounded-md text-base font-medium ${theme === 'dark' ? 'text-gray-200 hover:bg-gray-700 hover:text-white' : 'text-gray-900 hover:bg-gray-100 hover:text-blue-600'}`}
                   >
                     <div className="flex items-center">
                       SST AI Bot
-                      <span className="ml-2 px-1.5 py-0.5 bg-blue-100 text-blue-800 text-xs font-medium rounded">New</span>
+                      <span className={`ml-2 px-1.5 py-0.5 ${theme === 'dark' ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-800'} text-xs font-medium rounded`}>New</span>
                     </div>
                   </button>
                   {/* Additional menu items can be added here later */}
@@ -824,16 +835,16 @@ const Dashboard = () => {
       )}
 
       {/* Main content */}
-      <main className="py-10">
+      <main className={`py-10 ${theme === 'dark' ? 'bg-gray-900' : 'bg-gray-50'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Welcome section - only visible on home page */}
           {!showSyllabus && !showTestHistory && (
-            <div className="bg-white overflow-hidden shadow rounded-lg mb-6">
+            <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} overflow-hidden shadow rounded-lg mb-6`}>
               <div className="px-4 py-5 sm:p-6">
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                   Welcome, {currentUser?.displayName || "Student"}
                 </h1>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className={`mt-1 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>
                   Your one-stop platform for NSET preparation. Access mock
                   tests, study resources, and more.
                 </p>
@@ -843,19 +854,19 @@ const Dashboard = () => {
 
           {/* Syllabus section - only visible when toggled */}
           {showSyllabus ? (
-            <div className="bg-white overflow-hidden shadow rounded-lg mb-6">
+            <div className={`${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white'} overflow-hidden shadow rounded-lg mb-6`}>
               <div className="px-4 py-5 sm:p-6">
-                <h2 className="text-xl font-bold text-gray-900 mb-4">
+                <h2 className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-4`}>
                   NSET Exam Syllabus
                 </h2>
 
                 <div className="max-h-[70vh] overflow-y-auto pr-2">
                   {/* Logical Reasoning section */}
                   <div className="mb-8">
-                    <h3 className="text-lg font-semibold text-blue-700 mb-3">
+                    <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-700'} mb-3`}>
                       Logical Reasoning
                     </h3>
-                    <p className="text-gray-700 mb-4">
+                    <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} mb-4`}>
                       The Logical Reasoning section has questions that will test
                       your ability to read and analyse visual representations of
                       data. It will also test your ability to think logically.
@@ -863,13 +874,13 @@ const Dashboard = () => {
                       unstructured. This section requires the candidate to have
                       sound skills in logical reasoning and data representation.
                     </p>
-                    <h4 className="text-md font-medium text-gray-900 mb-2">
+                    <h4 className={`text-md font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'} mb-2`}>
                       Topics covered:
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2">
                       <div className="flex items-center">
                         <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
+                          className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -878,14 +889,14 @@ const Dashboard = () => {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                            d="M5 13l4 4L19 7"
                           />
                         </svg>
-                        <span>Series, Blood Relations, & Family Tree</span>
+                        <span className={theme === 'dark' ? 'text-gray-300' : ''}>Direction sense</span>
                       </div>
                       <div className="flex items-center">
                         <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
+                          className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -897,11 +908,11 @@ const Dashboard = () => {
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span>Simple & Compound Interest</span>
+                        <span className={theme === 'dark' ? 'text-gray-300' : ''}>Series, Blood Relations, & Family Tree</span>
                       </div>
                       <div className="flex items-center">
                         <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
+                          className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -913,11 +924,11 @@ const Dashboard = () => {
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span>Direction Sense</span>
+                        <span className={theme === 'dark' ? 'text-gray-300' : ''}>Simple & Compound Interest</span>
                       </div>
                       <div className="flex items-center">
                         <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
+                          className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -929,11 +940,11 @@ const Dashboard = () => {
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span>Puzzles</span>
+                        <span className={theme === 'dark' ? 'text-gray-300' : ''}>Puzzles</span>
                       </div>
                       <div className="flex items-center">
                         <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
+                          className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -945,11 +956,11 @@ const Dashboard = () => {
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span>Seating Arrangement</span>
+                        <span className={theme === 'dark' ? 'text-gray-300' : ''}>Seating Arrangement</span>
                       </div>
                       <div className="flex items-center">
                         <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
+                          className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -961,11 +972,11 @@ const Dashboard = () => {
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span>Venn Diagram</span>
+                        <span className={theme === 'dark' ? 'text-gray-300' : ''}>Venn Diagram</span>
                       </div>
                       <div className="flex items-center">
                         <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
+                          className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -977,11 +988,11 @@ const Dashboard = () => {
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span>Data Sufficiency</span>
+                        <span className={theme === 'dark' ? 'text-gray-300' : ''}>Data Sufficiency</span>
                       </div>
                       <div className="flex items-center">
                         <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
+                          className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -993,11 +1004,11 @@ const Dashboard = () => {
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span>Pie Charts</span>
+                        <span className={theme === 'dark' ? 'text-gray-300' : ''}>Pie Charts</span>
                       </div>
                       <div className="flex items-center">
                         <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
+                          className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -1009,11 +1020,11 @@ const Dashboard = () => {
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span>Bar and Line Graphs</span>
+                        <span className={theme === 'dark' ? 'text-gray-300' : ''}>Bar and Line Graphs</span>
                       </div>
                       <div className="flex items-center">
                         <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
+                          className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -1025,11 +1036,11 @@ const Dashboard = () => {
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span>Coding-Decoding</span>
+                        <span className={theme === 'dark' ? 'text-gray-300' : ''}>Coding-Decoding</span>
                       </div>
                       <div className="flex items-center">
                         <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
+                          className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -1041,11 +1052,11 @@ const Dashboard = () => {
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span>Sets and Caselets</span>
+                        <span className={theme === 'dark' ? 'text-gray-300' : ''}>Sets and Caselets</span>
                       </div>
                       <div className="flex items-center">
                         <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
+                          className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -1057,11 +1068,11 @@ const Dashboard = () => {
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span>Clocks and Calendars</span>
+                        <span className={theme === 'dark' ? 'text-gray-300' : ''}>Clocks and Calendars</span>
                       </div>
                       <div className="flex items-center">
                         <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
+                          className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -1073,11 +1084,11 @@ const Dashboard = () => {
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span>Syllogism</span>
+                        <span className={theme === 'dark' ? 'text-gray-300' : ''}>Syllogism</span>
                       </div>
                       <div className="flex items-center">
                         <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
+                          className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -1089,11 +1100,11 @@ const Dashboard = () => {
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span>Percentages</span>
+                        <span className={theme === 'dark' ? 'text-gray-300' : ''}>Percentages</span>
                       </div>
                       <div className="flex items-center">
                         <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
+                          className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -1105,11 +1116,11 @@ const Dashboard = () => {
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span>Profit and Loss</span>
+                        <span className={theme === 'dark' ? 'text-gray-300' : ''}>Profit and Loss</span>
                       </div>
                       <div className="flex items-center">
                         <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
+                          className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -1121,11 +1132,11 @@ const Dashboard = () => {
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span>Speed, Time and Distance</span>
+                        <span className={theme === 'dark' ? 'text-gray-300' : ''}>Speed, Time and Distance</span>
                       </div>
                       <div className="flex items-center">
                         <svg
-                          className="h-4 w-4 text-blue-500 mr-2"
+                          className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                           fill="none"
                           viewBox="0 0 24 24"
                           stroke="currentColor"
@@ -1137,30 +1148,30 @@ const Dashboard = () => {
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                           />
                         </svg>
-                        <span>Work and Time</span>
+                        <span className={theme === 'dark' ? 'text-gray-300' : ''}>Work and Time</span>
                       </div>
                     </div>
                   </div>
 
                   {/* Mathematics section */}
                   <div>
-                    <h3 className="text-lg font-semibold text-blue-700 mb-3">
+                    <h3 className={`text-lg font-semibold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-700'} mb-3`}>
                       Mathematics
                     </h3>
-                    <p className="text-gray-700 mb-4">
+                    <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'} mb-4`}>
                       The mathematics section evaluates the candidate's
                       knowledge and problem-solving skills. It gauges their
                       quantitative aptitude and ability to apply mathematical
                       concepts to solve problems.
                     </p>
-                    <h4 className="text-md font-medium text-gray-900 mb-2">
+                    <h4 className={`text-md font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'} mb-2`}>
                       Topics covered:
                     </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
                           <svg
-                            className="h-4 w-4 text-blue-500 mr-2"
+                            className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -1172,7 +1183,7 @@ const Dashboard = () => {
                               d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                             />
                           </svg>
-                          <span className="text-gray-700">Number Theory</span>
+                          <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Number Theory</span>
                         </div>
                         <button
                           onClick={() => toggleResourcePopup("Number Theory")}
@@ -1198,7 +1209,7 @@ const Dashboard = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
                           <svg
-                            className="h-4 w-4 text-blue-500 mr-2"
+                            className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -1210,7 +1221,7 @@ const Dashboard = () => {
                               d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                             />
                           </svg>
-                          <span className="text-gray-700">Exponentials and Logarithms</span>
+                          <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Exponentials and Logarithms</span>
                         </div>
                         <button
                           onClick={() => toggleResourcePopup("Exponentials and Logarithms")}
@@ -1236,7 +1247,7 @@ const Dashboard = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
                           <svg
-                            className="h-4 w-4 text-blue-500 mr-2"
+                            className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -1248,7 +1259,7 @@ const Dashboard = () => {
                               d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                             />
                           </svg>
-                          <span className="text-gray-700">Probability and Statistics</span>
+                          <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Probability and Statistics</span>
                         </div>
                         <button
                           onClick={() => toggleResourcePopup("Probability and Statistics")}
@@ -1274,7 +1285,7 @@ const Dashboard = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
                           <svg
-                            className="h-4 w-4 text-blue-500 mr-2"
+                            className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -1286,7 +1297,7 @@ const Dashboard = () => {
                               d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                             />
                           </svg>
-                          <span className="text-gray-700">Permutation and Combinations</span>
+                          <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Permutation and Combinations</span>
                         </div>
                         <button
                           onClick={() => toggleResourcePopup("Permutation and Combinations")}
@@ -1312,7 +1323,7 @@ const Dashboard = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
                           <svg
-                            className="h-4 w-4 text-blue-500 mr-2"
+                            className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -1324,7 +1335,7 @@ const Dashboard = () => {
                               d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                             />
                           </svg>
-                          <span className="text-gray-700">Ratio and Proportion</span>
+                          <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Ratio and Proportion</span>
                         </div>
                         <button
                           onClick={() => toggleResourcePopup("Ratio and Proportion")}
@@ -1350,7 +1361,7 @@ const Dashboard = () => {
                       <div className="flex items-center justify-between">
                         <div className="flex items-center">
                           <svg
-                            className="h-4 w-4 text-blue-500 mr-2"
+                            className={`h-4 w-4 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-500'} mr-2`}
                             fill="none"
                             viewBox="0 0 24 24"
                             stroke="currentColor"
@@ -1362,7 +1373,7 @@ const Dashboard = () => {
                               d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
                             />
                           </svg>
-                          <span className="text-gray-700">Sets (Venn Diagrams)</span>
+                          <span className={theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}>Sets (Venn Diagrams)</span>
                         </div>
                         <button
                           onClick={() => toggleResourcePopup("Sets (Venn Diagrams)")}
@@ -1396,7 +1407,7 @@ const Dashboard = () => {
             // ... existing dashboard content (test series, etc.) ...
             // Keep all the existing dashboard content here
             <>
-              <div className="bg-gradient-to-r from-blue-600 to-indigo-700 overflow-hidden shadow rounded-lg mb-6 text-white">
+              <div className={`${theme === 'dark' ? 'bg-gradient-to-r from-blue-900 to-indigo-900' : 'bg-gradient-to-r from-blue-600 to-indigo-700'} overflow-hidden shadow rounded-lg mb-6 text-white`}>
                 <div className="px-4 py-5 sm:p-6">
                   <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                     <div className="flex-1">
@@ -1437,8 +1448,8 @@ const Dashboard = () => {
                             />
                           </svg>
                           <span className="text-white">
-                            Get 50% discount on registration fee using our
-                            referral code
+                            Use our special referral code for 50% OFF on
+                            registration fee
                           </span>
                         </li>
                         <li className="flex items-start">
@@ -1456,48 +1467,29 @@ const Dashboard = () => {
                             />
                           </svg>
                           <span className="text-white">
-                            Secure your spot for the next NSET intake
+                            Pay only ₹500 instead of ₹1000
                           </span>
                         </li>
                       </ul>
-                      <div className="mt-4 bg-white/10 p-3 rounded-md">
-                        <p className="text-sm text-white">
-                          Use the
-                          <button
-                            ref={interviewCodeRef}
-                            onClick={copyInterviewCode}
-                            className="font-bold bg-white/20 px-2 py-0.5 rounded mx-1 hover:bg-white/30 transition-colors cursor-pointer flex items-center inline-flex"
-                          >
-                            {referralCode}
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-3 w-3 ml-1"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"
-                              />
-                            </svg>
-                          </button>
-                          referral code during registration for a{" "}
-                          <span className="font-bold underline">
-                            50% discount
-                          </span>{" "}
-                          on the registration fee!
-                        </p>
+
+                      <div className="mt-3 flex items-center">
+                        <div className={`py-1 px-2 ${theme === 'dark' ? 'bg-blue-800' : 'bg-blue-500'} rounded mr-2`}>
+                          <p className="text-xs font-bold text-white">
+                            SHAUE061
+                          </p>
+                        </div>
+                        <span className="text-xs text-blue-100">
+                          Use this referral code at checkout
+                        </span>
                       </div>
                     </div>
+
                     <div>
                       <a
                         href="https://www.scaler.com/school-of-technology/application/?rce=4dd65cf3cf67&rcy=1&utm_source=SST_student_referral"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center px-5 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-indigo-700 bg-white hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white focus:ring-offset-indigo-700 transition-all duration-200"
+                        className={`inline-flex items-center px-5 py-3 border border-transparent text-base font-medium rounded-md shadow-sm ${theme === 'dark' ? 'text-indigo-900 bg-gray-100 hover:bg-white' : 'text-indigo-700 bg-white hover:bg-indigo-50'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white focus:ring-offset-indigo-700 transition-all duration-200`}
                       >
                         Book NSET Exam
                         <svg
@@ -1521,15 +1513,15 @@ const Dashboard = () => {
               </div>
               {/* Mock Interview Section */}
 
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 overflow-hidden shadow rounded-lg mb-6">
+              <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-gradient-to-r from-blue-50 to-indigo-50'} overflow-hidden shadow rounded-lg mb-6`}>
                 <div className="px-4 py-5 sm:p-6">
                   <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-lg font-medium text-gray-900">
+                    <h2 className={`text-lg font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                       Interview Preparation
                     </h2>
                     <button
                       onClick={loadAppSettings}
-                      className="text-xs text-gray-500 flex items-center"
+                      className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} flex items-center`}
                       disabled={isRefreshing}
                     >
                       {isRefreshing ? (
@@ -1558,7 +1550,7 @@ const Dashboard = () => {
                   {/* Interview Content */}
                   <div className="flex flex-col md:flex-row justify-between items-center gap-6">
                     <div className="flex-1">
-                      <h3 className="text-xl font-semibold text-blue-800">
+                      <h3 className={`text-xl font-semibold ${theme === 'dark' ? 'text-blue-400' : 'text-blue-800'}`}>
                         1:1 Mock Interview Session
                       </h3>
                       <ul className="mt-2 space-y-1">
@@ -1576,7 +1568,7 @@ const Dashboard = () => {
                               d="M5 13l4 4L19 7"
                             />
                           </svg>
-                          <span className="text-gray-600">
+                          <span className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                             Practice with real SST students who have
                             successfully cleared the NSET exam
                           </span>
@@ -1595,7 +1587,7 @@ const Dashboard = () => {
                               d="M5 13l4 4L19 7"
                             />
                           </svg>
-                          <span className="text-gray-600">
+                          <span className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                             Get personalized feedback on your interview
                             performance
                           </span>
@@ -1614,18 +1606,18 @@ const Dashboard = () => {
                               d="M5 13l4 4L19 7"
                             />
                           </svg>
-                          <span className="text-gray-600">
+                          <span className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                             Improve your interview skills and confidence
                           </span>
                         </li>
                       </ul>
 
                       {/* Special Offer Box - NEW */}
-                      <div className="mt-4 bg-gradient-to-r from-green-50 to-emerald-50 p-3 border border-green-200 rounded-md">
+                      <div className={`mt-4 ${theme === 'dark' ? 'bg-gray-700 border-green-900' : 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200'} p-3 border rounded-md`}>
                         <div className="flex items-start">
                           <div className="flex-shrink-0">
                             <svg
-                              className="h-5 w-5 text-green-500"
+                              className={`h-5 w-5 ${theme === 'dark' ? 'text-green-400' : 'text-green-500'}`}
                               fill="currentColor"
                               viewBox="0 0 20 20"
                             >
@@ -1637,17 +1629,17 @@ const Dashboard = () => {
                             </svg>
                           </div>
                           <div className="ml-3">
-                            <h4 className="text-sm font-bold text-green-800">
+                            <h4 className={`text-sm font-bold ${theme === 'dark' ? 'text-green-400' : 'text-green-800'}`}>
                               🔥 LIMITED TIME OFFER 🔥
                             </h4>
-                            <p className="mt-1 text-sm text-green-700">
+                            <p className={`mt-1 text-sm ${theme === 'dark' ? 'text-green-300' : 'text-green-700'}`}>
                               Get <span className="font-bold">100% REFUND</span>{" "}
                               on your mock interview if you have used my
                               referral code
                               <button
                                 ref={interviewCodeRef}
                                 onClick={copyInterviewCode}
-                                className="font-bold bg-white text-green-700 px-1.5 py-0.5 rounded mx-1 hover:bg-green-100 transition-colors cursor-pointer flex items-center inline-flex"
+                                className={`font-bold ${theme === 'dark' ? 'bg-gray-800 text-green-400' : 'bg-white text-green-700'} px-1.5 py-0.5 rounded mx-1 hover:bg-green-100 transition-colors cursor-pointer flex items-center inline-flex`}
                               >
                                 {referralCode}
                                 <svg
@@ -1672,10 +1664,10 @@ const Dashboard = () => {
                       </div>
 
                       <div className="mt-3 flex items-center text-sm text-gray-500">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${theme === 'dark' ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-800'} mr-2`}>
                           30 min
                         </span>
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${theme === 'dark' ? 'bg-purple-900 text-purple-300' : 'bg-purple-100 text-purple-800'}`}>
                           With SST Students
                         </span>
                       </div>
@@ -1683,11 +1675,11 @@ const Dashboard = () => {
                       {/* Message when bookings are disabled */}
                       {!bookingsEnabled &&
                         appSettings.interviewBookingsMessage && (
-                          <div className="mt-3 p-2 bg-amber-50 border border-amber-200 rounded-md">
-                            <p className="text-sm text-amber-800">
+                          <div className={`mt-3 p-2 ${theme === 'dark' ? 'bg-yellow-900 border-yellow-800' : 'bg-amber-50 border-amber-200'} border rounded-md`}>
+                            <p className={`text-sm ${theme === 'dark' ? 'text-yellow-300' : 'text-amber-800'}`}>
                               <span className="flex items-center">
                                 <svg
-                                  className="h-4 w-4 text-amber-600 mr-1.5"
+                                  className={`h-4 w-4 ${theme === 'dark' ? 'text-yellow-500' : 'text-amber-600'} mr-1.5`}
                                   fill="none"
                                   viewBox="0 0 24 24"
                                   stroke="currentColor"
@@ -1709,27 +1701,27 @@ const Dashboard = () => {
 
                     <div className="flex flex-col items-center">
                       <div className="flex items-center mb-1">
-                        <span className="text-2xl font-bold text-gray-900">
+                        <span className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                           ₹399
                         </span>
-                        <span className="ml-2 px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                        <span className={`ml-2 px-2 py-0.5 ${theme === 'dark' ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-800'} text-xs font-medium rounded-full`}>
                           Refundable!
                         </span>
                       </div>
-                      <p className="text-s text-gray-600 mb-2 line-through">
+                      <p className={`text-s ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} mb-2 line-through`}>
                         ₹599
                       </p>
                       {showBookingButton ? (
                         <button
                           onClick={handleBookInterview}
-                          className="inline-flex items-center px-5 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                          className={`inline-flex items-center px-5 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white ${theme === 'dark' ? 'bg-blue-700 hover:bg-blue-800' : 'bg-blue-600 hover:bg-blue-700'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
                         >
                           Book Now
                         </button>
                       ) : (
                         <button
                           disabled
-                          className="inline-flex items-center px-5 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-gray-400 bg-gray-200 cursor-not-allowed"
+                          className={`inline-flex items-center px-5 py-2 border border-transparent text-base font-medium rounded-md shadow-sm ${theme === 'dark' ? 'text-gray-500 bg-gray-700' : 'text-gray-400 bg-gray-200'} cursor-not-allowed`}
                         >
                           Temporarily Unavailable
                         </button>
@@ -1742,9 +1734,9 @@ const Dashboard = () => {
 
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                 {/* Resources/Test Series section */}
-                <div className="bg-white overflow-hidden shadow rounded-lg">
+                <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} overflow-hidden shadow rounded-lg`}>
                   <div className="px-4 py-5 sm:p-6">
-                    <h2 className="text-lg font-medium text-gray-900 mb-4">
+                    <h2 className={`text-lg font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-4`}>
                       Test Series & Resources
                     </h2>
 
@@ -1760,25 +1752,25 @@ const Dashboard = () => {
                         return (
                           <div
                             key={testId}
-                            className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-center gap-4"
+                            className={`border ${theme === 'dark' ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'} rounded-lg p-4 flex flex-col sm:flex-row justify-between items-center gap-4`}
                           >
                             <div>
-                              <h3 className="text-md font-medium text-gray-900">
+                              <h3 className={`text-md font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                                 {test.testName}
                               </h3>
-                              <div className="mt-1 flex items-center text-sm text-gray-500">
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 mr-2">
+                              <div className={`mt-1 flex items-center text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${theme === 'dark' ? 'bg-blue-900 text-blue-300' : 'bg-blue-100 text-blue-800'} mr-2`}>
                                   {test.testDuration} min
                                 </span>
-                                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${theme === 'dark' ? 'bg-green-900 text-green-300' : 'bg-green-100 text-green-800'}`}>
                                   {test.totalQuestions} Questions
                                 </span>
                               </div>
                             </div>
 
                             <div className="flex items-center gap-3">
-                              <span className="text-md font-medium text-gray-900">
-                                <span className="line-through">₹169</span><span> </span>
+                              <span className={`text-md font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-900'}`}>
+                                <span className={`line-through ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>₹169</span><span> </span>
                                 {test.isFree ? (
                                   "Free"
                                 ) : (
@@ -1788,14 +1780,14 @@ const Dashboard = () => {
                               {isPurchased || test.isFree ? (
                                 <button
                                   onClick={() => handleStartTest(testId)}
-                                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                  className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${theme === 'dark' ? 'bg-blue-700 hover:bg-blue-800' : 'bg-blue-600 hover:bg-blue-700'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${theme === 'dark' ? 'focus:ring-offset-gray-800' : ''}`}
                                 >
                                   Start Test
                                 </button>
                               ) : (
                                 <button
                                   onClick={() => handlePurchase(testId)}
-                                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                                  className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white ${theme === 'dark' ? 'bg-blue-700 hover:bg-blue-800' : 'bg-blue-600 hover:bg-blue-700'} focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${theme === 'dark' ? 'focus:ring-offset-gray-800' : ''}`}
                                 >
                                   Purchase
                                 </button>
@@ -1850,9 +1842,9 @@ const Dashboard = () => {
                   </div> */}
 
                   {/* Booked Interviews */}
-                  <div className="bg-white overflow-hidden shadow rounded-lg">
+                  <div className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} overflow-hidden shadow rounded-lg`}>
                     <div className="px-4 py-5 sm:p-6">
-                      <h2 className="text-lg font-medium text-gray-900 mb-4">
+                      <h2 className={`text-lg font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'} mb-4`}>
                         Your Mock Interviews
                       </h2>
 
@@ -1862,9 +1854,9 @@ const Dashboard = () => {
                             {bookedInterviews.map((interview) => (
                               <div
                                 key={interview.id}
-                                className="border rounded-lg p-4"
+                                className={`border ${theme === 'dark' ? 'border-gray-700' : 'border-gray-200'} rounded-lg p-4`}
                               >
-                                <h3 className="text-md font-medium text-gray-900">
+                                <h3 className={`text-md font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                                   Mock Interview Session
                                 </h3>
                                 <div className="mt-2">
@@ -1873,12 +1865,12 @@ const Dashboard = () => {
                                     <span
                                       className={`px-2 py-1 text-xs font-medium rounded-full ${
                                         interview.status === "confirmed"
-                                          ? "bg-green-100 text-green-800"
+                                          ? theme === 'dark' ? "bg-green-900 text-green-300" : "bg-green-100 text-green-800"
                                           : interview.status === "completed"
-                                          ? "bg-blue-100 text-blue-800"
+                                          ? theme === 'dark' ? "bg-blue-900 text-blue-300" : "bg-blue-100 text-blue-800"
                                           : interview.status === "cancelled"
-                                          ? "bg-red-100 text-red-800"
-                                          : "bg-yellow-100 text-yellow-800"
+                                          ? theme === 'dark' ? "bg-red-900 text-red-300" : "bg-red-100 text-red-800"
+                                          : theme === 'dark' ? "bg-yellow-900 text-yellow-300" : "bg-yellow-100 text-yellow-800"
                                       }`}
                                     >
                                       {interview.status === "confirmed"
@@ -1892,7 +1884,7 @@ const Dashboard = () => {
                                   </div>
 
                                   {/* Booking date info */}
-                                  <p className="mt-2 text-sm text-gray-500">
+                                  <p className={`mt-2 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                                     Booked on{" "}
                                     {interview.bookingDate?.toDate?.()
                                       ? new Date(
@@ -1904,7 +1896,7 @@ const Dashboard = () => {
                                   {/* Show scheduled date if available */}
                                   {interview.scheduledDate &&
                                     interview.status !== "cancelled" && (
-                                      <p className="mt-2 text-sm font-medium text-gray-900">
+                                      <p className={`mt-2 text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-900'}`}>
                                         {interview.status === "completed"
                                           ? "Completed on: "
                                           : "Scheduled for: "}
@@ -1917,15 +1909,15 @@ const Dashboard = () => {
                                   {/* Show Google Meet link if status is confirmed (not for completed or cancelled) */}
                                   {interview.status === "confirmed" &&
                                     interview.meetLink && (
-                                      <div className="mt-3 bg-blue-50 p-3 rounded-md">
-                                        <p className="text-sm font-medium text-gray-900 mb-1">
+                                      <div className={`mt-3 ${theme === 'dark' ? 'bg-blue-900/30' : 'bg-blue-50'} p-3 rounded-md`}>
+                                        <p className={`text-sm font-medium ${theme === 'dark' ? 'text-gray-200' : 'text-gray-900'} mb-1`}>
                                           Google Meet Link:
                                         </p>
                                         <a
                                           href={interview.meetLink}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="text-sm text-blue-600 hover:text-blue-800 flex items-center"
+                                          className={`text-sm ${theme === 'dark' ? 'text-blue-400 hover:text-blue-300' : 'text-blue-600 hover:text-blue-800'} flex items-center`}
                                         >
                                           <svg
                                             xmlns="http://www.w3.org/2000/svg"
@@ -1943,7 +1935,7 @@ const Dashboard = () => {
                                           </svg>
                                           Join Google Meet
                                         </a>
-                                        <p className="text-xs text-gray-500 mt-1">
+                                        <p className={`text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} mt-1`}>
                                           Click to join the meeting at the
                                           scheduled time
                                         </p>
@@ -1953,14 +1945,14 @@ const Dashboard = () => {
                                   {/* Status-specific messages */}
                                   {interview.status === "pending" &&
                                     !interview.scheduledDate && (
-                                      <p className="mt-2 text-sm text-gray-500">
+                                      <p className={`mt-2 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                                         You will be contacted within 12 hours to
                                         schedule your interview.
                                       </p>
                                     )}
 
                                   {interview.status === "completed" && (
-                                    <p className="mt-2 text-sm text-gray-600">
+                                    <p className={`mt-2 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                                       Thank you for participating in the mock
                                       interview. We hope it was helpful for your
                                       preparation!
@@ -1968,7 +1960,7 @@ const Dashboard = () => {
                                   )}
 
                                   {interview.status === "cancelled" && (
-                                    <p className="mt-2 text-sm text-gray-600">
+                                    <p className={`mt-2 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
                                       This interview booking has been cancelled.
                                       If you have any questions, please contact
                                       us.
@@ -1979,11 +1971,11 @@ const Dashboard = () => {
                             ))}
                           </div>
                         ) : (
-                          <div className="text-center py-6 bg-gray-50 rounded-lg">
-                            <p className="text-gray-500">
+                          <div className={`text-center py-6 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-50'} rounded-lg`}>
+                            <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-500'}`}>
                               You haven't booked any mock interviews yet.
                             </p>
-                            <p className="mt-2 text-sm text-gray-500">
+                            <p className={`mt-2 text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                               Book a mock interview to practice for the actual
                               NSET interview.
                             </p>
@@ -2000,7 +1992,7 @@ const Dashboard = () => {
       </main>
 
       {/* No footer as requested */}
-      <div className="mt-8 text-center text-xs text-gray-400">
+      <div className={`mt-8 text-center text-xs ${theme === 'dark' ? 'text-gray-500' : 'text-gray-400'}`}>
         &copy; {new Date().getFullYear()} Vector. All rights reserved.
       </div>
       <InterviewCodeTooltip />
@@ -2013,6 +2005,19 @@ const Dashboard = () => {
           onClose={() => setOpenResourceTopic(null)}
         />
       ))}
+      
+      {/* CSS for logo filters in dark mode */}
+      <style jsx="true">{`
+        .logo-dark-filter {
+          filter: invert(0.8) sepia(0.5) hue-rotate(5deg) saturate(5) brightness(1.2);
+          /* Creates a warm sunlight effect by inverting, adding sepia, slight hue-rotation to orange */
+        }
+        
+        .logo-name-dark-filter {
+          filter: invert(0.8) sepia(0.6) hue-rotate(325deg) saturate(4) brightness(1.4) drop-shadow(0 0 5px rgba(255, 165, 0, 0.7));
+          /* Creates golden sun glow effect with orange drop shadow */
+        }
+      `}</style>
     </div>
   );
 };
@@ -2022,6 +2027,7 @@ const ResourcePopup = ({ topic, resources, isOpen, onClose }) => {
   
   // Reference for detecting clicks outside the popup
   const popupRef = useRef(null);
+  const { theme } = useTheme();
   
   // Close if clicked outside
   useEffect(() => {
@@ -2041,13 +2047,13 @@ const ResourcePopup = ({ topic, resources, isOpen, onClose }) => {
     <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
       <div 
         ref={popupRef}
-        className="bg-white rounded-lg shadow-xl w-full max-w-md p-4 pointer-events-auto"
+        className={`${theme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-xl w-full max-w-md p-4 pointer-events-auto`}
       >
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-medium text-gray-900">{topic} Resources</h3>
+          <h3 className={`text-lg font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{topic} Resources</h3>
           <button 
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-500"
+            className={`${theme === 'dark' ? 'text-gray-400 hover:text-gray-300' : 'text-gray-400 hover:text-gray-500'}`}
           >
             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -2063,23 +2069,23 @@ const ResourcePopup = ({ topic, resources, isOpen, onClose }) => {
                 href={resource.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center p-3 bg-gray-50 hover:bg-gray-100 rounded-md transition-colors"
+                className={`flex items-center p-3 ${theme === 'dark' ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-50 hover:bg-gray-100'} rounded-md transition-colors`}
               >
                 {resource.icon}
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">{resource.title}</p>
+                  <p className={`text-sm font-medium ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{resource.title}</p>
                 </div>
               </a>
             ))
           ) : (
-            <p className="text-sm text-gray-500 text-center py-4">No resources available yet. Check back later!</p>
+            <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} text-center py-4`}>No resources available yet. Check back later!</p>
           )}
         </div>
         
         <div className="mt-5 flex justify-end">
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
+            className={`px-4 py-2 ${theme === 'dark' ? 'bg-blue-700 hover:bg-blue-800' : 'bg-blue-600 hover:bg-blue-700'} text-white rounded-md text-sm`}
           >
             Close
           </button>
