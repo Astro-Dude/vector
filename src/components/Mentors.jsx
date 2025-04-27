@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { FaLinkedin } from 'react-icons/fa';
 import { useTheme } from '../context/ThemeContext';
 // Import images
-import shaurya from '../assets/images/shaurya.jpg';
+import shaurya from '../assets/images/shaurya1.jpg';
 import rudhar from '../assets/images/rudhar.jpg';
 import krritin from '../assets/images/krritin.jpg';
 import aatmik from '../assets/images/aatmik.jpg';
