@@ -1,18 +1,28 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 import Spline from "@splinetool/react-spline";
 import Navbar from "../components/Navbar";
 import LoadingScreen from "../components/LoadingScreen";
 
 export default function Dashboard() {
-  const [isLoading, setIsLoading] = useState(true);
+  const { isAuthenticated, isLoading } = useAuth();
+  const navigate = useNavigate();
+  const [isLoadingSpline, setIsLoadingSpline] = useState(true);
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate('/home');
+    }
+  }, [isAuthenticated, isLoading, navigate]);
 
   const handleLoadingComplete = () => {
-    setIsLoading(false);
+    setIsLoadingSpline(false);
   };
 
   return (
     <>
-      {isLoading && <LoadingScreen onLoadingComplete={handleLoadingComplete} />}
+      {isLoadingSpline && <LoadingScreen onLoadingComplete={handleLoadingComplete} />}
 
       <div className="w-full bg-black">
         <Navbar />
@@ -206,7 +216,7 @@ export default function Dashboard() {
               ].map((mentor, index) => (
                 <div
                   key={index}
-                  className="bg-white/5 border border-white/10 rounded-3xl overflow-hidden hover:bg-white/10 transition-all duration-300 flex-shrink-0 w-72 md:w-80 snap-center"
+                  className="bg-white/5 border border-white/10 rounded-3xl overflow-hidden hover:bg-white/10 transition-all duration-300 shrink-0 w-72 md:w-80 snap-center"
                 >
                   <div className="h-32 md:h-40 bg-white/5"></div>
                   <div className="flex flex-col grow bg-black/50 pt-12 md:pt-16 pb-6 md:pb-8 px-4 md:px-6 relative -mt-12">

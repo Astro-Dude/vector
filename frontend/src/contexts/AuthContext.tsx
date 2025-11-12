@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   id: string;
@@ -24,6 +25,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const navigate = useNavigate();
 
   const checkAuthStatus = async () => {
     try {
@@ -35,6 +37,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const data = await response.json();
         if (data.authenticated) {
           setUser(data.user);
+          // Redirect to home if authenticated and not already there
+          if (window.location.pathname === '/' && !window.location.search.includes('code')) {
+            navigate('/home');
+          }
         } else {
           setUser(null);
         }
@@ -61,7 +67,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (response.ok) {
         setUser(null);
-        // Optional: redirect to home or show logout message
+        // Clear any cached data
+        localStorage.clear();
+        sessionStorage.clear();
+        navigate('/');
       }
     } catch (error) {
       console.error('Logout failed:', error);
@@ -79,7 +88,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     };
 
     // Check if we just returned from authentication
-    if (window.location.pathname === '/' && window.location.search === '') {
+    if (window.location.pathname === '/' && window.location.search.includes('code')) {
       handleAuthSuccess();
     }
   }, []);

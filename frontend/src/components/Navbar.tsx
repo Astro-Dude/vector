@@ -1,12 +1,37 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function Navbar() {
-  const { user, isAuthenticated, login } = useAuth();
+  const { user, isAuthenticated, login, logout } = useAuth();
+  const navigate = useNavigate();
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
   const loginBtnRef = useRef<HTMLButtonElement>(null);
   const getStartedBtnRef = useRef<HTMLButtonElement>(null);
 
+  // Handle click outside to close profile menu
   useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = async () => {
+    await logout();
+    setIsProfileMenuOpen(false);
+    navigate('/');
+  };
+
+  // Mouse movement effect for magnetic buttons (only when not authenticated)
+  useEffect(() => {
+    if (isAuthenticated) return;
+
     const handleMouseMove = (e: MouseEvent) => {
       const loginBtn = loginBtnRef.current;
       const getStartedBtn = getStartedBtnRef.current;
@@ -67,7 +92,7 @@ export default function Navbar() {
 
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+  }, [isAuthenticated]);
 
   return (
     <nav className="fixed top-3 md:top-6 left-1/2 -translate-x-1/2 z-1000 w-[95%] max-w-[1400px]">
@@ -79,18 +104,75 @@ export default function Navbar() {
         </div>
         <div className="flex gap-2 md:gap-4 items-center">
           {isAuthenticated ? (
-            <>
-              <span className="px-4 md:px-6 py-2 md:py-2.5 text-sm md:text-[0.95rem] font-medium text-white">
-                Welcome, {user?.displayName?.split(' ')[0]}
-              </span>
+            <div className="relative" ref={profileMenuRef}>
               <button
-                ref={loginBtnRef}
-                onClick={() => window.location.href = '/profile'}
-                className="px-4 md:px-6 py-2 md:py-2.5 rounded-full text-sm md:text-[0.95rem] font-medium cursor-pointer transition-all duration-200 bg-transparent text-white border border-white/20 hover:bg-white/10 hover:border-white/30"
+                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-white/20 hover:border-white/40 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/50"
               >
-                Profile
+                {user?.profilePicture ? (
+                  <img
+                    src={user.profilePicture}
+                    alt={user.displayName || 'Profile'}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                    <span className="text-white font-bold text-sm md:text-base">
+                      {user?.displayName?.charAt(0)?.toUpperCase() || 'U'}
+                    </span>
+                  </div>
+                )}
               </button>
-            </>
+
+              {/* Profile Dropdown Menu */}
+              {isProfileMenuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-xl py-2 z-50">
+                  <div className="px-4 py-2 border-b border-gray-200">
+                    <p className="text-sm font-medium text-gray-900">{user?.displayName}</p>
+                    <p className="text-xs text-gray-500">{user?.email}</p>
+                  </div>
+                  
+                  <button
+                    onClick={() => {
+                      navigate('/profile');
+                      setIsProfileMenuOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200 flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                    Profile
+                  </button>
+                  
+                  <button
+                    onClick={() => {
+                      navigate('/home');
+                      setIsProfileMenuOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors duration-200 flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z" />
+                    </svg>
+                    Dashboard
+                  </button>
+                  
+                  <div className="border-t border-gray-200 my-1"></div>
+                  
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200 flex items-center gap-2"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
           ) : (
             <>
               <button
