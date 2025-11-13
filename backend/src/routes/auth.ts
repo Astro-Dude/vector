@@ -16,10 +16,11 @@ router.get('/google',
 
 // Google OAuth callback
 router.get('/google/callback',
-  passport.authenticate('google', { failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login` }),
+  passport.authenticate('google', { failureRedirect: process.env.NODE_ENV === 'production' ? '/login' : `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login` }),
   (req, res) => {
     // Successful authentication, redirect to dashboard
-    res.redirect(process.env.FRONTEND_URL || 'http://localhost:5173');
+    const redirectUrl = process.env.NODE_ENV === 'production' ? '/home' : `${process.env.FRONTEND_URL || 'http://localhost:5173'}/home`;
+    res.redirect(redirectUrl);
   }
 );
 
