@@ -8,9 +8,9 @@ import cookieParser from 'cookie-parser';
 import path from 'path';
 
 // Import passport configuration
-import './config/passport';
+import './config/passport.js';
 
-import authRoutes from './routes/auth';
+import authRoutes from './routes/auth.js';
 
 const app = express();
 const __dirname = path.resolve();

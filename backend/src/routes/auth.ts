@@ -1,8 +1,8 @@
 import express, { Request, Response } from 'express';
 import passport from 'passport';
-import User from '../models/User';
-import Item from '../models/Item';
-import Purchase from '../models/Purchase';
+import User from '../models/User.js';
+import Item from '../models/Item.js';
+import Purchase from '../models/Purchase.js';
 
 const router = express.Router();
 
