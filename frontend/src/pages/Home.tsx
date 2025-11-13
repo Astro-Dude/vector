@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import Navbar from '../components/Navbar';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL !== undefined ? import.meta.env.VITE_API_URL : 'http://localhost:5000';
+
 interface Item {
   _id: string;
   title: string;
@@ -29,7 +31,7 @@ export default function Home() {
   useEffect(() => {
     const fetchAvailableItems = async () => {
       try {
-        const response = await fetch('http://localhost:5000/auth/items');
+        const response = await fetch(`${API_BASE_URL}/auth/items`);
         if (!response.ok) {
           throw new Error('Failed to fetch available items');
         }
@@ -50,7 +52,7 @@ export default function Home() {
 
     const fetchPurchasedItems = async () => {
       try {
-        const response = await fetch('http://localhost:5000/auth/purchases', {
+        const response = await fetch(`${API_BASE_URL}/auth/purchases`, {
           credentials: 'include'
         });
         if (!response.ok) {
@@ -71,7 +73,7 @@ export default function Home() {
 
   const handlePurchase = async (item: Item) => {
     try {
-      const response = await fetch(`http://localhost:5000/auth/purchase/${item._id}`, {
+      const response = await fetch(`${API_BASE_URL}/auth/purchase/${item._id}`, {
         method: 'POST',
         credentials: 'include'
       });
@@ -84,7 +86,7 @@ export default function Home() {
       alert(`Purchase successful! ${item.title} has been added to your account.`);
 
       // Refresh purchased items
-      const purchasedResponse = await fetch('http://localhost:5000/auth/purchases', {
+      const purchasedResponse = await fetch(`${API_BASE_URL}/auth/purchases`, {
         credentials: 'include'
       });
       if (purchasedResponse.ok) {
