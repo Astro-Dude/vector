@@ -124,7 +124,7 @@ export default function Home() {
           {/* Welcome Section */}
           <div className="text-center mb-8 md:mb-12">
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3 md:mb-4 mt-5">
-              Welcome back, {user?.displayName?.split(' ')[0]}!
+              Welcome back, {user?.firstName || 'User'}!
             </h1>
             <p className="text-lg md:text-xl text-white/70 px-4">
               Continue your journey towards NSET success

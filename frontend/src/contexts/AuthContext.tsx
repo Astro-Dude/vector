@@ -4,8 +4,10 @@ import { useNavigate } from 'react-router-dom';
 
 interface User {
   id: string;
-  displayName: string;
   email: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
   profilePicture?: string;
 }
 

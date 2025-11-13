@@ -1,6 +1,18 @@
-const mongoose = require('mongoose');
+import mongoose, { Document, Schema } from 'mongoose';
 
-const itemSchema = new mongoose.Schema({
+export interface IItem extends Document {
+  title: string;
+  description: string;
+  price: number;
+  type: 'test' | 'interview' | 'course';
+  duration?: string;
+  level?: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const itemSchema = new Schema<IItem>({
   title: {
     type: String,
     required: true,
@@ -42,4 +54,4 @@ const itemSchema = new mongoose.Schema({
 itemSchema.index({ type: 1, isActive: 1 });
 itemSchema.index({ title: 'text', description: 'text' });
 
-module.exports = mongoose.model('Item', itemSchema);
+export default mongoose.model<IItem>('Item', itemSchema);

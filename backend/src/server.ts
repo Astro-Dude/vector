@@ -1,15 +1,17 @@
-const express = require('express');
-const mongoose = require('mongoose');
-const passport = require('passport');
-const session = require('express-session');
-const cors = require('cors');
-const cookieParser = require('cookie-parser');
-require('dotenv').config();
+import express from 'express';
+import mongoose from 'mongoose';
+import passport from 'passport';
+import session from 'express-session';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 // Import passport configuration
-require('./config/passport');
+import './config/passport';
 
-const authRoutes = require('./routes/auth');
+import authRoutes from './routes/auth';
 
 const app = express();
 

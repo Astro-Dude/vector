@@ -1,7 +1,9 @@
-const express = require('express');
-const passport = require('passport');
-const Item = require('../models/Item');
-const Purchase = require('../models/Purchase');
+import express, { Request, Response } from 'express';
+import passport from 'passport';
+import User from '../models/User';
+import Item from '../models/Item';
+import Purchase from '../models/Purchase';
+
 const router = express.Router();
 
 // Google OAuth routes
@@ -22,15 +24,17 @@ router.get('/google/callback',
 );
 
 // Check authentication status
-router.get('/status', (req, res) => {
+router.get('/status', (req: Request, res: Response) => {
   if (req.isAuthenticated()) {
     res.json({
       authenticated: true,
       user: {
-        id: req.user._id,
-        displayName: req.user.displayName,
-        email: req.user.email,
-        profilePicture: req.user.profilePicture
+        id: (req.user as any)._id,
+        email: (req.user as any).email,
+        firstName: (req.user as any).firstName,
+        lastName: (req.user as any).lastName,
+        phone: (req.user as any).phone,
+        profilePicture: (req.user as any).profilePicture
       }
     });
   } else {
@@ -39,7 +43,7 @@ router.get('/status', (req, res) => {
 });
 
 // Get available items
-router.get('/items', async (req, res) => {
+router.get('/items', async (req: Request, res: Response) => {
   try {
     const items = await Item.find({ isActive: true }).sort({ createdAt: -1 });
     res.json({ items });
@@ -50,27 +54,29 @@ router.get('/items', async (req, res) => {
 });
 
 // Get user's purchased items
-router.get('/purchases', async (req, res) => {
+router.get('/purchases', async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ message: 'Not authenticated' });
   }
 
   try {
-    const purchases = await Purchase.find({ user: req.user._id })
+    const purchases = await Purchase.find({ user: (req.user as any)._id })
       .populate('item')
       .sort({ purchaseDate: -1 });
 
     // Format the response to match the frontend expectations
-    const formattedPurchases = purchases.map(purchase => ({
-      id: purchase.item._id,
-      title: purchase.item.title,
-      description: purchase.item.description,
-      price: purchase.amount,
-      type: purchase.item.type,
-      duration: purchase.item.duration,
-      purchasedAt: purchase.purchaseDate.toISOString(),
-      status: purchase.status
-    }));
+    const formattedPurchases = purchases
+      .filter(purchase => purchase.item) // Filter out purchases with null items
+      .map(purchase => ({
+        id: (purchase.item as any)._id,
+        title: (purchase.item as any).title,
+        description: (purchase.item as any).description,
+        price: purchase.amount,
+        type: (purchase.item as any).type,
+        duration: (purchase.item as any).duration,
+        purchasedAt: purchase.purchaseDate.toISOString(),
+        status: purchase.status
+      }));
 
     res.json({ purchases: formattedPurchases });
   } catch (error) {
@@ -79,10 +85,51 @@ router.get('/purchases', async (req, res) => {
   }
 });
 
+// Update user profile
+router.put('/profile', async (req: Request, res: Response) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: 'Not authenticated' });
+  }
+
+  try {
+    const { firstName, lastName, phone } = req.body;
+
+    // Update user (email and profile picture cannot be changed)
+    const updatedUser = await User.findByIdAndUpdate(
+      (req.user as any)._id,
+      {
+        firstName,
+        lastName,
+        phone
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: {
+        id: updatedUser._id,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        phone: updatedUser.phone,
+        profilePicture: updatedUser.profilePicture
+      }
+    });
+  } catch (error) {
+    console.error('Error updating profile:', error);
+    res.status(500).json({ message: 'Failed to update profile' });
+  }
+});
+
 // CRUD Operations for Items (Admin routes - you might want to add authentication middleware)
 
 // Create a new item
-router.post('/items', async (req, res) => {
+router.post('/items', async (req: Request, res: Response) => {
   try {
     const { title, description, price, type, duration, level } = req.body;
 
@@ -108,7 +155,7 @@ router.post('/items', async (req, res) => {
 });
 
 // Update an item
-router.put('/items/:id', async (req, res) => {
+router.put('/items/:id', async (req: Request, res: Response) => {
   try {
     const { title, description, price, type, duration, level, isActive } = req.body;
 
@@ -130,7 +177,7 @@ router.put('/items/:id', async (req, res) => {
 });
 
 // Delete an item
-router.delete('/items/:id', async (req, res) => {
+router.delete('/items/:id', async (req: Request, res: Response) => {
   try {
     const item = await Item.findByIdAndDelete(req.params.id);
 
@@ -146,7 +193,7 @@ router.delete('/items/:id', async (req, res) => {
 });
 
 // Purchase an item
-router.post('/purchase/:itemId', async (req, res) => {
+router.post('/purchase/:itemId', async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ message: 'Not authenticated' });
   }
@@ -164,7 +211,7 @@ router.post('/purchase/:itemId', async (req, res) => {
 
     // Check if user already purchased this item
     const existingPurchase = await Purchase.findOne({
-      user: req.user._id,
+      user: (req.user as any)._id,
       item: item._id,
       status: { $in: ['active', 'completed'] }
     });
@@ -175,7 +222,7 @@ router.post('/purchase/:itemId', async (req, res) => {
 
     // Create purchase record
     const purchase = new Purchase({
-      user: req.user._id,
+      user: (req.user as any)._id,
       item: item._id,
       amount: item.price,
       // Set expiry date based on duration (simplified logic)
@@ -199,4 +246,4 @@ router.post('/purchase/:itemId', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

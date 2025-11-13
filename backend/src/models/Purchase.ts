@@ -1,13 +1,24 @@
-const mongoose = require('mongoose');
+import mongoose, { Document, Schema } from 'mongoose';
 
-const purchaseSchema = new mongoose.Schema({
+export interface IPurchase extends Document {
+  user: mongoose.Types.ObjectId;
+  item: mongoose.Types.ObjectId;
+  purchaseDate: Date;
+  status: 'active' | 'completed' | 'expired' | 'cancelled';
+  expiryDate?: Date;
+  amount: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const purchaseSchema = new Schema<IPurchase>({
   user: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
   item: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: 'Item',
     required: true
   },
@@ -36,4 +47,4 @@ const purchaseSchema = new mongoose.Schema({
 purchaseSchema.index({ user: 1, status: 1 });
 purchaseSchema.index({ user: 1, item: 1 });
 
-module.exports = mongoose.model('Purchase', purchaseSchema);
+export default mongoose.model<IPurchase>('Purchase', purchaseSchema);
