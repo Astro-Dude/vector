@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import mongoose from 'mongoose';
 import passport from 'passport';
@@ -5,9 +6,6 @@ import session from 'express-session';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'path';
-import * as dotenv from 'dotenv';
-
-dotenv.config();
 
 // Import passport configuration
 import './config/passport';
@@ -81,10 +79,12 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/vector')
 .then(() => console.log('MongoDB connected'))
 .catch(err => console.error('MongoDB connection error:', err));
 
-app.use(express.static(path.join(__dirname, 'frontend/dist')));
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'frontend/dist', 'index.html'));
-});
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, 'frontend/dist')));
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend/dist', 'index.html'));
+  });
+}
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
