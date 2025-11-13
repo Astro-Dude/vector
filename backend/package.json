@@ -23,18 +23,18 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.0.3",
     "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0"
-  },
-  "devDependencies": {
+    "passport-google-oauth20": "^2.0.0",
+    "typescript": "^5.9.3",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
     "@types/express-session": "^1.18.2",
     "@types/node": "^24.10.1",
     "@types/passport": "^1.0.17",
-    "@types/passport-google-oauth20": "^2.0.17",
+    "@types/passport-google-oauth20": "^2.0.17"
+  },
+  "devDependencies": {
     "nodemon": "^3.0.2",
-    "tsx": "^4.20.6",
-    "typescript": "^5.9.3"
+    "tsx": "^4.20.6"
   }
 }
