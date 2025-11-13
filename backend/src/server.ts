@@ -44,8 +44,8 @@ app.use(passport.session());
 // Routes
 app.use('/auth', authRoutes);
 
-// Health check
-app.get('/', (req, res) => {
+// API health check
+app.get('/api', (req, res) => {
   res.json({ message: 'Vector Backend API', status: 'running' });
 });
 
@@ -74,13 +74,18 @@ app.post('/auth/logout', (req, res) => {
   });
 });
 
+// Serve static files in production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../../frontend/dist')));
+}
+
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/vector')
 .then(() => console.log('MongoDB connected'))
 .catch(err => console.error('MongoDB connection error:', err));
 
+// Serve frontend in production (must be last)
 if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../../frontend/dist')));
   app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, '../../frontend/dist', 'index.html'));
   });
