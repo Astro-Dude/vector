@@ -29,16 +29,22 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Trust proxy for secure cookies on Render
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', 1);
+}
+
 // Session configuration
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-super-secret-session-key-change-this-in-production-123456789',
   resave: false,
   saveUninitialized: false,
+  proxy: process.env.NODE_ENV === 'production',
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: process.env.NODE_ENV === 'production' ? 'lax' : 'lax'
+    sameSite: 'lax'
   }
 }));
 
