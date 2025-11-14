@@ -56,6 +56,19 @@ export default function Profile() {
     setError(null);
     setSuccess(null);
 
+    // Validation
+    if (!formData.firstName.trim()) {
+      setError('First name is required');
+      setLoading(false);
+      return;
+    }
+
+    if (formData.phone && !/^\+?[\d\s\-()]+$/.test(formData.phone)) {
+      setError('Please enter a valid phone number');
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch(`${API_BASE_URL}/auth/profile`, {
         method: 'PUT',
@@ -216,6 +229,7 @@ export default function Profile() {
                     value={formData.firstName}
                     onChange={handleInputChange}
                     disabled={!isEditing}
+                    required
                     className="w-full px-3 py-2 md:px-4 md:py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
                   />
                 </div>
@@ -248,7 +262,7 @@ export default function Profile() {
                     value={formData.phone}
                     onChange={handleInputChange}
                     disabled={!isEditing}
-                    placeholder="+1 (555) 123-4567"
+                    placeholder="0123456789"
                     className="w-full px-3 py-2 md:px-4 md:py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-white/50 focus:border-white/50 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base"
                   />
                 </div>

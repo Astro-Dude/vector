@@ -98,9 +98,13 @@ export default function Navbar() {
     <nav className="fixed top-3 md:top-6 left-1/2 -translate-x-1/2 z-1000 w-[95%] max-w-[1400px]">
       <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl md:rounded-4xl px-4 md:px-8 py-3 md:py-4 flex justify-between items-center shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
         <div className="navbar-brand">
-          <h1 className={`logo m-0 text-2xl md:text-3xl font-bold bg-white bg-clip-text text-transparent tracking-wide`}>
-            Vector
-          </h1>
+          <button
+            onClick={() => navigate('/home')}
+          >
+            <h1 className={`logo m-0 text-2xl md:text-3xl font-bold bg-white bg-clip-text text-transparent tracking-wide`}>
+              Vector
+            </h1>
+          </button>
         </div>
         <div className="flex gap-2 md:gap-4 items-center">
           {isAuthenticated ? (
