@@ -11,6 +11,7 @@ import path from 'path';
 import './config/passport.js';
 
 import authRoutes from './routes/auth.js';
+import interviewRoutes from './routes/interview.js';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
@@ -54,6 +55,7 @@ app.use(passport.session());
 
 // Routes
 app.use('/auth', authRoutes);
+app.use('/api/interview', interviewRoutes);
 
 // API health check
 app.get('/api', (req, res) => {

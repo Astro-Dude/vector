@@ -7,6 +7,9 @@ export interface IPurchase extends Document {
   status: 'active' | 'completed' | 'expired' | 'cancelled';
   expiryDate?: Date;
   amount: number;
+  // Interview tracking fields
+  interviewsPurchased: number;
+  interviewsUsed: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -37,6 +40,17 @@ const purchaseSchema = new Schema<IPurchase>({
   amount: {
     type: Number,
     required: true,
+    min: 0
+  },
+  // Interview tracking: how many interviews were purchased and used
+  interviewsPurchased: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  interviewsUsed: {
+    type: Number,
+    default: 0,
     min: 0
   }
 }, {

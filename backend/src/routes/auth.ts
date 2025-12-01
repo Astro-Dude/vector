@@ -68,16 +68,31 @@ router.get('/purchases', async (req: Request, res: Response) => {
     // Format the response to match the frontend expectations
     const formattedPurchases = purchases
       .filter(purchase => purchase.item) // Filter out purchases with null items
-      .map(purchase => ({
-        id: (purchase.item as any)._id,
-        title: (purchase.item as any).title,
-        description: (purchase.item as any).description,
-        price: purchase.amount,
-        type: (purchase.item as any).type,
-        duration: (purchase.item as any).duration,
-        purchasedAt: purchase.purchaseDate.toISOString(),
-        status: purchase.status
-      }));
+      .map(purchase => {
+        const item = purchase.item as any;
+        const base = {
+          id: item._id,
+          title: item.title,
+          description: item.description,
+          price: purchase.amount,
+          type: item.type,
+          duration: item.duration,
+          purchasedAt: purchase.purchaseDate.toISOString(),
+          status: purchase.status
+        };
+
+        // Add interview-specific fields for interview type items
+        if (item.type === 'interview') {
+          return {
+            ...base,
+            interviewsPurchased: purchase.interviewsPurchased,
+            interviewsUsed: purchase.interviewsUsed,
+            interviewsRemaining: purchase.interviewsPurchased - purchase.interviewsUsed
+          };
+        }
+
+        return base;
+      });
 
     res.json({ purchases: formattedPurchases });
   } catch (error) {
@@ -210,7 +225,68 @@ router.post('/purchase/:itemId', async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Item is not available' });
     }
 
-    // Check if user already purchased this item
+    // Get quantity from request body (default to 1)
+    const quantity = parseInt(req.body.quantity) || 1;
+    if (quantity < 1 || quantity > 10) {
+      return res.status(400).json({ message: 'Quantity must be between 1 and 10' });
+    }
+
+    // For interview type items, allow purchasing multiple and adding to existing
+    if (item.type === 'interview') {
+      // Check if user already has an active purchase for this interview item
+      const existingPurchase = await Purchase.findOne({
+        user: (req.user as any)._id,
+        item: item._id,
+        status: 'active'
+      });
+
+      if (existingPurchase) {
+        // Add to existing purchase
+        existingPurchase.interviewsPurchased += quantity;
+        existingPurchase.amount += item.price * quantity;
+        await existingPurchase.save();
+
+        return res.status(200).json({
+          message: `Successfully added ${quantity} interview${quantity > 1 ? 's' : ''} to your account`,
+          purchase: {
+            id: existingPurchase._id,
+            item: item,
+            purchaseDate: existingPurchase.purchaseDate,
+            status: existingPurchase.status,
+            interviewsPurchased: existingPurchase.interviewsPurchased,
+            interviewsUsed: existingPurchase.interviewsUsed,
+            interviewsRemaining: existingPurchase.interviewsPurchased - existingPurchase.interviewsUsed
+          }
+        });
+      }
+
+      // Create new purchase with interview count
+      const purchase = new Purchase({
+        user: (req.user as any)._id,
+        item: item._id,
+        amount: item.price * quantity,
+        interviewsPurchased: quantity,
+        interviewsUsed: 0,
+        expiryDate: new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000) // 6 months
+      });
+
+      await purchase.save();
+
+      return res.status(201).json({
+        message: `Successfully purchased ${quantity} interview${quantity > 1 ? 's' : ''}`,
+        purchase: {
+          id: purchase._id,
+          item: item,
+          purchaseDate: purchase.purchaseDate,
+          status: purchase.status,
+          interviewsPurchased: purchase.interviewsPurchased,
+          interviewsUsed: purchase.interviewsUsed,
+          interviewsRemaining: purchase.interviewsPurchased - purchase.interviewsUsed
+        }
+      });
+    }
+
+    // For non-interview items, check for existing purchase
     const existingPurchase = await Purchase.findOne({
       user: (req.user as any)._id,
       item: item._id,
@@ -221,7 +297,7 @@ router.post('/purchase/:itemId', async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Item already purchased' });
     }
 
-    // Create purchase record
+    // Create purchase record for non-interview items
     const purchase = new Purchase({
       user: (req.user as any)._id,
       item: item._id,
