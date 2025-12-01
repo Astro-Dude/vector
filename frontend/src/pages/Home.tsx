@@ -123,7 +123,7 @@ export default function Home() {
     <div className="min-h-screen bg-black">
       <Navbar />
 
-      <div className="pt-20 md:pt-24 px-4 sm:px-6 lg:px-8">
+      <div className="pt-28 md:pt-36 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Welcome Section */}
           <div className="text-center mb-8 md:mb-12">

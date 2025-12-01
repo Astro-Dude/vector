@@ -7,10 +7,18 @@ export interface IScores {
   problemSolving: number;
 }
 
+export interface IScoreReasons {
+  correctness?: string;
+  reasoning?: string;
+  clarity?: string;
+  problemSolving?: string;
+}
+
 export interface IQuestionResult {
   question: string;
   answer: string;
   scores: IScores;
+  scoreReasons?: IScoreReasons;
   total: number;
   feedback: {
     whatWentRight: string[];
@@ -44,10 +52,18 @@ const scoresSchema = new Schema<IScores>({
   problemSolving: { type: Number, required: true, min: 0, max: 5 }
 }, { _id: false });
 
+const scoreReasonsSchema = new Schema<IScoreReasons>({
+  correctness: { type: String },
+  reasoning: { type: String },
+  clarity: { type: String },
+  problemSolving: { type: String }
+}, { _id: false });
+
 const questionResultSchema = new Schema<IQuestionResult>({
   question: { type: String, required: true },
   answer: { type: String, required: true },
   scores: { type: scoresSchema, required: true },
+  scoreReasons: { type: scoreReasonsSchema },
   total: { type: Number, required: true, min: 0, max: 10 },
   feedback: {
     whatWentRight: [{ type: String }],

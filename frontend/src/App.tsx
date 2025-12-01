@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import Profile from './pages/Profile';
 import InterviewSetup from './pages/interview/InterviewSetup';
 import InterviewSession from './pages/interview/InterviewSession';
+import InterviewHistory from './pages/interview/InterviewHistory';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -41,6 +42,14 @@ function App() {
           element={
             <ProtectedRoute>
               <InterviewSession />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/interview/history"
+          element={
+            <ProtectedRoute>
+              <InterviewHistory />
             </ProtectedRoute>
           }
         />
