@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import multer from 'multer';
+import multer, { FileFilterCallback } from 'multer';
 import {
   startInterview,
   submitAnswer,
@@ -21,7 +21,7 @@ const upload = multer({
   limits: {
     fileSize: 10 * 1024 * 1024, // 10MB max
   },
-  fileFilter: (_req, file, cb) => {
+  fileFilter: (_req: Request, file: Express.Multer.File, cb: FileFilterCallback) => {
     // Accept audio files
     if (file.mimetype.startsWith('audio/')) {
       cb(null, true);

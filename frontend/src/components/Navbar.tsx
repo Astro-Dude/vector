@@ -101,6 +101,7 @@ export default function Navbar() {
         <div className="navbar-brand">
           <button
             onClick={() => navigate('/home')}
+            className="cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:drop-shadow-[0_4px_6px_rgba(255,255,255,0.3)]"
           >
             <h1 className={`logo m-0 text-2xl md:text-3xl font-bold bg-white bg-clip-text text-transparent tracking-wide`}>
               Vector

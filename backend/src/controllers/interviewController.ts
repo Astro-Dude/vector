@@ -1,5 +1,10 @@
 import { Request, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
+
+// Extend Request type to include multer file
+interface MulterRequest extends Request {
+  file?: Express.Multer.File;
+}
 import InterviewQuestion, { IInterviewQuestion } from '../models/InterviewQuestion.js';
 import InterviewResult from '../models/InterviewResult.js';
 import Purchase from '../models/Purchase.js';
@@ -431,7 +436,7 @@ export async function submitAnswer(req: Request, res: Response): Promise<void> {
 }
 
 // Transcribe audio to text (STT)
-export async function transcribeAnswer(req: Request, res: Response): Promise<void> {
+export async function transcribeAnswer(req: MulterRequest, res: Response): Promise<void> {
   try {
     if (!req.file) {
       res.status(400).json({ error: 'Audio file is required' });
