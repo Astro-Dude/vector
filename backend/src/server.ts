@@ -3,6 +3,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import passport from 'passport';
 import session from 'express-session';
+import MongoStore from 'connect-mongo';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'path';
@@ -35,12 +36,17 @@ if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', 1);
 }
 
-// Session configuration
+// Session configuration with MongoDB store
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-super-secret-session-key-change-this-in-production-123456789',
   resave: false,
   saveUninitialized: false,
   proxy: process.env.NODE_ENV === 'production',
+  store: MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI || 'mongodb://localhost:27017/vector',
+    ttl: 24 * 60 * 60, // 24 hours in seconds
+    autoRemove: 'native'
+  }),
   cookie: {
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
