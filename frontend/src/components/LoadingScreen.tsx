@@ -8,6 +8,14 @@ export default function LoadingScreen({ onLoadingComplete }: LoadingScreenProps)
   const [progress, setProgress] = useState(0);
   const [fadeOut, setFadeOut] = useState(false);
 
+  // Hide scrollbar while loading screen is visible
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
+
   useEffect(() => {
     const duration = 3000; // 3 seconds
     const interval = 20; // Update every 20ms

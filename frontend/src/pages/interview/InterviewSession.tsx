@@ -535,22 +535,6 @@ export default function InterviewSession() {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const getStatusText = () => {
-    if (isAiSpeaking) return 'AI is speaking...';
-    if (recordingState === 'recording') return 'Recording... Click to stop';
-    if (recordingState === 'transcribing') return 'Processing your answer...';
-    if (recordingState === 'submitting') return 'Evaluating your response...';
-    if (feedback) return 'Feedback received';
-    return 'Click microphone to answer';
-  };
-
-  const getStatusColor = () => {
-    if (isAiSpeaking) return 'text-blue-400';
-    if (recordingState === 'recording') return 'text-red-400';
-    if (recordingState === 'transcribing' || recordingState === 'submitting') return 'text-yellow-400';
-    return 'text-white/60';
-  };
-
   // Unauthorized state - user didn't come from setup
   if (unauthorized) {
     return (
@@ -846,80 +830,6 @@ export default function InterviewSession() {
           </div>
         )}
 
-        {/* Central Status Indicator */}
-        <div className="relative flex items-center justify-center mb-8">
-          {/* Outer glow rings */}
-          <div className={`absolute w-32 h-32 md:w-40 md:h-40 rounded-full transition-all duration-300 ${
-            isAiSpeaking ? 'bg-blue-500/20 animate-pulse' :
-            recordingState === 'recording' ? 'bg-red-500/20' :
-            recordingState === 'transcribing' || recordingState === 'submitting' ? 'bg-yellow-500/20 animate-pulse' :
-            'bg-white/5'
-          }`} />
-
-          {/* Audio level indicator when recording */}
-          {recordingState === 'recording' && (
-            <div
-              className="absolute rounded-full bg-red-500/30 transition-transform duration-75"
-              style={{
-                width: '160px',
-                height: '160px',
-                transform: `scale(${1 + audioLevel * 0.5})`,
-                opacity: 0.5
-              }}
-            />
-          )}
-
-          {/* Inner core circle */}
-          <div className={`relative w-20 h-20 md:w-24 md:h-24 rounded-full flex items-center justify-center transition-all duration-300 ${
-            isAiSpeaking
-              ? 'bg-gradient-to-br from-blue-600 to-blue-800 shadow-[0_0_40px_rgba(59,130,246,0.5)]'
-              : recordingState === 'recording'
-              ? 'bg-gradient-to-br from-red-600 to-red-800 shadow-[0_0_40px_rgba(239,68,68,0.5)]'
-              : recordingState === 'transcribing' || recordingState === 'submitting'
-              ? 'bg-gradient-to-br from-yellow-600 to-yellow-800 shadow-[0_0_40px_rgba(234,179,8,0.5)]'
-              : 'bg-gradient-to-br from-zinc-700 to-zinc-900'
-          }`}>
-            {isAiSpeaking ? (
-              <div className="flex items-center gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-1 bg-white rounded-full animate-pulse"
-                    style={{
-                      height: `${12 + Math.random() * 12}px`,
-                      animationDelay: `${i * 0.1}s`
-                    }}
-                  />
-                ))}
-              </div>
-            ) : recordingState === 'recording' ? (
-              <div className="flex items-center gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-1 bg-white rounded-full transition-all duration-75"
-                    style={{
-                      height: `${8 + audioLevel * 20}px`
-                    }}
-                  />
-                ))}
-              </div>
-            ) : recordingState === 'transcribing' || recordingState === 'submitting' ? (
-              <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <svg className="w-8 h-8 md:w-10 md:h-10 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-              </svg>
-            )}
-          </div>
-
-          {/* Status text */}
-          <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 text-center whitespace-nowrap">
-            <p className={`text-sm font-medium transition-colors duration-300 ${getStatusColor()}`}>
-              {getStatusText()}
-            </p>
-          </div>
-        </div>
 
         {/* Transcribed Answer Display */}
         {transcribedAnswer && recordingState !== 'idle' && (

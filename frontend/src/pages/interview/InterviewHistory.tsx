@@ -295,9 +295,9 @@ export default function InterviewHistory() {
 
   // List View
   return (
-    <div className="min-h-screen bg-black">
+    <div className={`min-h-screen bg-black ${loading || detailLoading ? 'overflow-hidden' : ''}`}>
       <Navbar />
-      <div className="pt-28 md:pt-36 p-4 md:p-8">
+      <div className={`pt-28 md:pt-36 p-4 md:p-8 ${loading || detailLoading ? 'no-scroll' : ''}`}>
         <div className="max-w-4xl mx-auto">
           <h1 className="text-2xl md:text-3xl font-bold text-white mb-8">Interview Results</h1>
 
