@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL !== undefined ? import.meta.env.VITE_API_URL : 'http://localhost:5000';
@@ -21,6 +22,7 @@ interface PurchasedItem extends Item {
 
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'available' | 'purchased'>('available');
   const [availableItems, setAvailableItems] = useState<Item[]>([]);
   const [purchasedItems, setPurchasedItems] = useState<PurchasedItem[]>([]);
@@ -294,9 +296,19 @@ export default function Home() {
 
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                           <span className="text-lg md:text-xl font-bold text-white">₹{item.price}</span>
-                          <button className="px-3 py-2 md:px-4 md:py-2.5 bg-white/10 text-white hover:bg-white/20 rounded-lg font-medium transition-colors duration-300 text-sm md:text-base">
-                            Details
-                          </button>
+                          <div className="flex gap-2">
+                            {item.type === 'interview' && item.status === 'active' && (
+                              <button
+                                onClick={() => navigate('/interview/setup')}
+                                className="px-3 py-2 md:px-4 md:py-2.5 bg-green-500 text-white hover:bg-green-600 rounded-lg font-medium transition-colors duration-300 text-sm md:text-base"
+                              >
+                                Start Interview
+                              </button>
+                            )}
+                            <button className="px-3 py-2 md:px-4 md:py-2.5 bg-white/10 text-white hover:bg-white/20 rounded-lg font-medium transition-colors duration-300 text-sm md:text-base">
+                              Details
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}

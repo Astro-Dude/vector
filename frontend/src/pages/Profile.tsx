@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL !== undefined ? import.meta.env.VITE_API_URL : 'http://localhost:5000';
 import Navbar from '../components/Navbar';
+import ProfileAvatar from '../components/ProfileAvatar';
 
 interface UserProfile {
   email: string;
@@ -148,20 +149,13 @@ export default function Profile() {
             )}
             {/* Profile Picture */}
             <div className="flex flex-col items-center mb-6 md:mb-8">
-              <div className="w-20 h-20 md:w-24 md:h-24 lg:w-32 lg:h-32 rounded-full overflow-hidden border-4 border-white/20 mb-3 md:mb-4">
-                {user?.profilePicture ? (
-                  <img
-                    src={user.profilePicture}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                    <span className="text-white font-bold text-xl md:text-2xl lg:text-3xl">
-                      {(user?.firstName || user?.email || 'U').charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                )}
+              <div className="border-4 border-white/20 rounded-full mb-3 md:mb-4">
+                <ProfileAvatar
+                  src={user?.profilePicture}
+                  name={user?.firstName}
+                  email={user?.email}
+                  size="lg"
+                />
               </div>
               <h2 className="text-lg md:text-xl lg:text-2xl font-bold text-white mb-1 md:mb-2 text-center">
                 {user?.firstName && user?.lastName 

@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import ProfileAvatar from './ProfileAvatar';
 
 export default function Navbar() {
   const { user, isAuthenticated, login, logout } = useAuth();
@@ -113,19 +114,12 @@ export default function Navbar() {
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
                 className="w-10 h-10 md:w-12 md:h-12 rounded-full overflow-hidden border-2 border-white/20 hover:border-white/40 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-white/50"
               >
-                {user?.profilePicture ? (
-                  <img
-                    src={user.profilePicture}
-                    alt={user.firstName || 'Profile'}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                    <span className="text-white font-bold text-sm md:text-base">
-                      {(user?.firstName || user?.email || 'U').charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                )}
+                <ProfileAvatar
+                  src={user?.profilePicture}
+                  name={user?.firstName}
+                  email={user?.email}
+                  size="sm"
+                />
               </button>
 
               {/* Profile Dropdown Menu */}
