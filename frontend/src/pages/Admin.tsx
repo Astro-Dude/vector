@@ -20,6 +20,7 @@ interface Item {
   description: string;
   price: number;
   type: 'test' | 'interview' | 'course';
+  duration?: string;
   isActive: boolean;
 }
 
@@ -133,8 +134,12 @@ export default function Admin() {
     title: '',
     description: '',
     price: 0,
-    type: 'interview' as 'test' | 'interview' | 'course'
+    type: 'interview' as 'test' | 'interview' | 'course',
+    duration: ''
   });
+
+  // Edit item state
+  const [editingItem, setEditingItem] = useState<Item | null>(null);
 
   // New interview question form
   const [newQuestion, setNewQuestion] = useState({
@@ -250,7 +255,7 @@ export default function Admin() {
 
       if (!res.ok) throw new Error('Failed to create item');
 
-      setNewItem({ title: '', description: '', price: 0, type: 'interview' });
+      setNewItem({ title: '', description: '', price: 0, type: 'interview', duration: '' });
       loadTabData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error creating item');
@@ -268,6 +273,32 @@ export default function Admin() {
       loadTabData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error deleting item');
+    }
+  };
+
+  const updateItem = async () => {
+    if (!editingItem) return;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/items/${editingItem._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          title: editingItem.title,
+          description: editingItem.description,
+          price: editingItem.price,
+          type: editingItem.type,
+          duration: editingItem.duration,
+          isActive: editingItem.isActive
+        })
+      });
+
+      if (!res.ok) throw new Error('Failed to update item');
+
+      setEditingItem(null);
+      loadTabData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Error updating item');
     }
   };
 
@@ -869,44 +900,95 @@ export default function Admin() {
       {/* Items Tab */}
       {tab === 'items' && (
         <div>
-          {/* Create Item Form */}
+          {/* Create/Edit Item Form */}
           <div className="bg-zinc-900 p-4 rounded mb-6">
-            <h3 className="text-lg font-semibold mb-4">Create New Item</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              {editingItem ? 'Edit Item' : 'Create New Item'}
+            </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <input
                 type="text"
                 placeholder="Title"
-                value={newItem.title}
-                onChange={e => setNewItem({ ...newItem, title: e.target.value })}
+                value={editingItem ? editingItem.title : newItem.title}
+                onChange={e => editingItem
+                  ? setEditingItem({ ...editingItem, title: e.target.value })
+                  : setNewItem({ ...newItem, title: e.target.value })
+                }
                 className="bg-zinc-800 p-2 rounded"
               />
               <input
                 type="text"
                 placeholder="Description"
-                value={newItem.description}
-                onChange={e => setNewItem({ ...newItem, description: e.target.value })}
+                value={editingItem ? editingItem.description : newItem.description}
+                onChange={e => editingItem
+                  ? setEditingItem({ ...editingItem, description: e.target.value })
+                  : setNewItem({ ...newItem, description: e.target.value })
+                }
                 className="bg-zinc-800 p-2 rounded"
               />
               <input
                 type="number"
                 placeholder="Price"
-                value={newItem.price}
-                onChange={e => setNewItem({ ...newItem, price: Number(e.target.value) })}
+                value={editingItem ? editingItem.price : newItem.price}
+                onChange={e => editingItem
+                  ? setEditingItem({ ...editingItem, price: Number(e.target.value) })
+                  : setNewItem({ ...newItem, price: Number(e.target.value) })
+                }
                 className="bg-zinc-800 p-2 rounded"
               />
               <select
-                value={newItem.type}
-                onChange={e => setNewItem({ ...newItem, type: e.target.value as 'test' | 'interview' | 'course' })}
+                value={editingItem ? editingItem.type : newItem.type}
+                onChange={e => editingItem
+                  ? setEditingItem({ ...editingItem, type: e.target.value as 'test' | 'interview' | 'course' })
+                  : setNewItem({ ...newItem, type: e.target.value as 'test' | 'interview' | 'course' })
+                }
                 className="bg-zinc-800 p-2 rounded"
               >
                 <option value="interview">Interview</option>
                 <option value="test">Test</option>
                 <option value="course">Course</option>
               </select>
+              <input
+                type="text"
+                placeholder="Duration (e.g., 30 mins)"
+                value={editingItem ? (editingItem.duration || '') : newItem.duration}
+                onChange={e => editingItem
+                  ? setEditingItem({ ...editingItem, duration: e.target.value })
+                  : setNewItem({ ...newItem, duration: e.target.value })
+                }
+                className="bg-zinc-800 p-2 rounded"
+              />
+              {editingItem && (
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={editingItem.isActive}
+                    onChange={e => setEditingItem({ ...editingItem, isActive: e.target.checked })}
+                    className="w-4 h-4"
+                  />
+                  <span>Active</span>
+                </label>
+              )}
             </div>
-            <button onClick={createItem} className="mt-4 px-4 py-2 bg-white text-black rounded hover:bg-white/90">
-              Create Item
-            </button>
+            <div className="flex gap-2 mt-4">
+              {editingItem ? (
+                <>
+                  <button onClick={updateItem} className="px-4 py-2 bg-white text-black rounded hover:bg-white/90">
+                    Save Changes
+                  </button>
+                  <button
+                    onClick={() => setEditingItem(null)}
+                    className="px-4 py-2 bg-zinc-700 text-white rounded hover:bg-zinc-600"
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <button onClick={createItem} className="px-4 py-2 bg-white text-black rounded hover:bg-white/90">
+                  Create Item
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Filter */}
@@ -938,6 +1020,7 @@ export default function Admin() {
                   <th className="p-3">Description</th>
                   <th className="p-3">Price</th>
                   <th className="p-3">Type</th>
+                  <th className="p-3">Duration</th>
                   <th className="p-3">Active</th>
                   <th className="p-3">Actions</th>
                 </tr>
@@ -949,8 +1032,15 @@ export default function Admin() {
                     <td className="p-3 text-white/60 text-sm">{item.description}</td>
                     <td className="p-3">₹{item.price}</td>
                     <td className="p-3">{item.type}</td>
+                    <td className="p-3 text-white/60">{item.duration || '-'}</td>
                     <td className="p-3">{item.isActive ? 'Yes' : 'No'}</td>
-                    <td className="p-3">
+                    <td className="p-3 flex gap-2">
+                      <button
+                        onClick={() => setEditingItem(item)}
+                        className="text-blue-400 hover:text-blue-300"
+                      >
+                        Edit
+                      </button>
                       <button
                         onClick={() => deleteItem(item._id)}
                         className="text-red-400 hover:text-red-300"

@@ -71,7 +71,8 @@ router.get('/purchases', async (req: Request, res: Response) => {
       .map(purchase => {
         const item = purchase.item as any;
         const base = {
-          id: item._id,
+          _id: item._id.toString(),
+          id: item._id.toString(),
           title: item.title,
           description: item.description,
           price: purchase.amount,

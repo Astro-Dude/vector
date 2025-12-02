@@ -6,7 +6,6 @@ export interface IItem extends Document {
   price: number;
   type: 'test' | 'interview' | 'course';
   duration?: string;
-  level?: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -35,11 +34,6 @@ const itemSchema = new Schema<IItem>({
   },
   duration: {
     type: String,
-    trim: true
-  },
-  level: {
-    type: String,
-    enum: ['Beginner', 'Intermediate', 'Advanced', 'Expert'],
     trim: true
   },
   isActive: {

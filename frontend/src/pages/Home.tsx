@@ -5,6 +5,12 @@ import Navbar from '../components/Navbar';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
+
 interface Item {
   _id: string;
   title: string;
@@ -12,10 +18,10 @@ interface Item {
   price: number;
   type: 'test' | 'interview' | 'course';
   duration?: string;
-  level?: string;
 }
 
 interface PurchasedItem extends Item {
+  id?: string; // Backend returns 'id' instead of '_id'
   purchasedAt: string;
   status: 'active' | 'completed' | 'expired';
   credits?: number;
@@ -41,7 +47,12 @@ export default function Home() {
           throw new Error('Failed to fetch available items');
         }
         const data = await response.json();
-        setAvailableItems(data.items);
+        // Sort items: interviews first, then tests, then courses
+        const sortedItems = [...data.items].sort((a: Item, b: Item) => {
+          const order = { interview: 0, test: 1, course: 2 };
+          return order[a.type] - order[b.type];
+        });
+        setAvailableItems(sortedItems);
       } catch (err) {
         setError('Failed to load available items');
         console.error('Error fetching available items:', err);
@@ -78,26 +89,88 @@ export default function Home() {
 
   const handlePurchase = async (item: Item) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/purchase/${item._id}`, {
+      // Get Razorpay key
+      const keyResponse = await fetch(`${API_BASE_URL}/api/payment/key`, {
+        credentials: 'include'
+      });
+      const { key } = await keyResponse.json();
+
+      // Create order
+      const orderResponse = await fetch(`${API_BASE_URL}/api/payment/create-order`, {
         method: 'POST',
-        credentials: 'include'
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ itemId: item._id, quantity: 1 })
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Purchase failed');
+      if (!orderResponse.ok) {
+        const errorData = await orderResponse.json();
+        throw new Error(errorData.message || 'Failed to create order');
       }
 
-      alert(`Purchase successful! ${item.title} has been added to your account.`);
+      const orderData = await orderResponse.json();
 
-      // Refresh purchased items
-      const purchasedResponse = await fetch(`${API_BASE_URL}/auth/purchases`, {
-        credentials: 'include'
-      });
-      if (purchasedResponse.ok) {
-        const purchasedData = await purchasedResponse.json();
-        setPurchasedItems(purchasedData.purchases);
-      }
+      // Initialize Razorpay
+      const options = {
+        key,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: 'Vector',
+        description: `${orderData.itemTitle}${orderData.quantity > 1 ? ` x${orderData.quantity}` : ''}`,
+        order_id: orderData.orderId,
+        handler: async (response: any) => {
+          try {
+            // Verify payment
+            const verifyResponse = await fetch(`${API_BASE_URL}/api/payment/verify`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                itemId: item._id,
+                quantity: 1
+              })
+            });
+
+            const verifyData = await verifyResponse.json();
+
+            if (verifyResponse.ok && verifyData.success) {
+              // Refresh purchased items
+              const purchasedResponse = await fetch(`${API_BASE_URL}/auth/purchases`, {
+                credentials: 'include'
+              });
+              if (purchasedResponse.ok) {
+                const purchasedData = await purchasedResponse.json();
+                setPurchasedItems(purchasedData.purchases);
+              }
+              // Switch to purchased tab
+              setActiveTab('purchased');
+            } else {
+              throw new Error(verifyData.message || 'Payment verification failed');
+            }
+          } catch (err) {
+            console.error('Payment verification error:', err);
+            alert(err instanceof Error ? err.message : 'Payment verification failed');
+          }
+        },
+        prefill: {
+          name: user?.firstName ? `${user.firstName} ${user.lastName || ''}`.trim() : '',
+          email: user?.email || ''
+        },
+        theme: {
+          color: '#000000'
+        },
+        modal: {
+          ondismiss: () => {
+            console.log('Payment cancelled');
+          }
+        }
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
     } catch (err) {
       console.error('Purchase error:', err);
       alert(err instanceof Error ? err.message : 'Purchase failed. Please try again.');
@@ -120,6 +193,18 @@ export default function Home() {
       case 'expired': return 'bg-red-500/20 text-red-400';
       default: return 'bg-gray-500/20 text-gray-400';
     }
+  };
+
+  const isItemPurchased = (item: Item) => {
+    // For tests and courses, check if already purchased
+    if (item.type === 'test' || item.type === 'course') {
+      const itemId = String(item._id);
+      return purchasedItems.some(p => {
+        const purchasedId = String(p.id || p._id);
+        return purchasedId === itemId && p.type === item.type;
+      });
+    }
+    return false;
   };
 
   return (
@@ -235,21 +320,18 @@ export default function Home() {
                               <span className="truncate">{item.duration}</span>
                             </div>
                           )}
-                          {item.level && (
-                            <div className="flex items-center gap-1">
-                              <svg className="w-3 h-3 md:w-4 md:h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              <span className="truncate">{item.level}</span>
-                            </div>
-                          )}
                         </div>
 
                         <button
                           onClick={() => handlePurchase(item)}
-                          className="w-full py-2.5 md:py-3 bg-white text-black hover:bg-white/90 rounded-lg font-medium transition-colors duration-300 text-sm md:text-base"
+                          disabled={isItemPurchased(item)}
+                          className={`w-full py-2.5 md:py-3 rounded-lg font-medium transition-colors duration-300 text-sm md:text-base ${
+                            isItemPurchased(item)
+                              ? 'bg-gray-500/50 text-gray-400 cursor-not-allowed'
+                              : 'bg-white text-black hover:bg-white/90'
+                          }`}
                         >
-                          Purchase Now
+                          {isItemPurchased(item) ? 'Already Purchased' : 'Purchase Now'}
                         </button>
                       </div>
                     ))}
@@ -281,10 +363,10 @@ export default function Home() {
                                 <button
                                   onClick={() => navigate('/interview/setup')}
                                   disabled={remaining <= 0}
-                                  className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                                  className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                                     remaining > 0
-                                      ? 'bg-blue-500 text-white hover:bg-blue-600'
-                                      : 'bg-gray-500/50 text-gray-400 cursor-not-allowed'
+                                      ? 'bg-white/10 text-white border border-white/20 hover:bg-white/20 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-white/10'
+                                      : 'bg-white/5 text-white/30 border border-white/10 cursor-not-allowed'
                                   }`}
                                 >
                                   Start
@@ -310,7 +392,7 @@ export default function Home() {
                             <span className="text-white font-medium">{item.title}</span>
                             <button
                               onClick={() => navigate(`/test/${item._id}`)}
-                              className="px-4 py-1.5 rounded-lg text-sm font-medium bg-purple-500 text-white hover:bg-purple-600 transition-colors"
+                              className="px-4 py-1.5 rounded-lg text-sm font-medium bg-white/10 text-white border border-white/20 hover:bg-white/20 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-white/10 transition-all duration-200"
                             >
                               Start
                             </button>
@@ -333,7 +415,7 @@ export default function Home() {
                             <span className="text-white font-medium">{item.title}</span>
                             <button
                               onClick={() => navigate(`/course/${item._id}`)}
-                              className="px-4 py-1.5 rounded-lg text-sm font-medium bg-green-500 text-white hover:bg-green-600 transition-colors"
+                              className="px-4 py-1.5 rounded-lg text-sm font-medium bg-white/10 text-white border border-white/20 hover:bg-white/20 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-white/10 transition-all duration-200"
                             >
                               Continue
                             </button>
