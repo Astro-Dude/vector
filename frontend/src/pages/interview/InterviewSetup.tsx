@@ -9,9 +9,9 @@ type Step = 'rules' | 'device-check';
 
 interface InterviewBalance {
   canStartInterview: boolean;
-  interviewsPurchased: number;
-  interviewsUsed: number;
-  interviewsRemaining: number;
+  totalCredits: number;
+  creditsUsed: number;
+  creditsRemaining: number;
   message?: string;
   error?: string;
 }
@@ -40,9 +40,9 @@ export default function InterviewSetup() {
       if (!response.ok) {
         setBalance({
           canStartInterview: false,
-          interviewsPurchased: data.interviewsPurchased || 0,
-          interviewsUsed: data.interviewsUsed || 0,
-          interviewsRemaining: data.interviewsRemaining || 0,
+          totalCredits: data.totalCredits || 0,
+          creditsUsed: data.creditsUsed || 0,
+          creditsRemaining: data.creditsRemaining || 0,
           error: data.error || data.message
         });
       } else {
@@ -121,15 +121,15 @@ export default function InterviewSetup() {
           <h3 className="text-xl font-bold text-white mb-2">No Interview Credits</h3>
           <p className="text-white/60 mb-4">{balance.error || 'You need to purchase an AI Interview to continue.'}</p>
 
-          {balance.interviewsPurchased > 0 && (
+          {balance.totalCredits > 0 && (
             <div className="bg-white/5 rounded-lg p-4 mb-6">
               <div className="flex justify-between text-sm mb-2">
-                <span className="text-white/60">Purchased</span>
-                <span className="text-white">{balance.interviewsPurchased}</span>
+                <span className="text-white/60">Total Credits</span>
+                <span className="text-white">{balance.totalCredits}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-white/60">Used</span>
-                <span className="text-white">{balance.interviewsUsed}</span>
+                <span className="text-white">{balance.creditsUsed}</span>
               </div>
             </div>
           )}
@@ -168,7 +168,7 @@ export default function InterviewSetup() {
                 </div>
                 <div>
                   <p className="text-white font-medium">Interview Credits Available</p>
-                  <p className="text-white/60 text-sm">{balance.interviewsRemaining} of {balance.interviewsPurchased} remaining</p>
+                  <p className="text-white/60 text-sm">{balance.creditsRemaining} of {balance.totalCredits} remaining</p>
                 </div>
               </div>
             </div>

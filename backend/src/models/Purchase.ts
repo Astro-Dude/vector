@@ -7,9 +7,11 @@ export interface IPurchase extends Document {
   status: 'active' | 'completed' | 'expired' | 'cancelled';
   expiryDate?: Date;
   amount: number;
-  // Interview tracking fields
-  interviewsPurchased: number;
-  interviewsUsed: number;
+  // Credit tracking fields
+  credits: number;        // Credits purchased (paid)
+  creditsUsed: number;    // Credits consumed
+  creditsAssigned: number; // Credits assigned by admin (free)
+  // Total available = credits + creditsAssigned - creditsUsed
   createdAt: Date;
   updatedAt: Date;
 }
@@ -42,13 +44,18 @@ const purchaseSchema = new Schema<IPurchase>({
     required: true,
     min: 0
   },
-  // Interview tracking: how many interviews were purchased and used
-  interviewsPurchased: {
+  // Credit tracking: paid credits, used credits, assigned credits
+  credits: {
     type: Number,
     default: 0,
     min: 0
   },
-  interviewsUsed: {
+  creditsUsed: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  creditsAssigned: {
     type: Number,
     default: 0,
     min: 0

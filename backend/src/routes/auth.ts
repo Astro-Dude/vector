@@ -81,13 +81,24 @@ router.get('/purchases', async (req: Request, res: Response) => {
           status: purchase.status
         };
 
-        // Add interview-specific fields for interview type items
+        // Add credit fields for interview type items
         if (item.type === 'interview') {
+          // Handle migration from old fields
+          const oldPurchase = purchase as any;
+          let credits = purchase.credits;
+          let creditsUsed = purchase.creditsUsed;
+          if (oldPurchase.interviewsPurchased !== undefined && purchase.credits === 0) {
+            credits = oldPurchase.interviewsPurchased || 0;
+            creditsUsed = oldPurchase.interviewsUsed || 0;
+          }
+
+          const totalCredits = credits + purchase.creditsAssigned;
           return {
             ...base,
-            interviewsPurchased: purchase.interviewsPurchased,
-            interviewsUsed: purchase.interviewsUsed,
-            interviewsRemaining: purchase.interviewsPurchased - purchase.interviewsUsed
+            credits,
+            creditsUsed,
+            creditsAssigned: purchase.creditsAssigned,
+            creditsRemaining: totalCredits - creditsUsed
           };
         }
 
@@ -241,11 +252,19 @@ router.post('/purchase/:itemId', async (req: Request, res: Response) => {
       });
 
       if (existingPurchase) {
-        // Add to existing purchase
-        existingPurchase.interviewsPurchased += quantity;
+        // Migrate old fields if they exist (one-time migration)
+        const oldPurchase = existingPurchase as any;
+        if (oldPurchase.interviewsPurchased !== undefined && existingPurchase.credits === 0) {
+          existingPurchase.credits = oldPurchase.interviewsPurchased || 0;
+          existingPurchase.creditsUsed = oldPurchase.interviewsUsed || 0;
+        }
+
+        // Add to existing purchase (paid credits)
+        existingPurchase.credits += quantity;
         existingPurchase.amount += item.price * quantity;
         await existingPurchase.save();
 
+        const totalCredits = existingPurchase.credits + existingPurchase.creditsAssigned;
         return res.status(200).json({
           message: `Successfully added ${quantity} interview${quantity > 1 ? 's' : ''} to your account`,
           purchase: {
@@ -253,20 +272,22 @@ router.post('/purchase/:itemId', async (req: Request, res: Response) => {
             item: item,
             purchaseDate: existingPurchase.purchaseDate,
             status: existingPurchase.status,
-            interviewsPurchased: existingPurchase.interviewsPurchased,
-            interviewsUsed: existingPurchase.interviewsUsed,
-            interviewsRemaining: existingPurchase.interviewsPurchased - existingPurchase.interviewsUsed
+            credits: existingPurchase.credits,
+            creditsUsed: existingPurchase.creditsUsed,
+            creditsAssigned: existingPurchase.creditsAssigned,
+            creditsRemaining: totalCredits - existingPurchase.creditsUsed
           }
         });
       }
 
-      // Create new purchase with interview count
+      // Create new purchase with credits
       const purchase = new Purchase({
         user: (req.user as any)._id,
         item: item._id,
         amount: item.price * quantity,
-        interviewsPurchased: quantity,
-        interviewsUsed: 0,
+        credits: quantity,
+        creditsUsed: 0,
+        creditsAssigned: 0,
         expiryDate: new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000) // 6 months
       });
 
@@ -279,9 +300,10 @@ router.post('/purchase/:itemId', async (req: Request, res: Response) => {
           item: item,
           purchaseDate: purchase.purchaseDate,
           status: purchase.status,
-          interviewsPurchased: purchase.interviewsPurchased,
-          interviewsUsed: purchase.interviewsUsed,
-          interviewsRemaining: purchase.interviewsPurchased - purchase.interviewsUsed
+          credits: purchase.credits,
+          creditsUsed: purchase.creditsUsed,
+          creditsAssigned: purchase.creditsAssigned,
+          creditsRemaining: purchase.credits - purchase.creditsUsed
         }
       });
     }

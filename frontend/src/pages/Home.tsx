@@ -18,6 +18,9 @@ interface Item {
 interface PurchasedItem extends Item {
   purchasedAt: string;
   status: 'active' | 'completed' | 'expired';
+  credits?: number;
+  creditsUsed?: number;
+  creditsAssigned?: number;
 }
 
 export default function Home() {
@@ -130,9 +133,6 @@ export default function Home() {
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-3 md:mb-4 mt-5">
               Welcome back, {user?.firstName || 'User'}!
             </h1>
-            <p className="text-lg md:text-xl text-white/70 px-4">
-              Continue your journey towards NSET success
-            </p>
           </div>
 
           {/* Loading State */}
@@ -213,7 +213,6 @@ export default function Home() {
               {/* Available Items Tab */}
               {activeTab === 'available' && (
                 <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-6 md:mb-8">Available Items</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                     {availableItems.map((item) => (
                       <div key={item._id} className="bg-white/5 border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-6 hover:bg-white/10 transition-all duration-300">
@@ -261,58 +260,101 @@ export default function Home() {
               {/* Purchased Items Tab */}
               {activeTab === 'purchased' && (
                 <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-6 md:mb-8">My Purchases</h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                    {purchasedItems.map((item) => (
-                      <div key={item._id} className="bg-white/5 border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-6 hover:bg-white/10 transition-all duration-300">
-                        <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-3 md:mb-4 gap-2">
-                          <span className={`px-2 py-1 md:px-3 md:py-1 rounded-full text-xs font-medium border self-start ${getTypeColor(item.type)}`}>
-                            {item.type.toUpperCase()}
-                          </span>
-                          <span className={`px-2 py-1 md:px-3 md:py-1 rounded-full text-xs font-medium self-start ${getStatusColor(item.status)}`}>
-                            {item.status.toUpperCase()}
-                          </span>
-                        </div>
-
-                        <h3 className="text-lg md:text-xl font-bold text-white mb-2 md:mb-3 leading-tight">{item.title}</h3>
-                        <p className="text-white/70 mb-3 md:mb-4 leading-relaxed text-sm md:text-base line-clamp-3">{item.description}</p>
-
-                        <div className="flex flex-col gap-2 md:gap-4 mb-3 md:mb-4 text-xs md:text-sm text-white/60">
-                          {item.duration && (
-                            <div className="flex items-center gap-1">
-                              <svg className="w-3 h-3 md:w-4 md:h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              <span className="truncate">{item.duration}</span>
+                  {/* Interviews Section */}
+                  {purchasedItems.filter(item => item.type === 'interview').length > 0 && (
+                    <div className="mb-8">
+                      <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                        Interviews
+                      </h3>
+                      <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                        {purchasedItems.filter(item => item.type === 'interview').map((item, index, arr) => {
+                          const totalCredits = (item.credits || 0) + (item.creditsAssigned || 0);
+                          const remaining = totalCredits - (item.creditsUsed || 0);
+                          return (
+                            <div key={item._id} className={`flex items-center justify-between p-4 hover:bg-white/5 transition-colors ${index !== arr.length - 1 ? 'border-b border-white/10' : ''}`}>
+                              <span className="text-white font-medium">{item.title}</span>
+                              <div className="flex items-center gap-4">
+                                <span className={`text-sm ${remaining > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                                  {remaining} / {totalCredits} left
+                                </span>
+                                <button
+                                  onClick={() => navigate('/interview/setup')}
+                                  disabled={remaining <= 0}
+                                  className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                                    remaining > 0
+                                      ? 'bg-blue-500 text-white hover:bg-blue-600'
+                                      : 'bg-gray-500/50 text-gray-400 cursor-not-allowed'
+                                  }`}
+                                >
+                                  Start
+                                </button>
+                              </div>
                             </div>
-                          )}
-                          <div className="flex items-center gap-1">
-                            <svg className="w-3 h-3 md:w-4 md:h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            <span className="truncate">Purchased {new Date(item.purchasedAt).toLocaleDateString()}</span>
-                          </div>
-                        </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                          <span className="text-lg md:text-xl font-bold text-white">₹{item.price}</span>
-                          <div className="flex gap-2">
-                            {item.type === 'interview' && item.status === 'active' && (
-                              <button
-                                onClick={() => navigate('/interview/setup')}
-                                className="px-3 py-2 md:px-4 md:py-2.5 bg-green-500 text-white hover:bg-green-600 rounded-lg font-medium transition-colors duration-300 text-sm md:text-base"
-                              >
-                                Start Interview
-                              </button>
-                            )}
-                            <button className="px-3 py-2 md:px-4 md:py-2.5 bg-white/10 text-white hover:bg-white/20 rounded-lg font-medium transition-colors duration-300 text-sm md:text-base">
-                              Details
+                  {/* Tests Section */}
+                  {purchasedItems.filter(item => item.type === 'test').length > 0 && (
+                    <div className="mb-8">
+                      <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                        Tests
+                      </h3>
+                      <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                        {purchasedItems.filter(item => item.type === 'test').map((item, index, arr) => (
+                          <div key={item._id} className={`flex items-center justify-between p-4 hover:bg-white/5 transition-colors ${index !== arr.length - 1 ? 'border-b border-white/10' : ''}`}>
+                            <span className="text-white font-medium">{item.title}</span>
+                            <button
+                              onClick={() => navigate(`/test/${item._id}`)}
+                              className="px-4 py-1.5 rounded-lg text-sm font-medium bg-purple-500 text-white hover:bg-purple-600 transition-colors"
+                            >
+                              Start
                             </button>
                           </div>
-                        </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
+                    </div>
+                  )}
+
+                  {/* Courses Section */}
+                  {purchasedItems.filter(item => item.type === 'course').length > 0 && (
+                    <div className="mb-8">
+                      <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                        <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                        Courses
+                      </h3>
+                      <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                        {purchasedItems.filter(item => item.type === 'course').map((item, index, arr) => (
+                          <div key={item._id} className={`flex items-center justify-between p-4 hover:bg-white/5 transition-colors ${index !== arr.length - 1 ? 'border-b border-white/10' : ''}`}>
+                            <span className="text-white font-medium">{item.title}</span>
+                            <button
+                              onClick={() => navigate(`/course/${item._id}`)}
+                              className="px-4 py-1.5 rounded-lg text-sm font-medium bg-green-500 text-white hover:bg-green-600 transition-colors"
+                            >
+                              Continue
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Empty State */}
+                  {purchasedItems.length === 0 && (
+                    <div className="text-center py-12">
+                      <p className="text-white/60">No purchases yet</p>
+                      <button
+                        onClick={() => setActiveTab('available')}
+                        className="mt-4 px-6 py-2 bg-white text-black rounded-lg font-medium hover:bg-white/90 transition-colors"
+                      >
+                        Browse Available Items
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </>

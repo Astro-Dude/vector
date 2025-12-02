@@ -68,13 +68,22 @@ export async function startInterview(req: Request, res: Response): Promise<void>
       return;
     }
 
-    // Check if user has remaining interviews
-    if (purchase.interviewsUsed >= purchase.interviewsPurchased) {
+    // Migrate old fields if they exist (one-time migration)
+    const oldPurchase = purchase as any;
+    if (oldPurchase.interviewsPurchased !== undefined && purchase.credits === 0) {
+      purchase.credits = oldPurchase.interviewsPurchased || 0;
+      purchase.creditsUsed = oldPurchase.interviewsUsed || 0;
+      await purchase.save();
+    }
+
+    // Check if user has remaining credits
+    const totalCredits = purchase.credits + purchase.creditsAssigned;
+    if (purchase.creditsUsed >= totalCredits) {
       res.status(403).json({
         error: 'No interviews remaining',
         message: 'You have used all your purchased interviews. Please purchase more to continue.',
-        interviewsPurchased: purchase.interviewsPurchased,
-        interviewsUsed: purchase.interviewsUsed
+        totalCredits,
+        creditsUsed: purchase.creditsUsed
       });
       return;
     }
@@ -93,8 +102,8 @@ export async function startInterview(req: Request, res: Response): Promise<void>
       return;
     }
 
-    // Increment interviews used count
-    purchase.interviewsUsed += 1;
+    // Increment credits used count
+    purchase.creditsUsed += 1;
     await purchase.save();
 
     const sessionId = uuidv4();
@@ -131,7 +140,7 @@ export async function startInterview(req: Request, res: Response): Promise<void>
       },
       questionIntro,
       speechService: getSpeechServiceStatus(),
-      interviewsRemaining: purchase.interviewsPurchased - purchase.interviewsUsed
+      creditsRemaining: totalCredits - purchase.creditsUsed
     });
   } catch (error) {
     console.error('Error starting interview:', error);
@@ -636,9 +645,9 @@ export async function getInterviewBalance(req: Request, res: Response): Promise<
     if (!aiInterviewItem) {
       res.json({
         hasPurchase: false,
-        interviewsPurchased: 0,
-        interviewsUsed: 0,
-        interviewsRemaining: 0
+        totalCredits: 0,
+        creditsUsed: 0,
+        creditsRemaining: 0
       });
       return;
     }
@@ -652,18 +661,27 @@ export async function getInterviewBalance(req: Request, res: Response): Promise<
     if (!purchase) {
       res.json({
         hasPurchase: false,
-        interviewsPurchased: 0,
-        interviewsUsed: 0,
-        interviewsRemaining: 0
+        totalCredits: 0,
+        creditsUsed: 0,
+        creditsRemaining: 0
       });
       return;
     }
 
+    // Migrate old fields if they exist (one-time migration)
+    const oldPurchase = purchase as any;
+    if (oldPurchase.interviewsPurchased !== undefined && purchase.credits === 0) {
+      purchase.credits = oldPurchase.interviewsPurchased || 0;
+      purchase.creditsUsed = oldPurchase.interviewsUsed || 0;
+      await purchase.save();
+    }
+
+    const totalCredits = purchase.credits + purchase.creditsAssigned;
     res.json({
       hasPurchase: true,
-      interviewsPurchased: purchase.interviewsPurchased,
-      interviewsUsed: purchase.interviewsUsed,
-      interviewsRemaining: purchase.interviewsPurchased - purchase.interviewsUsed
+      totalCredits,
+      creditsUsed: purchase.creditsUsed,
+      creditsRemaining: totalCredits - purchase.creditsUsed
     });
   } catch (error) {
     console.error('Error getting interview balance:', error);
@@ -703,23 +721,32 @@ export async function getInterviewSession(req: Request, res: Response): Promise<
         error: 'No active AI Interview purchase found',
         message: 'Please purchase an AI Interview to continue',
         canStartInterview: false,
-        interviewsPurchased: 0,
-        interviewsUsed: 0,
-        interviewsRemaining: 0
+        totalCredits: 0,
+        creditsUsed: 0,
+        creditsRemaining: 0
       });
       return;
     }
 
-    const interviewsRemaining = purchase.interviewsPurchased - purchase.interviewsUsed;
+    // Migrate old fields if they exist (one-time migration)
+    const oldPurchase = purchase as any;
+    if (oldPurchase.interviewsPurchased !== undefined && purchase.credits === 0) {
+      purchase.credits = oldPurchase.interviewsPurchased || 0;
+      purchase.creditsUsed = oldPurchase.interviewsUsed || 0;
+      await purchase.save();
+    }
 
-    if (interviewsRemaining <= 0) {
+    const totalCredits = purchase.credits + purchase.creditsAssigned;
+    const creditsRemaining = totalCredits - purchase.creditsUsed;
+
+    if (creditsRemaining <= 0) {
       res.status(403).json({
         error: 'No interviews remaining',
         message: 'You have used all your purchased interviews. Please purchase more to continue.',
         canStartInterview: false,
-        interviewsPurchased: purchase.interviewsPurchased,
-        interviewsUsed: purchase.interviewsUsed,
-        interviewsRemaining: 0
+        totalCredits,
+        creditsUsed: purchase.creditsUsed,
+        creditsRemaining: 0
       });
       return;
     }
@@ -727,10 +754,10 @@ export async function getInterviewSession(req: Request, res: Response): Promise<
     // User can start an interview
     res.json({
       canStartInterview: true,
-      interviewsPurchased: purchase.interviewsPurchased,
-      interviewsUsed: purchase.interviewsUsed,
-      interviewsRemaining,
-      message: `You have ${interviewsRemaining} interview${interviewsRemaining > 1 ? 's' : ''} remaining out of ${purchase.interviewsPurchased} purchased.`,
+      totalCredits,
+      creditsUsed: purchase.creditsUsed,
+      creditsRemaining,
+      message: `You have ${creditsRemaining} interview${creditsRemaining > 1 ? 's' : ''} remaining out of ${totalCredits} total.`,
       speechService: getSpeechServiceStatus()
     });
   } catch (error) {

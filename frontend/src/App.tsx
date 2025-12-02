@@ -6,6 +6,7 @@ import Profile from './pages/Profile';
 import InterviewSetup from './pages/interview/InterviewSetup';
 import InterviewSession from './pages/interview/InterviewSession';
 import InterviewHistory from './pages/interview/InterviewHistory';
+import Admin from './pages/Admin';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -53,6 +54,7 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/admin" element={<Admin />} />
       </Routes>
     </AuthProvider>
   );
