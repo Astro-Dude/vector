@@ -9,20 +9,17 @@ import TestResult from '../models/TestResult.js';
 
 const router = Router();
 
-// Localhost-only middleware
-const localhostOnly = (req: Request, res: Response, next: NextFunction): void => {
-  const ip = req.ip || req.connection.remoteAddress || '';
-  const isLocalhost = ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1' || ip.includes('localhost');
-
-  if (isLocalhost) {
-    next();
-  } else {
-    res.status(403).json({ error: 'Admin access only available from localhost' });
+// Block admin routes in production
+const blockInProduction = (req: Request, res: Response, next: NextFunction): void => {
+  if (process.env.NODE_ENV === 'production') {
+    res.status(403).json({ error: 'Not allowed in production' });
+    return;
   }
+  next();
 };
 
-// Apply localhost restriction to all admin routes
-router.use(localhostOnly);
+// Apply production block to all admin routes
+router.use(blockInProduction);
 
 // Get all users with their spend breakdown
 router.get('/users', async (_req: Request, res: Response) => {
