@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import Navbar from '../../components/Navbar';
 
 interface QuestionResult {
@@ -61,6 +61,7 @@ interface HistoryResponse {
 
 export default function InterviewHistory() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [results, setResults] = useState<InterviewResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -70,6 +71,16 @@ export default function InterviewHistory() {
   const [totalPages, setTotalPages] = useState(1);
 
   const API_URL = import.meta.env.VITE_API_URL || '';
+
+  // Check if navigated from interview completion with sessionId
+  useEffect(() => {
+    const locationState = location.state as { sessionId?: string } | null;
+    if (locationState?.sessionId) {
+      fetchResultDetail(locationState.sessionId);
+      // Clear the state so refresh doesn't re-trigger
+      window.history.replaceState({}, document.title);
+    }
+  }, []);
 
   useEffect(() => {
     fetchHistory();

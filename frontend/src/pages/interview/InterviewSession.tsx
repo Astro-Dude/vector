@@ -54,43 +54,6 @@ interface Question {
   isFollowUp?: boolean;
 }
 
-interface InterviewReport {
-  finalScore: number;
-  questions: Array<{
-    question: string;
-    answer: string;
-    normalizedAnswer?: string;
-    total: number;
-    scores: {
-      correctness: number;
-      reasoning: number;
-      clarity: number;
-      problemSolving: number;
-    };
-    scoreReasons?: {
-      correctness: string;
-      reasoning: string;
-      clarity: string;
-      problemSolving: string;
-    };
-    feedback: {
-      whatWentRight: string[];
-      needsImprovement: string[];
-    };
-    followUpQuestions?: Array<{
-      question: string;
-      answer: string;
-      wasHint: boolean;
-    }>;
-    detailedFeedback?: string;
-  }>;
-  overallFeedback: {
-    strengths: string[];
-    improvementAreas: string[];
-    suggestedNextSteps: string[];
-  };
-}
-
 type RecordingState = 'idle' | 'recording' | 'transcribing' | 'submitting';
 
 export default function InterviewSession() {
@@ -110,7 +73,6 @@ export default function InterviewSession() {
   const [transcribedAnswer, setTranscribedAnswer] = useState<string>('');
   const [feedback, setFeedback] = useState<string | null>(null);
   const [interviewComplete, setInterviewComplete] = useState(false);
-  const [report, setReport] = useState<InterviewReport | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [unauthorized, setUnauthorized] = useState(false);
 
@@ -430,8 +392,12 @@ export default function InterviewSession() {
       }
 
       if (data.status === 'completed') {
-        setInterviewComplete(true);
-        setReport(data.report);
+        // Redirect directly to history page with sessionId
+        cleanup();
+        if (document.fullscreenElement) {
+          await document.exitFullscreen();
+        }
+        navigate('/interview/history', { state: { sessionId: sessionId } });
       } else if (data.nextQuestion) {
         // Wait for spoken feedback, then speak intro and next question
         setTimeout(() => {
@@ -523,14 +489,6 @@ export default function InterviewSession() {
     setShowEndConfirm(false);
   };
 
-  const viewResults = async () => {
-    cleanup();
-    if (document.fullscreenElement) {
-      await document.exitFullscreen();
-    }
-    navigate('/home');
-  };
-
   const formatTime = (seconds: number) => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
@@ -609,183 +567,6 @@ export default function InterviewSession() {
               Back to Home
             </button>
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Interview complete - show results
-  if (interviewComplete && report) {
-    return (
-      <div className="min-h-screen bg-black p-4 md:p-8 overflow-y-auto">
-        <div className="max-w-3xl mx-auto">
-          {/* Score Card */}
-          <div className="bg-zinc-900 border border-white/10 rounded-2xl p-8 mb-6 text-center">
-            <h2 className="text-2xl font-bold text-white mb-4">Interview Complete!</h2>
-            <div className="w-32 h-32 mx-auto mb-4 relative">
-              <svg className="w-full h-full transform -rotate-90">
-                <circle cx="64" cy="64" r="56" stroke="rgba(255,255,255,0.1)" strokeWidth="8" fill="none" />
-                <circle
-                  cx="64" cy="64" r="56"
-                  stroke={report.finalScore >= 70 ? '#22c55e' : report.finalScore >= 50 ? '#eab308' : '#ef4444'}
-                  strokeWidth="8"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeDasharray={`${(report.finalScore / 100) * 352} 352`}
-                />
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-4xl font-bold text-white">{report.finalScore}</span>
-              </div>
-            </div>
-            <p className="text-white/60">Your Score out of 100</p>
-          </div>
-
-          {/* Overall Feedback */}
-          <div className="bg-zinc-900 border border-white/10 rounded-2xl p-6 mb-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Overall Feedback</h3>
-
-            {report.overallFeedback.strengths.length > 0 && (
-              <div className="mb-4">
-                <h4 className="text-green-400 font-medium mb-2">Strengths</h4>
-                <ul className="space-y-1">
-                  {report.overallFeedback.strengths.map((s, i) => (
-                    <li key={i} className="text-white/80 text-sm flex items-start gap-2">
-                      <span className="text-green-400 mt-1">+</span> {s}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {report.overallFeedback.improvementAreas.length > 0 && (
-              <div className="mb-4">
-                <h4 className="text-yellow-400 font-medium mb-2">Areas to Improve</h4>
-                <ul className="space-y-1">
-                  {report.overallFeedback.improvementAreas.map((a, i) => (
-                    <li key={i} className="text-white/80 text-sm flex items-start gap-2">
-                      <span className="text-yellow-400 mt-1">-</span> {a}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {report.overallFeedback.suggestedNextSteps.length > 0 && (
-              <div>
-                <h4 className="text-blue-400 font-medium mb-2">Next Steps</h4>
-                <ul className="space-y-1">
-                  {report.overallFeedback.suggestedNextSteps.map((s, i) => (
-                    <li key={i} className="text-white/80 text-sm flex items-start gap-2">
-                      <span className="text-blue-400 mt-1">→</span> {s}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-
-          {/* Question Details */}
-          <div className="space-y-4 mb-6">
-            {report.questions.map((q, i) => (
-              <div key={i} className="bg-zinc-900 border border-white/10 rounded-xl p-5">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-white/60 text-sm">Question {i + 1}</span>
-                  <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                    q.total >= 7 ? 'bg-green-500/20 text-green-400' :
-                    q.total >= 5 ? 'bg-yellow-500/20 text-yellow-400' :
-                    'bg-red-500/20 text-red-400'
-                  }`}>
-                    {q.total}/10
-                  </span>
-                </div>
-                <p className="text-white font-medium mb-2">{q.question}</p>
-
-                {/* Conversation Flow - Question, Answer, Follow-ups */}
-                <div className="bg-white/5 rounded-lg p-4 mb-4 space-y-3">
-                  {/* Main Answer */}
-                  <div className="border-l-2 border-blue-500/50 pl-3">
-                    <p className="text-blue-400 text-xs font-medium mb-1">Your Answer</p>
-                    <p className="text-white/80 text-sm">{q.answer}</p>
-                    {q.normalizedAnswer && q.normalizedAnswer !== q.answer && (
-                      <p className="text-white/40 text-xs mt-1">Understood as: {q.normalizedAnswer}</p>
-                    )}
-                  </div>
-
-                  {/* Follow-up Exchanges */}
-                  {q.followUpQuestions && q.followUpQuestions.length > 0 && (
-                    <div className="space-y-3 mt-3 pt-3 border-t border-white/10">
-                      <p className="text-white/40 text-xs font-medium">Follow-up Discussion</p>
-                      {q.followUpQuestions.map((fq, j) => (
-                        <div key={j} className="space-y-2">
-                          <div className="border-l-2 border-orange-500/50 pl-3">
-                            <p className="text-orange-400 text-xs font-medium mb-1">
-                              Interviewer {fq.wasHint ? '(Hint)' : '(Probe)'}
-                            </p>
-                            <p className="text-white/70 text-sm">{fq.question}</p>
-                          </div>
-                          <div className="border-l-2 border-blue-500/50 pl-3 ml-4">
-                            <p className="text-blue-400 text-xs font-medium mb-1">Your Response</p>
-                            <p className="text-white/70 text-sm">{fq.answer}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Score breakdown with reasons */}
-                {q.scores && (
-                  <div className="space-y-2 mb-3">
-                    <div className="grid grid-cols-4 gap-2 text-xs">
-                      <div className={`rounded p-2 text-center ${q.scores.correctness >= 4 ? 'bg-green-500/10' : q.scores.correctness >= 3 ? 'bg-yellow-500/10' : 'bg-red-500/10'}`}>
-                        <div className="text-white/40">Correctness</div>
-                        <div className="text-white font-medium">{q.scores.correctness}/5</div>
-                      </div>
-                      <div className={`rounded p-2 text-center ${q.scores.reasoning >= 4 ? 'bg-green-500/10' : q.scores.reasoning >= 3 ? 'bg-yellow-500/10' : 'bg-red-500/10'}`}>
-                        <div className="text-white/40">Reasoning</div>
-                        <div className="text-white font-medium">{q.scores.reasoning}/5</div>
-                      </div>
-                      <div className={`rounded p-2 text-center ${q.scores.clarity >= 4 ? 'bg-green-500/10' : q.scores.clarity >= 3 ? 'bg-yellow-500/10' : 'bg-red-500/10'}`}>
-                        <div className="text-white/40">Clarity</div>
-                        <div className="text-white font-medium">{q.scores.clarity}/5</div>
-                      </div>
-                      <div className={`rounded p-2 text-center ${q.scores.problemSolving >= 4 ? 'bg-green-500/10' : q.scores.problemSolving >= 3 ? 'bg-yellow-500/10' : 'bg-red-500/10'}`}>
-                        <div className="text-white/40">Problem Solving</div>
-                        <div className="text-white font-medium">{q.scores.problemSolving}/5</div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Detailed Feedback (Markdown-like rendering) */}
-                {q.detailedFeedback && (
-                  <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg p-4 mt-4">
-                    <h4 className="text-purple-400 font-medium text-sm mb-3">Detailed Feedback</h4>
-                    <div className="text-white/80 text-sm space-y-2 whitespace-pre-wrap">
-                      {q.detailedFeedback.split('\n').map((line, idx) => {
-                        if (line.startsWith('**') && line.endsWith('**')) {
-                          return <p key={idx} className="font-semibold text-white mt-3 first:mt-0">{line.replace(/\*\*/g, '')}</p>;
-                        }
-                        if (line.startsWith('- ')) {
-                          return <p key={idx} className="text-white/70 pl-3">{line}</p>;
-                        }
-                        return line.trim() ? <p key={idx} className="text-white/70">{line}</p> : null;
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Done Button */}
-          <button
-            onClick={viewResults}
-            className="w-full py-4 bg-white text-black hover:bg-white/90 rounded-xl font-semibold transition-all duration-200"
-          >
-            Done
-          </button>
         </div>
       </div>
     );
