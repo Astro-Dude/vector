@@ -76,6 +76,11 @@ export default function InterviewSession() {
   const [error, setError] = useState<string | null>(null);
   const [unauthorized, setUnauthorized] = useState(false);
 
+  // Introduction phase state
+  const [phase, setPhase] = useState<'introduction' | 'introduction_followup' | 'technical'>('introduction');
+  const [introductionMessage, setIntroductionMessage] = useState<string | null>(null);
+  const [followUpQuestion, setFollowUpQuestion] = useState<string | null>(null);
+
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
 
@@ -161,12 +166,22 @@ export default function InterviewSession() {
 
       const data = await response.json();
       setSessionId(data.sessionId);
-      setCurrentQuestion(data.currentQuestion);
       setTotalQuestions(data.totalQuestions);
 
-      // Speak the intro and then the question
-      if (data.questionIntro) {
-        speakText(data.questionIntro + ' ' + data.currentQuestion.question);
+      // Handle introduction phase
+      if (data.phase === 'introduction') {
+        setPhase('introduction');
+        setIntroductionMessage(data.introductionMessage);
+        setCurrentQuestion(null);
+        // Speak the introduction message
+        speakText(data.introductionMessage);
+      } else if (data.currentQuestion) {
+        // Fallback for technical phase (shouldn't happen on start)
+        setPhase('technical');
+        setCurrentQuestion(data.currentQuestion);
+        if (data.questionIntro) {
+          speakText(data.questionIntro + ' ' + data.currentQuestion.question);
+        }
       }
     } catch (err) {
       console.error('Error starting interview:', err);
@@ -252,7 +267,18 @@ export default function InterviewSession() {
         };
 
         recognition.onerror = (event) => {
-          console.warn('Browser speech recognition error:', event);
+          // Get the error type from the event
+          const errorEvent = event as unknown as { error?: string };
+          const errorType = errorEvent.error || 'unknown';
+          console.warn('Browser speech recognition error:', errorType);
+
+          // Only show error for significant issues, not for 'no-speech' or 'aborted'
+          // These errors are expected during normal use (e.g., when user pauses or stops)
+          if (errorType === 'network' || errorType === 'audio-capture' || errorType === 'not-allowed') {
+            setError('Microphone access issue. Please check your microphone permissions and try again.');
+          }
+          // For 'no-speech', 'aborted', 'service-not-allowed' - fail silently
+          // The backend transcription will handle the audio
         };
 
         speechRecognitionRef.current = recognition;
@@ -389,6 +415,41 @@ export default function InterviewSession() {
       // Speak brief spoken feedback (4-5 words) instead of full feedback
       if (data.spokenFeedback) {
         speakText(data.spokenFeedback);
+      }
+
+      // Handle introduction phase responses
+      if (data.phase === 'introduction_followup' && data.followUpQuestion) {
+        // Got a follow-up question during introduction
+        setTimeout(() => {
+          setPhase('introduction_followup');
+          setFollowUpQuestion(data.followUpQuestion);
+          setTranscribedAnswer('');
+          setFeedback(null);
+          setRecordingState('idle');
+          speakText(data.followUpQuestion);
+        }, 1500);
+        return;
+      }
+
+      if (data.phase === 'technical' && data.nextQuestion) {
+        // Transitioning from introduction to technical questions
+        setTimeout(() => {
+          setPhase('technical');
+          setIntroductionMessage(null);
+          setFollowUpQuestion(null);
+          const questionWithFollowUp = {
+            ...data.nextQuestion,
+            isFollowUp: false
+          };
+          setCurrentQuestion(questionWithFollowUp);
+          setTranscribedAnswer('');
+          setFeedback(null);
+          setRecordingState('idle');
+          if (data.questionIntro) {
+            speakText(data.questionIntro + ' ' + data.nextQuestion.question);
+          }
+        }, 2000);
+        return;
       }
 
       if (data.status === 'completed') {
@@ -610,8 +671,39 @@ export default function InterviewSession() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col items-center justify-center p-4 md:p-8">
-        {/* Question Display */}
-        {currentQuestion && (
+        {/* Introduction Phase Display */}
+        {phase === 'introduction' && introductionMessage && (
+          <div className="w-full max-w-2xl mb-8">
+            <div className="bg-white/5 border border-green-500/30 rounded-2xl p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="px-2 py-1 rounded text-xs font-medium bg-green-500/20 text-green-400">
+                  Introduction
+                </span>
+              </div>
+              <p className="text-white text-lg md:text-xl leading-relaxed">{introductionMessage}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Introduction Follow-up Display */}
+        {phase === 'introduction_followup' && followUpQuestion && (
+          <div className="w-full max-w-2xl mb-8">
+            <div className="bg-white/5 border border-green-500/30 rounded-2xl p-6">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="px-2 py-1 rounded text-xs font-medium bg-green-500/20 text-green-400">
+                  Introduction
+                </span>
+                <span className="px-2 py-1 rounded text-xs font-medium bg-blue-500/20 text-blue-400">
+                  Follow-up
+                </span>
+              </div>
+              <p className="text-white text-lg md:text-xl leading-relaxed">{followUpQuestion}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Technical Question Display */}
+        {phase === 'technical' && currentQuestion && (
           <div className="w-full max-w-2xl mb-8">
             <div className={`bg-white/5 border rounded-2xl p-6 ${
               currentQuestion.isFollowUp ? 'border-orange-500/30' : 'border-white/10'

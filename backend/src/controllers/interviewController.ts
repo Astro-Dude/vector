@@ -14,6 +14,7 @@ import {
   generateFeedback,
   generateSpokenFeedback,
   generateDetailedFeedback,
+  generateIntroductionFollowUp,
   generateFollowUp,
   generateReport,
   getQuestionIntro,
@@ -47,6 +48,11 @@ interface InterviewSession {
   }>;
   startedAt: Date;
   status: 'in_progress' | 'completed';
+  // Interview phase tracking
+  phase: 'introduction' | 'introduction_followup' | 'technical';
+  introductionFollowUpCount: number;
+  introductionAnswer?: string;
+  introductionFollowUpHistory: Array<{ question: string; answer: string }>;
   // New: Track follow-up state for current question
   currentQuestionState: {
     followUpCount: number;
@@ -75,6 +81,127 @@ function resetQuestionState(): InterviewSession['currentQuestionState'] {
 }
 
 const activeSessions: Map<string, InterviewSession> = new Map();
+
+// Handle introduction phase answers
+async function handleIntroductionAnswer(
+  req: Request,
+  res: Response,
+  session: InterviewSession,
+  answer: string
+): Promise<void> {
+  const { sessionId } = session;
+
+  if (session.phase === 'introduction') {
+    // This is the initial "tell me about yourself" answer
+    session.introductionAnswer = answer;
+
+    // Store the introduction answer in memory
+    await storeMemory(sessionId, `Candidate introduced themselves: "${answer}"`, {
+      type: 'introduction_answer',
+      candidateName: session.candidateName
+    });
+
+    // Generate a follow-up question about their background
+    const followUpQuestion = await generateIntroductionFollowUp(answer, []);
+
+    session.phase = 'introduction_followup';
+    session.introductionFollowUpCount = 1;
+
+    // Store the follow-up question
+    await storeMemory(sessionId, `Interviewer asked follow-up: "${followUpQuestion}"`, {
+      type: 'introduction_followup'
+    });
+
+    res.json({
+      status: 'in_progress',
+      phase: 'introduction_followup',
+      feedback: "Thanks for sharing!",
+      spokenFeedback: "Thanks for sharing!",
+      followUpQuestion,
+      currentQuestion: null
+    });
+    return;
+  }
+
+  if (session.phase === 'introduction_followup') {
+    // Store the follow-up answer
+    const previousFollowUp = session.introductionFollowUpHistory.length > 0
+      ? session.introductionFollowUpHistory[session.introductionFollowUpHistory.length - 1]
+      : null;
+
+    session.introductionFollowUpHistory.push({
+      question: previousFollowUp?.question || 'Follow-up question',
+      answer
+    });
+
+    await storeMemory(sessionId, `Candidate responded to follow-up: "${answer}"`, {
+      type: 'introduction_followup'
+    });
+
+    // Check if we should ask another follow-up or move to technical questions
+    if (session.introductionFollowUpCount < 2) {
+      // Ask one more follow-up
+      const allFollowUps = [
+        { question: 'Tell me about yourself', answer: session.introductionAnswer || '' },
+        ...session.introductionFollowUpHistory
+      ];
+
+      const followUpQuestion = await generateIntroductionFollowUp(
+        session.introductionAnswer || answer,
+        allFollowUps
+      );
+
+      session.introductionFollowUpCount++;
+
+      await storeMemory(sessionId, `Interviewer asked follow-up: "${followUpQuestion}"`, {
+        type: 'introduction_followup'
+      });
+
+      res.json({
+        status: 'in_progress',
+        phase: 'introduction_followup',
+        feedback: "Interesting!",
+        spokenFeedback: "Interesting!",
+        followUpQuestion,
+        currentQuestion: null
+      });
+      return;
+    }
+
+    // Done with introduction - transition to technical questions
+    session.phase = 'technical';
+
+    const firstQuestion = session.questions[0];
+    const questionIntro = "Thank you for sharing! Now let's move on to the technical questions.";
+
+    // Store the first technical question being asked
+    await storeMemory(sessionId, `Interviewer asked Question 1: ${firstQuestion.question}`, {
+      type: 'main_question',
+      questionIndex: 0,
+      category: firstQuestion.category,
+      difficulty: firstQuestion.difficulty
+    });
+
+    // Prepare question for TTS
+    const questionForTTS = await prepareForTTS(firstQuestion.question, 'question');
+
+    res.json({
+      status: 'in_progress',
+      phase: 'technical',
+      feedback: "Great, thank you for the introduction!",
+      spokenFeedback: "Great, thanks!",
+      questionIntro,
+      nextQuestion: {
+        index: 0,
+        question: firstQuestion.question,
+        questionForTTS,
+        category: firstQuestion.category,
+        difficulty: firstQuestion.difficulty
+      }
+    });
+    return;
+  }
+}
 
 // Start a new interview session
 export async function startInterview(req: Request, res: Response): Promise<void> {
@@ -155,6 +282,9 @@ export async function startInterview(req: Request, res: Response): Promise<void>
       answers: [],
       startedAt: new Date(),
       status: 'in_progress',
+      phase: 'introduction',
+      introductionFollowUpCount: 0,
+      introductionFollowUpHistory: [],
       currentQuestionState: resetQuestionState()
     };
 
@@ -166,31 +296,20 @@ export async function startInterview(req: Request, res: Response): Promise<void>
       candidateName: name
     });
 
-    // Get human-like intro for first question
-    const questionIntro = getQuestionIntro(0, questions.length);
+    // Introduction message
+    const introductionMessage = `Hello! I'm your AI interviewer today. Before we dive into the questions, I'd love to know more about you. Please tell me about yourself - your background, interests, and what brings you here.`;
 
-    // Store the first question being asked
-    await storeMemory(sessionId, `Interviewer asked Question 1: ${questions[0].question}`, {
-      type: 'main_question',
-      questionIndex: 0,
-      category: questions[0].category,
-      difficulty: questions[0].difficulty
+    // Store the introduction question being asked
+    await storeMemory(sessionId, `Interviewer asked: ${introductionMessage}`, {
+      type: 'introduction_ask'
     });
-
-    // Prepare question for TTS (convert symbols and summarize)
-    const questionForTTS = await prepareForTTS(questions[0].question, 'question');
 
     res.json({
       sessionId,
       totalQuestions: questions.length,
-      currentQuestion: {
-        index: 0,
-        question: questions[0].question,
-        questionForTTS, // TTS-friendly version
-        category: questions[0].category,
-        difficulty: questions[0].difficulty
-      },
-      questionIntro,
+      phase: 'introduction',
+      introductionMessage,
+      currentQuestion: null, // No technical question yet
       speechService: getSpeechServiceStatus(),
       creditsRemaining: totalCredits - purchase.creditsUsed
     });
@@ -220,6 +339,11 @@ export async function submitAnswer(req: Request, res: Response): Promise<void> {
     if (session.status === 'completed') {
       res.status(400).json({ error: 'Interview already completed' });
       return;
+    }
+
+    // Handle introduction phase
+    if (session.phase === 'introduction' || session.phase === 'introduction_followup') {
+      return handleIntroductionAnswer(req, res, session, answer);
     }
 
     const currentQuestion = session.questions[session.currentQuestionIndex];

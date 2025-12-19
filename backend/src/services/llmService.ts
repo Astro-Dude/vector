@@ -599,6 +599,40 @@ Keep each section concise (2-3 bullet points max). Be encouraging but honest.`;
   return response.trim();
 }
 
+// Generate follow-up question for candidate introduction
+export async function generateIntroductionFollowUp(
+  candidateIntroduction: string,
+  previousFollowUps: Array<{ question: string; answer: string }>
+): Promise<string> {
+  const previousQuestionsText = previousFollowUps.length > 0
+    ? `\n\nPrevious follow-up questions already asked:\n${previousFollowUps.map((f, i) => `${i + 1}. Q: ${f.question}\n   A: ${f.answer}`).join('\n')}`
+    : '';
+
+  const prompt = `You are a friendly AI interviewer. The candidate just introduced themselves. Generate a natural, conversational follow-up question about their background.
+
+Candidate's introduction: "${candidateIntroduction}"${previousQuestionsText}
+
+Generate ONE follow-up question that:
+1. Shows genuine interest in something specific they mentioned
+2. Is conversational and warm (not interrogative)
+3. Helps build rapport before technical questions
+4. Is different from any previous follow-up questions
+
+Examples of good follow-up questions:
+- "That's interesting! What aspect of [X] interests you most?"
+- "How did you first get started with [Y]?"
+- "What motivated you to pursue [Z]?"
+
+Return ONLY the follow-up question (one or two sentences):`;
+
+  const response = await chat([
+    { role: 'system', content: 'You are a friendly, conversational AI interviewer building rapport with a candidate.' },
+    { role: 'user', content: prompt }
+  ]);
+
+  return response.trim();
+}
+
 // Generate follow-up question based on the answer
 export async function generateFollowUp(
   question: string,
@@ -877,6 +911,7 @@ export default {
   generateFeedback,
   generateSpokenFeedback,
   generateDetailedFeedback,
+  generateIntroductionFollowUp,
   generateFollowUp,
   generateReport,
   getQuestionIntro,
