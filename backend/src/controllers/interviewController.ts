@@ -715,9 +715,6 @@ async function moveToNextQuestion(
       };
     };
 
-    // Get conversation context for detailed feedback generation
-    const conversationContext = await getFormattedConversationContext(session.sessionId);
-
     // Generate detailed feedback for each question and merge with report
     const questionsWithDetails = await Promise.all(
       typedReport.questions.map(async (q, i) => {
@@ -725,6 +722,8 @@ async function moveToNextQuestion(
         const originalQuestion = session.questions[i];
 
         // Generate detailed feedback using the new function
+        // Generate detailed feedback for THIS question only (no conversation context
+        // to prevent feedback from other questions bleeding in)
         const detailedFeedback = await generateDetailedFeedback(
           q.question,
           originalQuestion.answer, // correct answer from DB
@@ -737,8 +736,7 @@ async function moveToNextQuestion(
             reasoning: 'Evaluation not available',
             followUpType: 'hint' as const
           },
-          sessionAnswer.followUpQuestions || [],
-          conversationContext
+          sessionAnswer.followUpQuestions || []
         );
 
         return {

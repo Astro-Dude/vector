@@ -49,6 +49,7 @@ declare global {
 interface Question {
   index: number;
   question: string;
+  questionForTTS?: string;
   category: string;
   difficulty: string;
   isFollowUp?: boolean;
@@ -70,9 +71,9 @@ export default function InterviewSession() {
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [recordingState, setRecordingState] = useState<RecordingState>('idle');
-  const [transcribedAnswer, setTranscribedAnswer] = useState<string>('');
+  const [, setTranscribedAnswer] = useState<string>('');
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [interviewComplete, setInterviewComplete] = useState(false);
+  const [interviewComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [unauthorized, setUnauthorized] = useState(false);
 
@@ -141,12 +142,8 @@ export default function InterviewSession() {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, [showEndConfirm, interviewComplete]);
 
-  // Speak question using browser TTS
-  useEffect(() => {
-    if (currentQuestion && !isLoading && recordingState === 'idle' && !feedback) {
-      speakText(currentQuestion.question);
-    }
-  }, [currentQuestion, isLoading]);
+  // NOTE: TTS is now handled directly in the response handlers (startInterview, submitAnswer)
+  // to ensure proper sequencing and avoid double-speaking
 
   const startInterview = async () => {
     try {
@@ -180,7 +177,7 @@ export default function InterviewSession() {
         setPhase('technical');
         setCurrentQuestion(data.currentQuestion);
         if (data.questionIntro) {
-          speakText(data.questionIntro + ' ' + data.currentQuestion.question);
+          speakText(data.questionIntro + ' ' + (data.currentQuestion.questionForTTS || data.currentQuestion.question));
         }
       }
     } catch (err) {
@@ -191,25 +188,55 @@ export default function InterviewSession() {
     }
   };
 
-  const speakText = (text: string) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
+  const speakText = (text: string): Promise<void> => {
+    return new Promise((resolve) => {
+      if ('speechSynthesis' in window) {
+        // Cancel any ongoing speech
+        window.speechSynthesis.cancel();
 
-      setIsAiSpeaking(true);
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9;
-      utterance.pitch = 1;
+        setIsAiSpeaking(true);
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 1;
 
-      utterance.onend = () => {
-        setIsAiSpeaking(false);
-      };
+        utterance.onend = () => {
+          setIsAiSpeaking(false);
+          resolve();
+        };
 
-      utterance.onerror = () => {
-        setIsAiSpeaking(false);
-      };
+        utterance.onerror = () => {
+          setIsAiSpeaking(false);
+          resolve();
+        };
 
-      window.speechSynthesis.speak(utterance);
-    }
+        // Chrome bug workaround: speech synthesis can pause indefinitely
+        // Use a timeout based on text length as fallback
+        const estimatedDuration = Math.max(text.length * 80, 3000); // ~80ms per char, min 3s
+        const fallbackTimeout = setTimeout(() => {
+          if (window.speechSynthesis.speaking) {
+            window.speechSynthesis.cancel();
+          }
+          setIsAiSpeaking(false);
+          resolve();
+        }, estimatedDuration);
+
+        utterance.onend = () => {
+          clearTimeout(fallbackTimeout);
+          setIsAiSpeaking(false);
+          resolve();
+        };
+
+        utterance.onerror = () => {
+          clearTimeout(fallbackTimeout);
+          setIsAiSpeaking(false);
+          resolve();
+        };
+
+        window.speechSynthesis.speak(utterance);
+      } else {
+        resolve();
+      }
+    });
   };
 
   const startRecording = async () => {
@@ -412,43 +439,50 @@ export default function InterviewSession() {
       const data = await response.json();
       setFeedback(data.feedback);
 
-      // Speak brief spoken feedback (4-5 words) instead of full feedback
+      // Speak brief spoken feedback and wait for it to complete before transitioning
       if (data.spokenFeedback) {
-        speakText(data.spokenFeedback);
+        await speakText(data.spokenFeedback);
       }
+
+      // Small pause after feedback before next action
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // Handle introduction phase responses
       if (data.phase === 'introduction_followup' && data.followUpQuestion) {
         // Got a follow-up question during introduction
-        setTimeout(() => {
-          setPhase('introduction_followup');
-          setFollowUpQuestion(data.followUpQuestion);
-          setTranscribedAnswer('');
-          setFeedback(null);
-          setRecordingState('idle');
-          speakText(data.followUpQuestion);
-        }, 1500);
+        setPhase('introduction_followup');
+        setFollowUpQuestion(data.followUpQuestion);
+        setTranscribedAnswer('');
+        setFeedback(null);
+        setRecordingState('idle');
+        await speakText(data.followUpQuestion);
         return;
       }
 
       if (data.phase === 'technical' && data.nextQuestion) {
         // Transitioning from introduction to technical questions
-        setTimeout(() => {
-          setPhase('technical');
-          setIntroductionMessage(null);
-          setFollowUpQuestion(null);
-          const questionWithFollowUp = {
-            ...data.nextQuestion,
-            isFollowUp: false
-          };
-          setCurrentQuestion(questionWithFollowUp);
-          setTranscribedAnswer('');
-          setFeedback(null);
-          setRecordingState('idle');
-          if (data.questionIntro) {
-            speakText(data.questionIntro + ' ' + data.nextQuestion.question);
-          }
-        }, 2000);
+        // First speak the transition intro, then pause, then speak the question
+        setPhase('technical');
+        setIntroductionMessage(null);
+        setFollowUpQuestion(null);
+
+        // Speak transition message first
+        if (data.questionIntro) {
+          await speakText(data.questionIntro);
+          // Brief pause between intro and question for smoother transition
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
+
+        // Now set and speak the question
+        const questionWithFollowUp = {
+          ...data.nextQuestion,
+          isFollowUp: false
+        };
+        setCurrentQuestion(questionWithFollowUp);
+        setTranscribedAnswer('');
+        setFeedback(null);
+        setRecordingState('idle');
+        await speakText(data.nextQuestion.questionForTTS || data.nextQuestion.question);
         return;
       }
 
@@ -460,22 +494,23 @@ export default function InterviewSession() {
         }
         navigate('/interview/history', { state: { sessionId: sessionId } });
       } else if (data.nextQuestion) {
-        // Wait for spoken feedback, then speak intro and next question
-        setTimeout(() => {
-          // Mark if this is a follow-up question
-          const questionWithFollowUp = {
-            ...data.nextQuestion,
-            isFollowUp: data.isFollowUp || false
-          };
-          setCurrentQuestion(questionWithFollowUp);
-          setTranscribedAnswer('');
-          setFeedback(null);
-          setRecordingState('idle');
-          // Speak the question intro and question
-          if (data.questionIntro) {
-            speakText(data.questionIntro + ' ' + data.nextQuestion.question);
-          }
-        }, 2000);
+        // Mark if this is a follow-up question
+        const questionWithFollowUp = {
+          ...data.nextQuestion,
+          isFollowUp: data.isFollowUp || false
+        };
+        setCurrentQuestion(questionWithFollowUp);
+        setTranscribedAnswer('');
+        setFeedback(null);
+        setRecordingState('idle');
+
+        // Speak question intro first, then pause, then speak the question
+        if (data.questionIntro) {
+          await speakText(data.questionIntro);
+          // Brief pause between intro and question
+          await new Promise(resolve => setTimeout(resolve, 500));
+        }
+        await speakText(data.nextQuestion.questionForTTS || data.nextQuestion.question);
       }
     } catch (err) {
       console.error('Error submitting answer:', err);

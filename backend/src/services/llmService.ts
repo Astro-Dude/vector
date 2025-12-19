@@ -542,14 +542,14 @@ Provide brief constructive feedback (2-3 sentences). Be specific about what was 
 }
 
 // Generate detailed feedback for interview results (comprehensive, actionable)
+// NOTE: We intentionally don't use full conversation context to prevent feedback bleeding
 export async function generateDetailedFeedback(
   question: string,
   correctAnswer: string,
   studentAnswer: string,
   normalizedAnswer: string,
   evaluation: AnswerEvaluation,
-  followUpHistory: Array<{ question: string; answer: string; wasHint?: boolean }>,
-  conversationContext: string = ''
+  followUpHistory: Array<{ question: string; answer: string; wasHint?: boolean }>
 ): Promise<string> {
   const followUpText = followUpHistory.length > 0
     ? `\n\nFollow-up exchanges:\n${followUpHistory.map((f, i) =>
@@ -557,19 +557,24 @@ export async function generateDetailedFeedback(
       ).join('\n\n')}`
     : '';
 
-  const prompt = `Generate detailed, actionable feedback for this interview question.
+  // NOTE: We intentionally do NOT include full conversation context here
+  // to prevent feedback from one question bleeding into another.
+  // The followUpHistory already contains the relevant exchanges for THIS question.
+
+  const prompt = `Generate detailed, actionable feedback for this SPECIFIC interview question ONLY.
 
 Question: "${question}"
 Student's Answer: "${studentAnswer}"
 ${normalizedAnswer !== studentAnswer ? `Normalized Answer: "${normalizedAnswer}"` : ''}
 Evaluation: ${evaluation.correctnessLevel} - ${evaluation.reasoning}
 ${followUpText}
-${conversationContext ? `\nFull context:\n${conversationContext}` : ''}
 
-IMPORTANT RULES:
+CRITICAL RULES:
 1. DO NOT reveal the correct answer (which is "${correctAnswer}") - keep it hidden
 2. DO NOT say "the answer is..." or give away the solution
-3. Focus on the approach, methodology, and concepts
+3. Focus ONLY on this specific question - do NOT reference other questions or topics
+4. Base your feedback ONLY on the question and follow-up exchanges shown above
+5. DO NOT mention topics, concepts, or answers from other questions
 
 Generate feedback in this exact format (use markdown):
 
