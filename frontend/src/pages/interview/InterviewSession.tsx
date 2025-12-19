@@ -302,7 +302,7 @@ export default function InterviewSession() {
           // Only show error for significant issues, not for 'no-speech' or 'aborted'
           // These errors are expected during normal use (e.g., when user pauses or stops)
           if (errorType === 'network' || errorType === 'audio-capture' || errorType === 'not-allowed') {
-            setError('Microphone access issue. Please check your microphone permissions and try again.');
+            setError('Microphone access issue. Please check your microphone permissions. Note: Only Google Chrome is supported.');
           }
           // For 'no-speech', 'aborted', 'service-not-allowed' - fail silently
           // The backend transcription will handle the audio
