@@ -8,15 +8,28 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 // Check if browser is Google Chrome only (not Edge, Brave, Opera, etc.)
 function isGoogleChrome(): boolean {
   const userAgent = navigator.userAgent.toLowerCase();
-  // Must have "chrome" but NOT any of the other Chromium-based browsers
+
+  // Must have "chrome" in user agent
   const hasChrome = userAgent.includes('chrome');
+  if (!hasChrome) return false;
+
+  // Detect other Chromium-based browsers
   const isEdge = userAgent.includes('edg');
-  const isBrave = userAgent.includes('brave');
   const isOpera = userAgent.includes('opr') || userAgent.includes('opera');
   const isVivaldi = userAgent.includes('vivaldi');
   const isSamsungBrowser = userAgent.includes('samsungbrowser');
 
-  return hasChrome && !isEdge && !isBrave && !isOpera && !isVivaldi && !isSamsungBrowser;
+  // Brave detection - Brave adds navigator.brave object
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const isBrave = !!(navigator as any).brave || userAgent.includes('brave');
+
+  // Firefox and Safari don't have "chrome" in UA, so they're already excluded
+
+  if (isEdge || isBrave || isOpera || isVivaldi || isSamsungBrowser) {
+    return false;
+  }
+
+  return true;
 }
 
 type Step = 'rules' | 'device-check';

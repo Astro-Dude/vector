@@ -3,6 +3,33 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
+// Check if browser is Google Chrome only (not Edge, Brave, Opera, etc.)
+function isGoogleChrome(): boolean {
+  const userAgent = navigator.userAgent.toLowerCase();
+
+  // Must have "chrome" in user agent
+  const hasChrome = userAgent.includes('chrome');
+  if (!hasChrome) return false;
+
+  // Detect other Chromium-based browsers
+  const isEdge = userAgent.includes('edg');
+  const isOpera = userAgent.includes('opr') || userAgent.includes('opera');
+  const isVivaldi = userAgent.includes('vivaldi');
+  const isSamsungBrowser = userAgent.includes('samsungbrowser');
+
+  // Brave detection - Brave adds navigator.brave object
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const isBrave = !!(navigator as any).brave || userAgent.includes('brave');
+
+  // Firefox and Safari don't have "chrome" in UA, so they're already excluded
+
+  if (isEdge || isBrave || isOpera || isVivaldi || isSamsungBrowser) {
+    return false;
+  }
+
+  return true;
+}
+
 // TypeScript declarations for Web Speech API
 interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
@@ -595,6 +622,44 @@ export default function InterviewSession() {
     }
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
+
+  // Chrome browser check - only Google Chrome is supported
+  if (!isGoogleChrome()) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <div className="bg-zinc-900 border border-red-500/30 rounded-2xl p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-white mb-2">Google Chrome Required</h3>
+          <p className="text-white/60 mb-6">
+            The AI Interview requires Google Chrome for proper microphone and speech recognition functionality. Other browsers (including Edge, Brave, Firefox, Safari) are not supported.
+          </p>
+          <p className="text-white/40 text-sm mb-6">
+            Please download and open this page in Google Chrome to continue.
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => navigate('/home')}
+              className="flex-1 py-3 bg-white/10 text-white hover:bg-white/20 rounded-xl font-semibold transition-all duration-200"
+            >
+              Back to Home
+            </button>
+            <a
+              href="https://www.google.com/chrome/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 py-3 bg-white text-black hover:bg-white/90 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2"
+            >
+              Download Chrome
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Unauthorized state - user didn't come from setup
   if (unauthorized) {

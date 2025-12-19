@@ -60,8 +60,7 @@ export async function transcribeAudio(
       type: 'transcription',
       transcription_config: {
         language: 'en',
-        operating_point: 'enhanced',
-        enable_partials: false
+        operating_point: 'enhanced'
       }
     };
     formData.append('config', JSON.stringify(config));
