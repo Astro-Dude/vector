@@ -541,6 +541,64 @@ Provide brief constructive feedback (2-3 sentences). Be specific about what was 
   ]);
 }
 
+// Generate detailed feedback for interview results (comprehensive, actionable)
+export async function generateDetailedFeedback(
+  question: string,
+  correctAnswer: string,
+  studentAnswer: string,
+  normalizedAnswer: string,
+  evaluation: AnswerEvaluation,
+  followUpHistory: Array<{ question: string; answer: string; wasHint?: boolean }>,
+  conversationContext: string = ''
+): Promise<string> {
+  const followUpText = followUpHistory.length > 0
+    ? `\n\nFollow-up exchanges:\n${followUpHistory.map((f, i) =>
+        `Follow-up ${i + 1} (${f.wasHint ? 'Hint' : 'Probe'}): ${f.question}\nStudent response: ${f.answer}`
+      ).join('\n\n')}`
+    : '';
+
+  const prompt = `Generate detailed, actionable feedback for this interview question.
+
+Question: "${question}"
+Student's Answer: "${studentAnswer}"
+${normalizedAnswer !== studentAnswer ? `Normalized Answer: "${normalizedAnswer}"` : ''}
+Evaluation: ${evaluation.correctnessLevel} - ${evaluation.reasoning}
+${followUpText}
+${conversationContext ? `\nFull context:\n${conversationContext}` : ''}
+
+IMPORTANT RULES:
+1. DO NOT reveal the correct answer (which is "${correctAnswer}") - keep it hidden
+2. DO NOT say "the answer is..." or give away the solution
+3. Focus on the approach, methodology, and concepts
+
+Generate feedback in this exact format (use markdown):
+
+**What went well:**
+- [Specific positive point about their approach or reasoning]
+- [Another positive if applicable]
+
+**Where you struggled:**
+- [Specific area where they had difficulty]
+- [Be constructive, not harsh]
+
+**How to improve:**
+- [Actionable suggestion for improvement]
+- [Concept or technique to practice]
+- [Study recommendation if applicable]
+
+**Key concept to review:**
+[One sentence about the main concept/theorem/technique they should study]
+
+Keep each section concise (2-3 bullet points max). Be encouraging but honest.`;
+
+  const response = await chat([
+    { role: 'system', content: ANSWER_EVALUATOR_SYSTEM_PROMPT },
+    { role: 'user', content: prompt }
+  ]);
+
+  return response.trim();
+}
+
 // Generate follow-up question based on the answer
 export async function generateFollowUp(
   question: string,
@@ -818,6 +876,7 @@ export default {
   chat,
   generateFeedback,
   generateSpokenFeedback,
+  generateDetailedFeedback,
   generateFollowUp,
   generateReport,
   getQuestionIntro,

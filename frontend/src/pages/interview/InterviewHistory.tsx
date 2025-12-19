@@ -5,6 +5,7 @@ import Navbar from '../../components/Navbar';
 interface QuestionResult {
   question: string;
   answer: string;
+  normalizedAnswer?: string;
   scores: {
     correctness: number;
     reasoning: number;
@@ -22,6 +23,12 @@ interface QuestionResult {
     clarity?: string;
     problemSolving?: string;
   };
+  followUpQuestions?: Array<{
+    question: string;
+    answer: string;
+    wasHint: boolean;
+  }>;
+  detailedFeedback?: string;
 }
 
 interface OverallFeedback {
@@ -231,7 +238,39 @@ export default function InterviewHistory() {
                     </span>
                   </div>
                   <p className="text-white font-medium mb-2">{q.question || 'Question not available'}</p>
-                  <p className="text-white/60 text-sm mb-3">Your answer: {q.answer || 'No answer recorded'}</p>
+
+                  {/* Conversation Flow - Question, Answer, Follow-ups */}
+                  <div className="bg-white/5 rounded-lg p-4 mb-4 space-y-3">
+                    {/* Main Answer */}
+                    <div className="border-l-2 border-blue-500/50 pl-3">
+                      <p className="text-blue-400 text-xs font-medium mb-1">Your Answer</p>
+                      <p className="text-white/80 text-sm">{q.answer || 'No answer recorded'}</p>
+                      {q.normalizedAnswer && q.normalizedAnswer !== q.answer && (
+                        <p className="text-white/40 text-xs mt-1">Understood as: {q.normalizedAnswer}</p>
+                      )}
+                    </div>
+
+                    {/* Follow-up Exchanges */}
+                    {q.followUpQuestions && q.followUpQuestions.length > 0 && (
+                      <div className="space-y-3 mt-3 pt-3 border-t border-white/10">
+                        <p className="text-white/40 text-xs font-medium">Follow-up Discussion</p>
+                        {q.followUpQuestions.map((fq, j) => (
+                          <div key={j} className="space-y-2">
+                            <div className="border-l-2 border-orange-500/50 pl-3">
+                              <p className="text-orange-400 text-xs font-medium mb-1">
+                                Interviewer {fq.wasHint ? '(Hint)' : '(Probe)'}
+                              </p>
+                              <p className="text-white/70 text-sm">{fq.question}</p>
+                            </div>
+                            <div className="border-l-2 border-blue-500/50 pl-3 ml-4">
+                              <p className="text-blue-400 text-xs font-medium mb-1">Your Response</p>
+                              <p className="text-white/70 text-sm">{fq.answer}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
 
                   {/* Score breakdown with reasons */}
                   {q.scores && (
@@ -254,34 +293,24 @@ export default function InterviewHistory() {
                           <div className="text-white font-medium">{q.scores.problemSolving}/5</div>
                         </div>
                       </div>
-                      {/* Score reasons */}
-                      {q.scoreReasons && (
-                        <div className="bg-white/5 rounded-lg p-3 text-xs space-y-1">
-                          {q.scoreReasons.correctness && (
-                            <p className="text-white/60"><span className="text-white/80">Correctness:</span> {q.scoreReasons.correctness}</p>
-                          )}
-                          {q.scoreReasons.reasoning && (
-                            <p className="text-white/60"><span className="text-white/80">Reasoning:</span> {q.scoreReasons.reasoning}</p>
-                          )}
-                          {q.scoreReasons.clarity && (
-                            <p className="text-white/60"><span className="text-white/80">Clarity:</span> {q.scoreReasons.clarity}</p>
-                          )}
-                          {q.scoreReasons.problemSolving && (
-                            <p className="text-white/60"><span className="text-white/80">Problem Solving:</span> {q.scoreReasons.problemSolving}</p>
-                          )}
-                        </div>
-                      )}
                     </div>
                   )}
 
-                  {q.feedback?.whatWentRight?.length > 0 && (
-                    <div className="text-green-400/80 text-sm">
-                      + {q.feedback.whatWentRight.join(', ')}
-                    </div>
-                  )}
-                  {q.feedback?.needsImprovement?.length > 0 && (
-                    <div className="text-yellow-400/80 text-sm mt-1">
-                      - {q.feedback.needsImprovement.join(', ')}
+                  {/* Detailed Feedback (Markdown-like rendering) */}
+                  {q.detailedFeedback && (
+                    <div className="bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-lg p-4 mt-4">
+                      <h4 className="text-purple-400 font-medium text-sm mb-3">Detailed Feedback</h4>
+                      <div className="text-white/80 text-sm space-y-2 whitespace-pre-wrap">
+                        {q.detailedFeedback.split('\n').map((line, idx) => {
+                          if (line.startsWith('**') && line.endsWith('**')) {
+                            return <p key={idx} className="font-semibold text-white mt-3 first:mt-0">{line.replace(/\*\*/g, '')}</p>;
+                          }
+                          if (line.startsWith('- ')) {
+                            return <p key={idx} className="text-white/70 pl-3">{line}</p>;
+                          }
+                          return line.trim() ? <p key={idx} className="text-white/70">{line}</p> : null;
+                        })}
+                      </div>
                     </div>
                   )}
                 </div>

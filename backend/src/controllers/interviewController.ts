@@ -13,6 +13,7 @@ import { storeMemory, recallMemory, getFormattedConversationContext } from '../s
 import {
   generateFeedback,
   generateSpokenFeedback,
+  generateDetailedFeedback,
   generateFollowUp,
   generateReport,
   getQuestionIntro,
@@ -590,12 +591,47 @@ async function moveToNextQuestion(
       };
     };
 
-    // Save to MongoDB
+    // Get conversation context for detailed feedback generation
+    const conversationContext = await getFormattedConversationContext(session.sessionId);
+
+    // Generate detailed feedback for each question and merge with report
+    const questionsWithDetails = await Promise.all(
+      typedReport.questions.map(async (q, i) => {
+        const sessionAnswer = session.answers[i];
+        const originalQuestion = session.questions[i];
+
+        // Generate detailed feedback using the new function
+        const detailedFeedback = await generateDetailedFeedback(
+          q.question,
+          originalQuestion.answer, // correct answer from DB
+          sessionAnswer.answer,
+          sessionAnswer.normalizedAnswer || sessionAnswer.answer,
+          sessionAnswer.initialEvaluation || {
+            isCorrect: false,
+            correctnessLevel: 'incorrect' as const,
+            normalizedStudentAnswer: sessionAnswer.answer,
+            reasoning: 'Evaluation not available',
+            followUpType: 'hint' as const
+          },
+          sessionAnswer.followUpQuestions || [],
+          conversationContext
+        );
+
+        return {
+          ...q,
+          normalizedAnswer: sessionAnswer.normalizedAnswer,
+          followUpQuestions: sessionAnswer.followUpQuestions || [],
+          detailedFeedback
+        };
+      })
+    );
+
+    // Save to MongoDB with enhanced data
     const interviewResult = new InterviewResult({
       userId: session.userId,
       sessionId: session.sessionId,
       candidateName: session.candidateName,
-      questions: typedReport.questions,
+      questions: questionsWithDetails,
       finalScore: typedReport.finalScore,
       overallFeedback: typedReport.overallFeedback,
       startedAt: session.startedAt,
@@ -611,7 +647,10 @@ async function moveToNextQuestion(
       status: 'completed',
       feedback,
       spokenFeedback: "Great, that's all the questions.",
-      report: typedReport
+      report: {
+        ...typedReport,
+        questions: questionsWithDetails
+      }
     });
     return;
   }

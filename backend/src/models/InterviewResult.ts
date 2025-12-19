@@ -32,6 +32,7 @@ export interface IQuestionResult {
     whatWentRight: string[];
     needsImprovement: string[];
   };
+  detailedFeedback?: string; // Comprehensive improvement suggestions (markdown)
 }
 
 export interface IOverallFeedback {
@@ -84,7 +85,8 @@ const questionResultSchema = new Schema<IQuestionResult>({
   feedback: {
     whatWentRight: [{ type: String }],
     needsImprovement: [{ type: String }]
-  }
+  },
+  detailedFeedback: { type: String } // Comprehensive improvement suggestions (markdown)
 }, { _id: false });
 
 const overallFeedbackSchema = new Schema<IOverallFeedback>({
