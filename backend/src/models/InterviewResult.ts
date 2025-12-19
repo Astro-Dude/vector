@@ -50,6 +50,9 @@ export interface IInterviewResult extends Document {
   overallFeedback: IOverallFeedback;
   startedAt: Date;
   completedAt: Date;
+  status?: 'complete' | 'incomplete';
+  questionsAnswered?: number;
+  totalQuestions?: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -128,6 +131,17 @@ const interviewResultSchema = new Schema<IInterviewResult>({
   completedAt: {
     type: Date,
     required: true
+  },
+  status: {
+    type: String,
+    enum: ['complete', 'incomplete'],
+    default: 'complete'
+  },
+  questionsAnswered: {
+    type: Number
+  },
+  totalQuestions: {
+    type: Number
   }
 }, {
   timestamps: true

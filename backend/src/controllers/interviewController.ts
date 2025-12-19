@@ -1133,6 +1133,145 @@ export async function getInterviewSession(req: Request, res: Response): Promise<
   }
 }
 
+// End interview early and generate partial results
+export async function endInterviewEarly(req: Request, res: Response): Promise<void> {
+  try {
+    const { sessionId } = req.params;
+    const session = activeSessions.get(sessionId);
+
+    if (!session) {
+      res.status(404).json({ error: 'Session not found' });
+      return;
+    }
+
+    if (session.status === 'completed') {
+      res.status(400).json({ error: 'Interview already completed' });
+      return;
+    }
+
+    // Check if any questions were answered
+    if (session.answers.length === 0) {
+      // No questions answered - just clean up, no report
+      activeSessions.delete(sessionId);
+      res.json({
+        status: 'ended_early',
+        message: 'Interview ended without answering any questions',
+        hasReport: false
+      });
+      return;
+    }
+
+    // Generate partial report with answered questions only
+    const reportData = session.answers.map(a => {
+      let combined = `Question: ${a.question}\nAnswer: ${a.answer}`;
+      if (a.normalizedAnswer && a.normalizedAnswer !== a.answer) {
+        combined += ` (understood as: ${a.normalizedAnswer})`;
+      }
+      if (a.followUpQuestions.length > 0) {
+        a.followUpQuestions.forEach((fq, i) => {
+          combined += `\nFollow-up ${i + 1}: ${fq.question}\nResponse: ${fq.answer}`;
+        });
+      }
+      return { question: a.question, answer: combined };
+    });
+
+    const report = await generateReport(
+      session.candidateName,
+      session.sessionId,
+      reportData
+    );
+
+    const typedReport = report as {
+      questions: Array<{
+        question: string;
+        answer: string;
+        scores: {
+          correctness: number;
+          reasoning: number;
+          clarity: number;
+          problemSolving: number;
+        };
+        scoreReasons?: {
+          correctness: string;
+          reasoning: string;
+          clarity: string;
+          problemSolving: string;
+        };
+        total: number;
+        feedback: {
+          whatWentRight: string[];
+          needsImprovement: string[];
+        };
+      }>;
+      finalScore: number;
+      overallFeedback: {
+        strengths: string[];
+        improvementAreas: string[];
+        suggestedNextSteps: string[];
+      };
+    };
+
+    // Generate detailed feedback for each answered question
+    const questionsWithDetails = await Promise.all(
+      typedReport.questions.map(async (q, i) => {
+        const sessionAnswer = session.answers[i];
+        const originalQuestion = session.questions[i];
+
+        const detailedFeedback = await generateDetailedFeedback(
+          q.question,
+          originalQuestion.answer,
+          sessionAnswer.answer,
+          sessionAnswer.normalizedAnswer || sessionAnswer.answer,
+          sessionAnswer.initialEvaluation || {
+            isCorrect: false,
+            correctnessLevel: 'incorrect' as const,
+            normalizedStudentAnswer: sessionAnswer.answer,
+            reasoning: 'Evaluation not available',
+            followUpType: 'hint' as const
+          },
+          sessionAnswer.followUpQuestions || []
+        );
+
+        return {
+          ...q,
+          normalizedAnswer: sessionAnswer.normalizedAnswer,
+          followUpQuestions: sessionAnswer.followUpQuestions || [],
+          detailedFeedback
+        };
+      })
+    );
+
+    // Save to MongoDB with incomplete status
+    const interviewResult = new InterviewResult({
+      userId: session.userId,
+      sessionId: session.sessionId,
+      candidateName: session.candidateName,
+      questions: questionsWithDetails,
+      finalScore: typedReport.finalScore,
+      overallFeedback: typedReport.overallFeedback,
+      startedAt: session.startedAt,
+      completedAt: new Date(),
+      status: 'incomplete',
+      questionsAnswered: session.answers.length,
+      totalQuestions: session.questions.length
+    });
+
+    await interviewResult.save();
+    session.status = 'completed';
+    activeSessions.delete(session.sessionId);
+
+    res.json({
+      status: 'ended_early',
+      hasReport: true,
+      questionsAnswered: session.answers.length,
+      totalQuestions: session.questions.length
+    });
+  } catch (error) {
+    console.error('Error ending interview early:', error);
+    res.status(500).json({ error: 'Failed to end interview' });
+  }
+}
+
 export default {
   startInterview,
   submitAnswer,
@@ -1143,5 +1282,6 @@ export default {
   getInterviewResult,
   getSpeechStatus,
   getInterviewBalance,
-  getInterviewSession
+  getInterviewSession,
+  endInterviewEarly
 };

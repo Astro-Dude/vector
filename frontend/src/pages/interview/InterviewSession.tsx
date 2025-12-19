@@ -602,10 +602,40 @@ export default function InterviewSession() {
 
   const confirmEndInterview = async () => {
     cleanup();
-    if (document.fullscreenElement) {
-      await document.exitFullscreen();
+
+    // Call backend to generate partial results if we have a session
+    if (sessionId) {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/interview/session/${sessionId}/end`, {
+          method: 'POST',
+          credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        if (document.fullscreenElement) {
+          await document.exitFullscreen();
+        }
+
+        // Navigate to history if there are results, otherwise home
+        if (data.hasReport) {
+          navigate('/interview/history', { state: { sessionId: sessionId } });
+        } else {
+          navigate('/home');
+        }
+      } catch (error) {
+        console.error('Error ending interview:', error);
+        if (document.fullscreenElement) {
+          await document.exitFullscreen();
+        }
+        navigate('/home');
+      }
+    } else {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      }
+      navigate('/home');
     }
-    navigate('/home');
   };
 
   const cancelEndInterview = () => {

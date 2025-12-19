@@ -10,7 +10,8 @@ import {
   getInterviewResult,
   getSpeechStatus,
   getInterviewBalance,
-  getInterviewSession
+  getInterviewSession,
+  endInterviewEarly
 } from '../controllers/interviewController.js';
 
 const router = Router();
@@ -48,6 +49,7 @@ router.post('/session', requireAuth, startInterview);
 
 // Active session routes
 router.post('/session/:sessionId/answer', requireAuth, submitAnswer);
+router.post('/session/:sessionId/end', requireAuth, endInterviewEarly);
 router.get('/session/:sessionId/status', requireAuth, getSessionStatus);
 
 // Speech routes
