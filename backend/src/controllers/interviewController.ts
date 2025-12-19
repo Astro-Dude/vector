@@ -9,8 +9,20 @@ import InterviewQuestion, { IInterviewQuestion } from '../models/InterviewQuesti
 import InterviewResult from '../models/InterviewResult.js';
 import Purchase from '../models/Purchase.js';
 import Item from '../models/Item.js';
-import { storeMemory, recallMemory } from '../services/vectorService.js';
-import { generateFeedback, generateSpokenFeedback, generateFollowUp, generateReport, getQuestionIntro } from '../services/llmService.js';
+import { storeMemory, recallMemory, getFormattedConversationContext } from '../services/vectorService.js';
+import {
+  generateFeedback,
+  generateSpokenFeedback,
+  generateFollowUp,
+  generateReport,
+  getQuestionIntro,
+  normalizeTranscribedAnswer,
+  evaluateAnswer,
+  generateMathFollowUp,
+  prepareForTTS,
+  AnswerEvaluation,
+  NormalizedAnswer
+} from '../services/llmService.js';
 import { transcribeAudio, synthesizeSpeech, getSpeechServiceStatus } from '../services/speechService.js';
 
 // In-memory session storage (in production, use Redis)
@@ -23,15 +35,41 @@ interface InterviewSession {
   answers: Array<{
     question: string;
     answer: string;
+    normalizedAnswer?: string;
     feedback: string;
-    followUpQuestion?: string;
-    followUpAnswer?: string;
+    followUpQuestions: Array<{
+      question: string;
+      answer: string;
+      wasHint: boolean;
+    }>;
+    initialEvaluation?: AnswerEvaluation;
   }>;
   startedAt: Date;
   status: 'in_progress' | 'completed';
-  pendingFollowUp?: {
-    question: string;
-    originalQuestionIndex: number;
+  // New: Track follow-up state for current question
+  currentQuestionState: {
+    followUpCount: number;
+    initialEvaluation?: AnswerEvaluation;
+    awaitingFollowUpAnswer: boolean;
+    currentFollowUpQuestion?: string;
+    currentFollowUpType?: 'hint' | 'probe';
+    followUpHistory: Array<{ question: string; answer: string }>;
+    wasInitiallyCorrect?: boolean;
+    gotCorrectAfterHint?: boolean;
+  };
+}
+
+// Helper to reset question state when moving to next question
+function resetQuestionState(): InterviewSession['currentQuestionState'] {
+  return {
+    followUpCount: 0,
+    initialEvaluation: undefined,
+    awaitingFollowUpAnswer: false,
+    currentFollowUpQuestion: undefined,
+    currentFollowUpType: undefined,
+    followUpHistory: [],
+    wasInitiallyCorrect: undefined,
+    gotCorrectAfterHint: undefined
   };
 }
 
@@ -115,7 +153,8 @@ export async function startInterview(req: Request, res: Response): Promise<void>
       currentQuestionIndex: 0,
       answers: [],
       startedAt: new Date(),
-      status: 'in_progress'
+      status: 'in_progress',
+      currentQuestionState: resetQuestionState()
     };
 
     activeSessions.set(sessionId, session);
@@ -129,12 +168,24 @@ export async function startInterview(req: Request, res: Response): Promise<void>
     // Get human-like intro for first question
     const questionIntro = getQuestionIntro(0, questions.length);
 
+    // Store the first question being asked
+    await storeMemory(sessionId, `Interviewer asked Question 1: ${questions[0].question}`, {
+      type: 'main_question',
+      questionIndex: 0,
+      category: questions[0].category,
+      difficulty: questions[0].difficulty
+    });
+
+    // Prepare question for TTS (convert symbols and summarize)
+    const questionForTTS = await prepareForTTS(questions[0].question, 'question');
+
     res.json({
       sessionId,
       totalQuestions: questions.length,
       currentQuestion: {
         index: 0,
         question: questions[0].question,
+        questionForTTS, // TTS-friendly version
         category: questions[0].category,
         difficulty: questions[0].difficulty
       },
@@ -170,180 +221,119 @@ export async function submitAnswer(req: Request, res: Response): Promise<void> {
       return;
     }
 
+    const currentQuestion = session.questions[session.currentQuestionIndex];
+    const isMathQuestion = currentQuestion.category === 'maths';
+
+    // Step 1: Normalize the transcribed answer to fix STT issues
+    const normalizedAnswer = await normalizeTranscribedAnswer(answer, currentQuestion.question);
+    console.log(`[Interview] Original: "${answer}" -> Normalized: "${normalizedAnswer.normalizedText}"`);
+
     // Check if this is a follow-up answer
-    if (session.pendingFollowUp) {
-      // This answer is for a follow-up question
-      const { originalQuestionIndex, question: followUpQuestion } = session.pendingFollowUp;
-
-      // Store the follow-up answer in the original question's answer record
-      if (session.answers[originalQuestionIndex]) {
-        session.answers[originalQuestionIndex].followUpQuestion = followUpQuestion;
-        session.answers[originalQuestionIndex].followUpAnswer = answer;
-      }
-
-      // Store follow-up in vector memory
-      await storeMemory(sessionId, `Follow-up Q: ${followUpQuestion}\nFollow-up A: ${answer}`, {
-        type: 'follow_up',
-        questionIndex: originalQuestionIndex
-      });
-
-      // Clear the pending follow-up
-      session.pendingFollowUp = undefined;
-
-      // Generate brief acknowledgment
-      const spokenFeedback = await generateSpokenFeedback(followUpQuestion, answer);
-
-      // Check if interview is complete
-      if (session.currentQuestionIndex >= session.questions.length) {
-        // Generate final report (include follow-up Q&A in the report data)
-        const reportData = session.answers.map(a => {
-          let combined = `Question: ${a.question}\nAnswer: ${a.answer}`;
-          if (a.followUpQuestion && a.followUpAnswer) {
-            combined += `\nFollow-up: ${a.followUpQuestion}\nFollow-up Answer: ${a.followUpAnswer}`;
-          }
-          return { question: a.question, answer: combined };
-        });
-
-        const report = await generateReport(
-          session.candidateName,
-          sessionId,
-          reportData
-        );
-
-        const typedReport = report as {
-          questions: Array<{
-            question: string;
-            answer: string;
-            scores: {
-              correctness: number;
-              reasoning: number;
-              clarity: number;
-              problemSolving: number;
-            };
-            scoreReasons?: {
-              correctness: string;
-              reasoning: string;
-              clarity: string;
-              problemSolving: string;
-            };
-            total: number;
-            feedback: {
-              whatWentRight: string[];
-              needsImprovement: string[];
-            };
-          }>;
-          finalScore: number;
-          overallFeedback: {
-            strengths: string[];
-            improvementAreas: string[];
-            suggestedNextSteps: string[];
-          };
-        };
-
-        const interviewResult = new InterviewResult({
-          userId: session.userId,
-          sessionId,
-          candidateName: session.candidateName,
-          questions: typedReport.questions,
-          finalScore: typedReport.finalScore,
-          overallFeedback: typedReport.overallFeedback,
-          startedAt: session.startedAt,
-          completedAt: new Date()
-        });
-
-        await interviewResult.save();
-        session.status = 'completed';
-        activeSessions.delete(sessionId);
-
-        res.json({
-          status: 'completed',
-          feedback: 'Follow-up answered.',
-          spokenFeedback: "Great, that's all the questions.",
-          report: typedReport
-        });
-        return;
-      }
-
-      // Move to next main question
-      const nextQuestion = session.questions[session.currentQuestionIndex];
-      const questionIntro = getQuestionIntro(session.currentQuestionIndex, session.questions.length);
-
-      res.json({
-        status: 'in_progress',
-        feedback: 'Thanks for elaborating.',
-        spokenFeedback,
-        questionIntro,
-        nextQuestion: {
-          index: session.currentQuestionIndex,
-          question: nextQuestion.question,
-          category: nextQuestion.category,
-          difficulty: nextQuestion.difficulty
-        },
-        progress: {
-          answered: session.currentQuestionIndex,
-          total: session.questions.length
-        }
-      });
-      return;
+    if (session.currentQuestionState.awaitingFollowUpAnswer) {
+      return handleFollowUpAnswer(req, res, session, answer, normalizedAnswer);
     }
 
     // This is an answer to a main question
-    const currentQuestion = session.questions[session.currentQuestionIndex];
+    // Step 2: Evaluate the answer using LLM
+    const evaluation = await evaluateAnswer(
+      currentQuestion.question,
+      currentQuestion.answer, // Correct answer from DB
+      answer,
+      normalizedAnswer
+    );
 
-    // Recall previous context from vector memory
-    const memoryContext = await recallMemory(sessionId, answer);
+    console.log(`[Interview] Evaluation: ${evaluation.correctnessLevel} - ${evaluation.reasoning}`);
 
-    // Generate detailed feedback for storage (not spoken)
+    // Store initial evaluation in session state
+    session.currentQuestionState.initialEvaluation = evaluation;
+    session.currentQuestionState.wasInitiallyCorrect = evaluation.isCorrect;
+
+    // Store candidate's answer in memory
+    await storeMemory(sessionId, `Candidate answered: "${answer}" (Normalized: "${normalizedAnswer.normalizedText}")`, {
+      type: 'main_answer',
+      questionIndex: session.currentQuestionIndex,
+      category: currentQuestion.category,
+      isCorrect: evaluation.isCorrect
+    });
+
+    // Store evaluation result
+    await storeMemory(sessionId, `Evaluation: ${evaluation.correctnessLevel} - ${evaluation.reasoning}`, {
+      type: 'evaluation',
+      questionIndex: session.currentQuestionIndex,
+      isCorrect: evaluation.isCorrect
+    });
+
+    // Get full conversation context for feedback generation
+    const conversationContext = await getFormattedConversationContext(sessionId);
+
+    // Generate detailed feedback with full context
     const feedback = await generateFeedback(
       currentQuestion.question,
       answer,
-      memoryContext
+      conversationContext ? [conversationContext] : []
     );
 
-    // Generate brief spoken feedback (4-5 words)
-    const spokenFeedback = await generateSpokenFeedback(
-      currentQuestion.question,
-      answer
-    );
-
-    // Store answer and feedback in vector memory
-    await storeMemory(sessionId, `Q: ${currentQuestion.question}\nA: ${answer}\nFeedback: ${feedback}`, {
-      type: 'qa_pair',
-      questionIndex: session.currentQuestionIndex
-    });
-
-    // Store in session
+    // Store in session answers array
     session.answers.push({
       question: currentQuestion.question,
       answer,
-      feedback
+      normalizedAnswer: normalizedAnswer.normalizedText,
+      feedback,
+      followUpQuestions: [],
+      initialEvaluation: evaluation
     });
 
-    // Try to generate a follow-up question for this answer
-    const followUpQuestion = await generateFollowUp(currentQuestion.question, answer);
+    // Step 3: For math questions, generate follow-up (1-3 mandatory)
+    if (isMathQuestion && session.currentQuestionState.followUpCount < 3) {
+      const followUp = await generateMathFollowUp(
+        currentQuestion.question,
+        currentQuestion.answer,
+        answer,
+        evaluation,
+        session.currentQuestionState.followUpCount,
+        session.currentQuestionState.followUpHistory,
+        conversationContext
+      );
 
-    // Increment to next question
-    const answeredIndex = session.currentQuestionIndex;
-    session.currentQuestionIndex++;
+      session.currentQuestionState.followUpCount++;
+      session.currentQuestionState.awaitingFollowUpAnswer = true;
+      session.currentQuestionState.currentFollowUpQuestion = followUp.question;
+      session.currentQuestionState.currentFollowUpType = followUp.type;
 
-    // If we got a follow-up question, ask it before moving to the next main question
-    if (followUpQuestion) {
-      session.pendingFollowUp = {
-        question: followUpQuestion,
-        originalQuestionIndex: answeredIndex
-      };
+      // Store follow-up question in memory
+      await storeMemory(sessionId, `Interviewer asked follow-up (${followUp.type}): ${followUp.question}`, {
+        type: 'follow_up_question',
+        questionIndex: session.currentQuestionIndex,
+        followUpNumber: session.currentQuestionState.followUpCount,
+        category: currentQuestion.category
+      });
+
+      // Generate spoken feedback based on evaluation
+      const spokenFeedback = evaluation.isCorrect
+        ? "Good answer! Let me ask you something."
+        : "Let me ask you a follow-up.";
+
+      // Prepare follow-up question for TTS
+      const questionForTTS = await prepareForTTS(followUp.question, 'question');
 
       res.json({
         status: 'in_progress',
-        feedback,
+        feedback: evaluation.reasoning,
         spokenFeedback,
-        questionIntro: "Let me ask a quick follow-up.",
+        questionIntro: followUp.type === 'hint'
+          ? "Let me help you think through this."
+          : "I'd like to understand your thinking better.",
         isFollowUp: true,
+        followUpNumber: session.currentQuestionState.followUpCount,
+        maxFollowUps: 3,
+        followUpType: followUp.type,
         nextQuestion: {
-          index: answeredIndex,
-          question: followUpQuestion,
+          index: session.currentQuestionIndex,
+          question: followUp.question,
+          questionForTTS,
           category: currentQuestion.category,
-          difficulty: currentQuestion.difficulty
+          difficulty: currentQuestion.difficulty,
+          isFollowUp: true
         },
         progress: {
           answered: session.currentQuestionIndex,
@@ -353,95 +343,311 @@ export async function submitAnswer(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    // No follow-up - check if interview is complete
-    if (session.currentQuestionIndex >= session.questions.length) {
-      // Generate final report
-      const report = await generateReport(
-        session.candidateName,
-        sessionId,
-        session.answers.map(a => ({ question: a.question, answer: a.answer }))
-      );
-
-      // Type assertion for the report
-      const typedReport = report as {
-        questions: Array<{
-          question: string;
-          answer: string;
-          scores: {
-            correctness: number;
-            reasoning: number;
-            clarity: number;
-            problemSolving: number;
-          };
-          scoreReasons?: {
-            correctness: string;
-            reasoning: string;
-            clarity: string;
-            problemSolving: string;
-          };
-          total: number;
-          feedback: {
-            whatWentRight: string[];
-            needsImprovement: string[];
-          };
-        }>;
-        finalScore: number;
-        overallFeedback: {
-          strengths: string[];
-          improvementAreas: string[];
-          suggestedNextSteps: string[];
-        };
-      };
-
-      // Save to MongoDB
-      const interviewResult = new InterviewResult({
-        userId: session.userId,
-        sessionId,
-        candidateName: session.candidateName,
-        questions: typedReport.questions,
-        finalScore: typedReport.finalScore,
-        overallFeedback: typedReport.overallFeedback,
-        startedAt: session.startedAt,
-        completedAt: new Date()
-      });
-
-      await interviewResult.save();
-
-      session.status = 'completed';
-      activeSessions.delete(sessionId);
-
-      res.json({
-        status: 'completed',
-        feedback,
-        spokenFeedback: "Great, that's all the questions.",
-        report: typedReport
-      });
-    } else {
-      // Return next question with human-like intro
-      const nextQuestion = session.questions[session.currentQuestionIndex];
-      const questionIntro = getQuestionIntro(session.currentQuestionIndex, session.questions.length);
-
-      res.json({
-        status: 'in_progress',
-        feedback,
-        spokenFeedback,
-        questionIntro,
-        nextQuestion: {
-          index: session.currentQuestionIndex,
-          question: nextQuestion.question,
-          category: nextQuestion.category,
-          difficulty: nextQuestion.difficulty
-        },
-        progress: {
-          answered: session.currentQuestionIndex,
-          total: session.questions.length
-        }
-      });
-    }
+    // For behavior questions or when follow-ups are exhausted, move to next question
+    return moveToNextQuestion(res, session, feedback);
   } catch (error) {
     console.error('Error submitting answer:', error);
     res.status(500).json({ error: 'Failed to process answer' });
   }
+}
+
+// Handle follow-up answer for math questions
+async function handleFollowUpAnswer(
+  req: Request,
+  res: Response,
+  session: InterviewSession,
+  answer: string,
+  normalizedAnswer: NormalizedAnswer
+): Promise<void> {
+  const currentQuestion = session.questions[session.currentQuestionIndex];
+  const currentAnswerIndex = session.answers.length - 1;
+  const followUpQuestion = session.currentQuestionState.currentFollowUpQuestion!;
+  const followUpType = session.currentQuestionState.currentFollowUpType!;
+
+  // Get full conversation context for follow-up generation
+  const conversationContext = await getFormattedConversationContext(session.sessionId);
+
+  // Store candidate's follow-up answer in vector memory
+  await storeMemory(session.sessionId, `Candidate responded to follow-up: "${answer}" (Normalized: "${normalizedAnswer.normalizedText}")`, {
+    type: 'follow_up_answer',
+    questionIndex: session.currentQuestionIndex,
+    followUpNumber: session.currentQuestionState.followUpCount,
+    category: currentQuestion.category
+  });
+
+  // Store in follow-up history
+  session.currentQuestionState.followUpHistory.push({
+    question: followUpQuestion,
+    answer
+  });
+
+  // Store in answers array
+  if (session.answers[currentAnswerIndex]) {
+    session.answers[currentAnswerIndex].followUpQuestions.push({
+      question: followUpQuestion,
+      answer,
+      wasHint: followUpType === 'hint'
+    });
+  }
+
+  // Re-evaluate if this was a hint (student was wrong initially)
+  if (followUpType === 'hint') {
+    const reEvaluation = await evaluateAnswer(
+      currentQuestion.question,
+      currentQuestion.answer,
+      answer,
+      normalizedAnswer
+    );
+
+    // Check if they got it correct now
+    if (reEvaluation.isCorrect && !session.currentQuestionState.gotCorrectAfterHint) {
+      session.currentQuestionState.gotCorrectAfterHint = true;
+
+      // Ask one more probe question to verify understanding, then move on
+      if (session.currentQuestionState.followUpCount < 3) {
+        const probeFollowUp = await generateMathFollowUp(
+          currentQuestion.question,
+          currentQuestion.answer,
+          answer,
+          reEvaluation,
+          session.currentQuestionState.followUpCount,
+          session.currentQuestionState.followUpHistory,
+          conversationContext
+        );
+
+        session.currentQuestionState.followUpCount++;
+        session.currentQuestionState.currentFollowUpQuestion = probeFollowUp.question;
+        session.currentQuestionState.currentFollowUpType = 'probe';
+
+        // Store probe follow-up question in memory
+        await storeMemory(session.sessionId, `Interviewer asked verification probe: ${probeFollowUp.question}`, {
+          type: 'follow_up_question',
+          questionIndex: session.currentQuestionIndex,
+          followUpNumber: session.currentQuestionState.followUpCount,
+          category: currentQuestion.category
+        });
+
+        // Prepare for TTS
+        const questionForTTS = await prepareForTTS(probeFollowUp.question, 'question');
+
+        res.json({
+          status: 'in_progress',
+          feedback: "That's correct! Let me verify your understanding.",
+          spokenFeedback: "Good, you got it!",
+          questionIntro: "One more question to check your understanding.",
+          isFollowUp: true,
+          followUpNumber: session.currentQuestionState.followUpCount,
+          maxFollowUps: 3,
+          followUpType: 'probe',
+          nextQuestion: {
+            index: session.currentQuestionIndex,
+            question: probeFollowUp.question,
+            questionForTTS,
+            category: currentQuestion.category,
+            difficulty: currentQuestion.difficulty,
+            isFollowUp: true
+          },
+          progress: {
+            answered: session.currentQuestionIndex,
+            total: session.questions.length
+          }
+        });
+        return;
+      }
+    }
+  }
+
+  // Clear follow-up waiting state
+  session.currentQuestionState.awaitingFollowUpAnswer = false;
+
+  // Check if we need more follow-ups (for math questions)
+  const isMathQuestion = currentQuestion.category === 'maths';
+  if (isMathQuestion && session.currentQuestionState.followUpCount < 3) {
+    // Get latest evaluation state
+    const currentEvaluation = session.currentQuestionState.initialEvaluation!;
+    const isCorrect = session.currentQuestionState.wasInitiallyCorrect || session.currentQuestionState.gotCorrectAfterHint;
+
+    // Generate next follow-up
+    const followUp = await generateMathFollowUp(
+      currentQuestion.question,
+      currentQuestion.answer,
+      answer,
+      { ...currentEvaluation, isCorrect: isCorrect || false },
+      session.currentQuestionState.followUpCount,
+      session.currentQuestionState.followUpHistory,
+      conversationContext
+    );
+
+    session.currentQuestionState.followUpCount++;
+    session.currentQuestionState.awaitingFollowUpAnswer = true;
+    session.currentQuestionState.currentFollowUpQuestion = followUp.question;
+    session.currentQuestionState.currentFollowUpType = followUp.type;
+
+    // Store follow-up question in memory
+    await storeMemory(session.sessionId, `Interviewer asked follow-up (${followUp.type}): ${followUp.question}`, {
+      type: 'follow_up_question',
+      questionIndex: session.currentQuestionIndex,
+      followUpNumber: session.currentQuestionState.followUpCount,
+      category: currentQuestion.category
+    });
+
+    // Prepare for TTS
+    const questionForTTS = await prepareForTTS(followUp.question, 'question');
+
+    res.json({
+      status: 'in_progress',
+      feedback: 'Thanks for your response.',
+      spokenFeedback: "Okay, next follow-up.",
+      questionIntro: followUp.type === 'hint'
+        ? "Let me guide you a bit more."
+        : "Here's another question.",
+      isFollowUp: true,
+      followUpNumber: session.currentQuestionState.followUpCount,
+      maxFollowUps: 3,
+      followUpType: followUp.type,
+      nextQuestion: {
+        index: session.currentQuestionIndex,
+        question: followUp.question,
+        questionForTTS,
+        category: currentQuestion.category,
+        difficulty: currentQuestion.difficulty,
+        isFollowUp: true
+      },
+      progress: {
+        answered: session.currentQuestionIndex,
+        total: session.questions.length
+      }
+    });
+    return;
+  }
+
+  // All follow-ups done, move to next question
+  const feedback = session.answers[currentAnswerIndex]?.feedback || 'Thanks for your answers.';
+  return moveToNextQuestion(res, session, feedback);
+}
+
+// Helper to move to next question or complete interview
+async function moveToNextQuestion(
+  res: Response,
+  session: InterviewSession,
+  feedback: string
+): Promise<void> {
+  // Reset question state for next question
+  session.currentQuestionState = resetQuestionState();
+
+  // Increment to next question
+  session.currentQuestionIndex++;
+
+  // Check if interview is complete
+  if (session.currentQuestionIndex >= session.questions.length) {
+    // Generate final report with all answers and follow-ups
+    const reportData = session.answers.map(a => {
+      let combined = `Question: ${a.question}\nAnswer: ${a.answer}`;
+      if (a.normalizedAnswer && a.normalizedAnswer !== a.answer) {
+        combined += ` (understood as: ${a.normalizedAnswer})`;
+      }
+      if (a.followUpQuestions.length > 0) {
+        a.followUpQuestions.forEach((fq, i) => {
+          combined += `\nFollow-up ${i + 1}: ${fq.question}\nResponse: ${fq.answer}`;
+        });
+      }
+      return { question: a.question, answer: combined };
+    });
+
+    const report = await generateReport(
+      session.candidateName,
+      session.sessionId,
+      reportData
+    );
+
+    const typedReport = report as {
+      questions: Array<{
+        question: string;
+        answer: string;
+        scores: {
+          correctness: number;
+          reasoning: number;
+          clarity: number;
+          problemSolving: number;
+        };
+        scoreReasons?: {
+          correctness: string;
+          reasoning: string;
+          clarity: string;
+          problemSolving: string;
+        };
+        total: number;
+        feedback: {
+          whatWentRight: string[];
+          needsImprovement: string[];
+        };
+      }>;
+      finalScore: number;
+      overallFeedback: {
+        strengths: string[];
+        improvementAreas: string[];
+        suggestedNextSteps: string[];
+      };
+    };
+
+    // Save to MongoDB
+    const interviewResult = new InterviewResult({
+      userId: session.userId,
+      sessionId: session.sessionId,
+      candidateName: session.candidateName,
+      questions: typedReport.questions,
+      finalScore: typedReport.finalScore,
+      overallFeedback: typedReport.overallFeedback,
+      startedAt: session.startedAt,
+      completedAt: new Date()
+    });
+
+    await interviewResult.save();
+
+    session.status = 'completed';
+    activeSessions.delete(session.sessionId);
+
+    res.json({
+      status: 'completed',
+      feedback,
+      spokenFeedback: "Great, that's all the questions.",
+      report: typedReport
+    });
+    return;
+  }
+
+  // Return next question with human-like intro
+  const nextQuestion = session.questions[session.currentQuestionIndex];
+  const questionIntro = getQuestionIntro(session.currentQuestionIndex, session.questions.length);
+
+  // Store the next main question being asked
+  await storeMemory(session.sessionId, `Interviewer asked Question ${session.currentQuestionIndex + 1}: ${nextQuestion.question}`, {
+    type: 'main_question',
+    questionIndex: session.currentQuestionIndex,
+    category: nextQuestion.category,
+    difficulty: nextQuestion.difficulty
+  });
+
+  // Prepare question for TTS
+  const questionForTTS = await prepareForTTS(nextQuestion.question, 'question');
+
+  res.json({
+    status: 'in_progress',
+    feedback,
+    spokenFeedback: "Okay, moving on.",
+    questionIntro,
+    nextQuestion: {
+      index: session.currentQuestionIndex,
+      question: nextQuestion.question,
+      questionForTTS,
+      category: nextQuestion.category,
+      difficulty: nextQuestion.difficulty
+    },
+    progress: {
+      answered: session.currentQuestionIndex,
+      total: session.questions.length
+    }
+  });
 }
 
 // Transcribe audio to text (STT)

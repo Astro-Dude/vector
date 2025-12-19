@@ -14,9 +14,17 @@ export interface IScoreReasons {
   problemSolving?: string;
 }
 
+export interface IFollowUpResult {
+  question: string;
+  answer: string;
+  wasHint: boolean;
+}
+
 export interface IQuestionResult {
   question: string;
   answer: string;
+  normalizedAnswer?: string;
+  followUpQuestions?: IFollowUpResult[];
   scores: IScores;
   scoreReasons?: IScoreReasons;
   total: number;
@@ -59,9 +67,17 @@ const scoreReasonsSchema = new Schema<IScoreReasons>({
   problemSolving: { type: String }
 }, { _id: false });
 
+const followUpResultSchema = new Schema({
+  question: { type: String, required: true },
+  answer: { type: String, required: true },
+  wasHint: { type: Boolean, default: false }
+}, { _id: false });
+
 const questionResultSchema = new Schema<IQuestionResult>({
   question: { type: String, required: true },
   answer: { type: String, required: true },
+  normalizedAnswer: { type: String },
+  followUpQuestions: [followUpResultSchema],
   scores: { type: scoresSchema, required: true },
   scoreReasons: { type: scoreReasonsSchema },
   total: { type: Number, required: true, min: 0, max: 10 },

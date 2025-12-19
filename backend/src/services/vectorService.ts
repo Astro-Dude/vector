@@ -12,12 +12,34 @@ const getSupabaseClient = (): SupabaseClient => {
   return supabase;
 };
 
+// Memory types for structured storage
+export type MemoryType =
+  | 'session_start'
+  | 'introduction_ask'
+  | 'introduction_answer'
+  | 'introduction_followup'
+  | 'main_question'
+  | 'main_answer'
+  | 'follow_up_question'
+  | 'follow_up_answer'
+  | 'evaluation';
+
+export interface MemoryMetadata {
+  type: MemoryType;
+  questionIndex?: number;
+  followUpNumber?: number;
+  category?: string;
+  isCorrect?: boolean;
+  candidateName?: string;
+  [key: string]: unknown;
+}
+
 // Store memory without embeddings - just store the text content
 // We'll use simple text matching for recall instead of vector similarity
 export async function storeMemory(
   sessionId: string,
   text: string,
-  metadata?: Record<string, unknown>
+  metadata?: MemoryMetadata | Record<string, unknown>
 ): Promise<void> {
   try {
     const client = getSupabaseClient();
@@ -33,7 +55,7 @@ export async function storeMemory(
       console.error('Error storing memory in Supabase:', error);
       // Don't throw - fail gracefully
     } else {
-      console.log('[VectorDB] Memory stored for session:', sessionId);
+      console.log('[VectorDB] Memory stored for session:', sessionId, '- Type:', (metadata as MemoryMetadata)?.type || 'unknown');
     }
   } catch (error) {
     console.error('Vector DB storeMemory error:', error);
@@ -46,7 +68,7 @@ export async function storeMemory(
 export async function recallMemory(
   sessionId: string,
   _query: string,
-  limit: number = 5
+  limit: number = 20 // Increased default limit for better context
 ): Promise<string[]> {
   try {
     const client = getSupabaseClient();
@@ -73,6 +95,77 @@ export async function recallMemory(
     console.error('Vector DB recallMemory error:', error);
     return []; // Fail gracefully - return empty array
   }
+}
+
+// Get full conversation history in chronological order for LLM context
+export async function getFullConversationHistory(
+  sessionId: string
+): Promise<Array<{ content: string; metadata: MemoryMetadata; created_at: string }>> {
+  try {
+    const client = getSupabaseClient();
+
+    const { data, error } = await client
+      .from('interview_memories')
+      .select('content, metadata, created_at')
+      .eq('session_id', sessionId)
+      .order('created_at', { ascending: true }); // Chronological order
+
+    if (error) {
+      console.error('Error getting conversation history from Supabase:', error);
+      return [];
+    }
+
+    const history = (data || []).map((item: { content: string; metadata: MemoryMetadata; created_at: string }) => ({
+      content: item.content,
+      metadata: item.metadata,
+      created_at: item.created_at
+    }));
+
+    if (history.length > 0) {
+      console.log(`[VectorDB] Retrieved ${history.length} conversation entries for session:`, sessionId);
+    }
+    return history;
+  } catch (error) {
+    console.error('Vector DB getFullConversationHistory error:', error);
+    return [];
+  }
+}
+
+// Format conversation history as a string for LLM context
+export async function getFormattedConversationContext(
+  sessionId: string
+): Promise<string> {
+  const history = await getFullConversationHistory(sessionId);
+
+  if (history.length === 0) {
+    return '';
+  }
+
+  const formatted = history.map(entry => {
+    const type = entry.metadata?.type || 'unknown';
+    const prefix = getTypePrefix(type);
+    return `${prefix}: ${entry.content}`;
+  }).join('\n\n');
+
+  return `=== CONVERSATION HISTORY ===\n${formatted}\n=== END HISTORY ===`;
+}
+
+// Helper to get display prefix for memory type
+function getTypePrefix(type: MemoryType | string): string {
+  const prefixes: Record<string, string> = {
+    'session_start': '[Session Started]',
+    'introduction_ask': '[Interviewer - Introduction]',
+    'introduction_answer': '[Candidate - Introduction]',
+    'introduction_followup': '[Introduction Follow-up]',
+    'main_question': '[Interviewer - Question]',
+    'main_answer': '[Candidate - Answer]',
+    'follow_up_question': '[Interviewer - Follow-up]',
+    'follow_up_answer': '[Candidate - Follow-up Response]',
+    'evaluation': '[Evaluation]',
+    'qa_pair': '[Q&A]',
+    'follow_up': '[Follow-up Exchange]'
+  };
+  return prefixes[type] || '[Entry]';
 }
 
 // Initialize the Supabase table for interview memories (run once)
@@ -103,5 +196,7 @@ export async function initializeVectorTable(): Promise<void> {
 export default {
   storeMemory,
   recallMemory,
+  getFullConversationHistory,
+  getFormattedConversationContext,
   initializeVectorTable
 };

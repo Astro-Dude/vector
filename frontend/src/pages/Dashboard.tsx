@@ -1,9 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense, lazy } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import Spline from "@splinetool/react-spline";
 import Navbar from "../components/Navbar";
 import LoadingScreen from "../components/LoadingScreen";
+
+// Lazy load Spline to reduce initial bundle size
+const Spline = lazy(() => import("@splinetool/react-spline"));
 
 export default function Dashboard() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -29,9 +31,17 @@ export default function Dashboard() {
 
         <section className="relative min-h-screen flex items-center justify-center bg-black">
           <div className="absolute inset-0">
-            <div className="w-full h-full [&>canvas]:w-full! [&>canvas]:h-full!">
-              <Spline scene="https://prod.spline.design/Vr-k9WcXRKVzEPgF/scene.splinecode" />
-            </div>
+            <Suspense fallback={
+              <div className="w-full h-full flex items-center justify-center bg-black">
+                <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+              </div>
+            }>
+              <div className="w-full h-full [&>canvas]:w-full! [&>canvas]:h-full!">
+                <Spline
+                  scene="https://prod.spline.design/Vr-k9WcXRKVzEPgF/scene.splinecode"
+                />
+              </div>
+            </Suspense>
           </div>
         </section>
 
