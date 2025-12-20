@@ -3,6 +3,27 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
+// Check if device is mobile or tablet
+function isMobileOrTablet(): boolean {
+  const userAgent = navigator.userAgent.toLowerCase();
+
+  // Check for mobile/tablet keywords in user agent
+  const mobileKeywords = [
+    'android', 'webos', 'iphone', 'ipad', 'ipod', 'blackberry',
+    'windows phone', 'opera mini', 'mobile', 'tablet'
+  ];
+
+  const hasMobileKeyword = mobileKeywords.some(keyword => userAgent.includes(keyword));
+
+  // Also check screen size as a fallback (tablets and phones typically < 1024px width)
+  const isSmallScreen = window.innerWidth < 1024;
+
+  // Check for touch-only device (no mouse)
+  const isTouchOnly = 'ontouchstart' in window && navigator.maxTouchPoints > 0 && !window.matchMedia('(pointer: fine)').matches;
+
+  return hasMobileKeyword || (isSmallScreen && isTouchOnly);
+}
+
 interface Question {
   index: number;
   questionId: string;
@@ -42,7 +63,7 @@ export default function TestSession() {
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Check if user came from setup page
+  // Check if user came from setup page and verify eligibility
   useEffect(() => {
     const fromSetup = location.state?.fromSetup === true;
 
@@ -52,13 +73,35 @@ export default function TestSession() {
       return;
     }
 
-    startTest();
+    verifyAndStartTest();
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
       }
     };
   }, [location.state]);
+
+  const verifyAndStartTest = async () => {
+    try {
+      setIsLoading(true);
+      // Call setup API to verify purchase/eligibility
+      const setupResponse = await fetch(`${API_BASE_URL}/api/test/setup/${testId}`, {
+        credentials: 'include'
+      });
+      const setupData = await setupResponse.json();
+
+      if (!setupResponse.ok || !setupData.canStartTest) {
+        setError(setupData.error || 'Cannot start test. Please purchase the test first.');
+        return;
+      }
+
+      // If verified, proceed to start the test
+      await startTest();
+    } catch (err) {
+      setError('Failed to verify test eligibility');
+      setIsLoading(false);
+    }
+  };
 
   // Fullscreen management
   useEffect(() => {
@@ -192,6 +235,31 @@ export default function TestSession() {
   const getAnsweredCount = (): number => {
     return answers.size;
   };
+
+  // Block mobile and tablet devices
+  if (isMobileOrTablet()) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <div className="bg-zinc-900 border border-yellow-500/30 rounded-2xl p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-white mb-2">Desktop Required</h3>
+          <p className="text-white/60 mb-6">
+            Tests can only be taken on a laptop or desktop computer. Please switch to a larger device to continue.
+          </p>
+          <button
+            onClick={() => navigate('/home')}
+            className="w-full py-3 bg-white text-black hover:bg-white/90 rounded-xl font-semibold transition-all duration-200"
+          >
+            Back to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Unauthorized access
   if (unauthorized) {

@@ -30,6 +30,27 @@ function isGoogleChrome(): boolean {
   return true;
 }
 
+// Check if device is mobile or tablet
+function isMobileOrTablet(): boolean {
+  const userAgent = navigator.userAgent.toLowerCase();
+
+  // Check for mobile/tablet keywords in user agent
+  const mobileKeywords = [
+    'android', 'webos', 'iphone', 'ipad', 'ipod', 'blackberry',
+    'windows phone', 'opera mini', 'mobile', 'tablet'
+  ];
+
+  const hasMobileKeyword = mobileKeywords.some(keyword => userAgent.includes(keyword));
+
+  // Also check screen size as a fallback (tablets and phones typically < 1024px width)
+  const isSmallScreen = window.innerWidth < 1024;
+
+  // Check for touch-only device (no mouse)
+  const isTouchOnly = 'ontouchstart' in window && navigator.maxTouchPoints > 0 && !window.matchMedia('(pointer: fine)').matches;
+
+  return hasMobileKeyword || (isSmallScreen && isTouchOnly);
+}
+
 // TypeScript declarations for Web Speech API
 interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList;
@@ -123,7 +144,7 @@ export default function InterviewSession() {
   const speechRecognitionRef = useRef<SpeechRecognition | null>(null);
   const browserTranscriptRef = useRef<string>('');
 
-  // Check if user came from setup page and start interview
+  // Check if user came from setup page and verify eligibility
   useEffect(() => {
     const fromSetup = location.state?.fromSetup === true;
 
@@ -133,11 +154,33 @@ export default function InterviewSession() {
       return;
     }
 
-    startInterview();
+    verifyAndStartInterview();
     return () => {
       cleanup();
     };
   }, [location.state]);
+
+  const verifyAndStartInterview = async () => {
+    try {
+      setIsLoading(true);
+      // Call setup API to verify credits/eligibility
+      const setupResponse = await fetch(`${API_BASE_URL}/api/interview/setup`, {
+        credentials: 'include'
+      });
+      const setupData = await setupResponse.json();
+
+      if (!setupResponse.ok || !setupData.canStartInterview) {
+        setError(setupData.error || 'Cannot start interview. Please purchase interview credits first.');
+        return;
+      }
+
+      // If verified, proceed to start the interview
+      await startInterview();
+    } catch (err) {
+      setError('Failed to verify interview eligibility');
+      setIsLoading(false);
+    }
+  };
 
   // Enter fullscreen on mount
   useEffect(() => {
@@ -652,6 +695,31 @@ export default function InterviewSession() {
     }
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
+
+  // Block mobile and tablet devices
+  if (isMobileOrTablet()) {
+    return (
+      <div className="min-h-screen bg-black flex items-center justify-center p-4">
+        <div className="bg-zinc-900 border border-yellow-500/30 rounded-2xl p-8 max-w-md w-full text-center">
+          <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-bold text-white mb-2">Desktop Required</h3>
+          <p className="text-white/60 mb-6">
+            AI Interviews can only be taken on a laptop or desktop computer. Please switch to a larger device to continue.
+          </p>
+          <button
+            onClick={() => navigate('/home')}
+            className="w-full py-3 bg-white text-black hover:bg-white/90 rounded-xl font-semibold transition-all duration-200"
+          >
+            Back to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // Chrome browser check - only Google Chrome is supported
   if (!isGoogleChrome()) {
