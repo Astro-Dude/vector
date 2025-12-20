@@ -7,10 +7,47 @@ import LoadingScreen from "../components/LoadingScreen";
 // Lazy load Spline to reduce initial bundle size
 const Spline = lazy(() => import("@splinetool/react-spline"));
 
+// Check if device can run Spline (WebGL, GPU, CPU capabilities)
+function canRunSpline(): boolean {
+  // Skip on mobile devices
+  if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+    return false;
+  }
+
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+    if (!gl) return false;
+
+    // Check GPU - skip on integrated/low-end GPUs
+    const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+    if (debugInfo) {
+      const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
+      if (/Intel|Mali|Adreno|PowerVR/i.test(renderer)) {
+        return false;
+      }
+    }
+
+    // Check CPU cores
+    if (navigator.hardwareConcurrency && navigator.hardwareConcurrency < 4) {
+      return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export default function Dashboard() {
   const { isAuthenticated, isLoading } = useAuth();
   const navigate = useNavigate();
   const [isLoadingSpline, setIsLoadingSpline] = useState(true);
+  const [showSpline, setShowSpline] = useState(false);
+
+  useEffect(() => {
+    setShowSpline(canRunSpline());
+  }, []);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -24,24 +61,40 @@ export default function Dashboard() {
 
   return (
     <>
-      {isLoadingSpline && <LoadingScreen onLoadingComplete={handleLoadingComplete} />}
+      {isLoadingSpline && showSpline && <LoadingScreen onLoadingComplete={handleLoadingComplete} />}
 
       <div className="w-full bg-black">
         <Navbar />
 
         <section className="relative min-h-screen flex items-center justify-center bg-black">
           <div className="absolute inset-0">
-            <Suspense fallback={
-              <div className="w-full h-full flex items-center justify-center bg-black">
-                <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
-              </div>
-            }>
-              <div className="w-full h-full [&>canvas]:w-full! [&>canvas]:h-full!">
-                <Spline
-                  scene="https://prod.spline.design/Vr-k9WcXRKVzEPgF/scene.splinecode"
+            {showSpline ? (
+              <Suspense fallback={
+                <div className="w-full h-full flex items-center justify-center bg-black">
+                  <div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                </div>
+              }>
+                <div className="w-full h-full [&>canvas]:w-full! [&>canvas]:h-full!">
+                  <Spline
+                    scene="https://prod.spline.design/Vr-k9WcXRKVzEPgF/scene.splinecode"
+                  />
+                </div>
+              </Suspense>
+            ) : (
+              /* Lightweight CSS fallback for low-end devices */
+              <div className="w-full h-full bg-black flex items-center justify-center">
+                {/* Logo image behind text with glow */}
+                <img
+                  src="/src/assets/images/logo.png"
+                  alt=""
+                  className="absolute w-64 md:w-96 opacity-15 select-none pointer-events-none drop-shadow-[0_0_30px_rgba(255,255,255,1)]"
                 />
+                {/* VECTOR text with 3D glow effect */}
+                <h1 className="logo relative z-10 text-7xl md:text-9xl font-bold bg-white bg-clip-text text-transparent tracking-widest select-none drop-shadow-[0_0_30px_rgba(255,255,255,1)]">
+                  VECTOR
+                </h1>
               </div>
-            </Suspense>
+            )}
           </div>
         </section>
 
