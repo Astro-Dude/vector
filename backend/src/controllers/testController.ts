@@ -18,6 +18,7 @@ interface TestSession {
     type: 'mcq' | 'short';
     options: string[];
     correctAnswer: number | string;
+    note?: string;
     score: number;
   }>;
   answers: Map<string, number | string>; // questionId -> answer
@@ -184,6 +185,7 @@ export async function startTestSession(req: Request, res: Response): Promise<voi
         type: q.type || 'mcq',
         options: q.options || [],
         correctAnswer: q.correctAnswer,
+        note: q.note,
         score: q.score
       })),
       answers: new Map(),
@@ -321,6 +323,7 @@ export async function endTest(req: Request, res: Response): Promise<void> {
         question: q.question,
         type: q.type,
         options: q.options,
+        note: q.note,
         selectedAnswer: userAnswer ?? -1, // -1 for unanswered
         correctAnswer: q.correctAnswer,
         isCorrect,

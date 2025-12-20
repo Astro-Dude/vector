@@ -5,6 +5,7 @@ export interface ITestQuestionResult {
   question: string;
   type: 'mcq' | 'short';
   options: string[];
+  note?: string;
   selectedAnswer: number | string; // number for MCQ (index), string for short answer
   correctAnswer: number | string;
   isCorrect: boolean;
@@ -50,6 +51,9 @@ const testQuestionResultSchema = new Schema<ITestQuestionResult>({
   options: {
     type: [String],
     default: []
+  },
+  note: {
+    type: String
   },
   selectedAnswer: {
     type: Schema.Types.Mixed, // number for MCQ, string for short answer

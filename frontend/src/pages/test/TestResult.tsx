@@ -9,6 +9,7 @@ interface QuestionResult {
   question: string;
   type: 'mcq' | 'short';
   options: string[];
+  note?: string;
   selectedAnswer: number | string;
   correctAnswer: number | string;
   isCorrect: boolean;
@@ -229,6 +230,13 @@ export default function TestResult() {
                       </span>
                     </div>
                     <p className="text-white font-medium">{q.question}</p>
+                    {q.note && (
+                      <div className="mt-2 p-2 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                        <p className="text-blue-300 text-sm">
+                          <span className="font-medium">Note:</span> {q.note}
+                        </p>
+                      </div>
+                    )}
                   </div>
                   <div className="text-right">
                     <span className={`text-lg font-bold ${q.isCorrect ? 'text-green-400' : 'text-red-400'}`}>

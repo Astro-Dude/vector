@@ -584,28 +584,41 @@ router.get('/test-questions', async (req: Request, res: Response) => {
 // Create new test question
 router.post('/test-questions', async (req: Request, res: Response) => {
   try {
-    const { testId, question, options, correctAnswer, score, category, difficulty } = req.body;
+    const { testId, question, type, options, correctAnswer, note, score, category, difficulty } = req.body;
 
-    if (!testId || !question || !options || correctAnswer === undefined || !category) {
-      res.status(400).json({ error: 'testId, question, options, correctAnswer, and category are required' });
+    if (!testId || !question || correctAnswer === undefined || !category) {
+      res.status(400).json({ error: 'testId, question, correctAnswer, and category are required' });
       return;
     }
 
-    if (!Array.isArray(options) || options.length < 2) {
-      res.status(400).json({ error: 'At least 2 options are required' });
-      return;
-    }
+    const questionType = type || 'mcq';
 
-    if (correctAnswer < 0 || correctAnswer >= options.length) {
-      res.status(400).json({ error: 'correctAnswer must be a valid option index' });
-      return;
+    // Validate based on question type
+    if (questionType === 'mcq') {
+      if (!Array.isArray(options) || options.length < 2) {
+        res.status(400).json({ error: 'At least 2 options are required for MCQ' });
+        return;
+      }
+
+      if (typeof correctAnswer !== 'number' || correctAnswer < 0 || correctAnswer >= options.length) {
+        res.status(400).json({ error: 'correctAnswer must be a valid option index for MCQ' });
+        return;
+      }
+    } else {
+      // Short answer type
+      if (!String(correctAnswer).trim()) {
+        res.status(400).json({ error: 'correctAnswer is required for short answer questions' });
+        return;
+      }
     }
 
     const newQuestion = new TestQuestion({
       testId,
       question,
-      options,
+      type: questionType,
+      options: questionType === 'mcq' ? options : [],
       correctAnswer,
+      note: note || undefined,
       score: score || 1,
       category,
       difficulty: difficulty || 'medium',
@@ -626,12 +639,19 @@ router.put('/test-questions/:id', async (req: Request, res: Response) => {
     const { id } = req.params;
     const updates = req.body;
 
-    // Validate correctAnswer if options are being updated
-    if (updates.options && updates.correctAnswer !== undefined) {
-      if (updates.correctAnswer < 0 || updates.correctAnswer >= updates.options.length) {
-        res.status(400).json({ error: 'correctAnswer must be a valid option index' });
-        return;
+    const questionType = updates.type || 'mcq';
+
+    // Validate based on question type
+    if (questionType === 'mcq') {
+      if (updates.options && updates.correctAnswer !== undefined) {
+        if (typeof updates.correctAnswer !== 'number' || updates.correctAnswer < 0 || updates.correctAnswer >= updates.options.length) {
+          res.status(400).json({ error: 'correctAnswer must be a valid option index for MCQ' });
+          return;
+        }
       }
+    } else {
+      // Short answer type - ensure options is empty array
+      updates.options = [];
     }
 
     const question = await TestQuestion.findByIdAndUpdate(id, updates, { new: true });
