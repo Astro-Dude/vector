@@ -638,6 +638,54 @@ Return ONLY the follow-up question (one or two sentences):`;
   return response.trim();
 }
 
+// Generate qualitative feedback for candidate introduction (no scores)
+export async function generateIntroductionFeedback(
+  initialAnswer: string,
+  followUps: Array<{ question: string; answer: string }>
+): Promise<string> {
+  const followUpText = followUps.length > 0
+    ? `\n\nFollow-up exchanges:\n${followUps.map((f, i) =>
+        `Follow-up ${i + 1}: ${f.question}\nCandidate response: ${f.answer}`
+      ).join('\n\n')}`
+    : '';
+
+  const prompt = `You are providing feedback on a candidate's self-introduction during an interview.
+
+Candidate's introduction: "${initialAnswer}"${followUpText}
+
+Generate qualitative feedback (NO scores or numbers) on their self-introduction. Focus on:
+1. Communication style - clarity, confidence, structure
+2. Self-presentation - how well they conveyed their background/experience
+3. Engagement - responsiveness to follow-up questions (if any)
+4. Areas for improvement - specific, actionable suggestions
+
+Format the feedback in markdown:
+
+**Communication Style:**
+[1-2 sentences about how they communicated]
+
+**What Stood Out:**
+- [Positive observation 1]
+- [Positive observation 2 if applicable]
+
+**Suggestions for Improvement:**
+- [Specific, actionable suggestion 1]
+- [Specific, actionable suggestion 2]
+- [Specific, actionable suggestion 3 if applicable]
+
+**Overall Impression:**
+[1-2 sentences summarizing and encouraging]
+
+Keep the feedback constructive, specific, and encouraging. Focus on presentation skills, not technical content.`;
+
+  const response = await chat([
+    { role: 'system', content: 'You are a career coach providing constructive feedback on interview self-introductions. Be encouraging but honest.' },
+    { role: 'user', content: prompt }
+  ]);
+
+  return response.trim();
+}
+
 // Generate follow-up question based on the answer
 export async function generateFollowUp(
   question: string,

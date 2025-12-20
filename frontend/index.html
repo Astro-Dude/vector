@@ -2,10 +2,31 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" id="favicon" type="image/png" href="src/assets/images/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>Vector</title>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+      // Switch favicon based on color scheme preference
+      document.addEventListener('DOMContentLoaded', function() {
+        const favicon = document.getElementById('favicon');
+        if (!favicon) return;
+
+        const darkLogo = '/src/assets/images/logo.png';
+        const lightLogo = '/src/assets/images/logo-dark.png';
+
+        function updateFavicon(isDark) {
+          favicon.href = isDark ? darkLogo : lightLogo;
+        }
+
+        // Check initial preference
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+        updateFavicon(prefersDark.matches);
+
+        // Listen for changes
+        prefersDark.addEventListener('change', (e) => updateFavicon(e.matches));
+      });
+    </script>
   </head>
   <body>
     <div id="root"></div>

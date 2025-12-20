@@ -37,10 +37,23 @@ interface OverallFeedback {
   suggestedNextSteps: string[];
 }
 
+interface IntroductionExchange {
+  question: string;
+  answer: string;
+}
+
+interface Introduction {
+  initialQuestion: string;
+  initialAnswer: string;
+  followUps: IntroductionExchange[];
+  feedback?: string;
+}
+
 interface InterviewResult {
   _id: string;
   sessionId: string;
   candidateName: string;
+  introduction?: Introduction;
   questions: QuestionResult[];
   finalScore: number;
   overallFeedback: OverallFeedback;
@@ -253,6 +266,70 @@ export default function InterviewHistory() {
                 </div>
               )}
             </div>
+
+            {/* Introduction Section - No Scores */}
+            {selectedResult.introduction && (
+              <div className="bg-zinc-900 border border-green-500/20 rounded-xl p-5 mb-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="px-2 py-1 rounded text-xs font-medium bg-green-500/20 text-green-400">
+                    Introduction
+                  </span>
+                  <span className="text-white/40 text-sm">Getting to know you</span>
+                </div>
+
+                {/* Introduction Conversation Flow */}
+                <div className="bg-white/5 rounded-lg p-4 space-y-3">
+                  {/* Initial Question */}
+                  <div className="border-l-2 border-green-500/50 pl-3">
+                    <p className="text-green-400 text-xs font-medium mb-1">Interviewer</p>
+                    <p className="text-white/80 text-sm">{selectedResult.introduction.initialQuestion}</p>
+                  </div>
+
+                  {/* Initial Answer */}
+                  <div className="border-l-2 border-blue-500/50 pl-3 ml-4">
+                    <p className="text-blue-400 text-xs font-medium mb-1">Your Answer</p>
+                    <p className="text-white/80 text-sm">{selectedResult.introduction.initialAnswer}</p>
+                  </div>
+
+                  {/* Follow-up Exchanges */}
+                  {selectedResult.introduction.followUps && selectedResult.introduction.followUps.length > 0 && (
+                    <div className="space-y-3 mt-3 pt-3 border-t border-white/10">
+                      <p className="text-white/40 text-xs font-medium">Follow-up Discussion</p>
+                      {selectedResult.introduction.followUps.map((fu, j) => (
+                        <div key={j} className="space-y-2">
+                          <div className="border-l-2 border-green-500/50 pl-3">
+                            <p className="text-green-400 text-xs font-medium mb-1">Interviewer</p>
+                            <p className="text-white/70 text-sm">{fu.question}</p>
+                          </div>
+                          <div className="border-l-2 border-blue-500/50 pl-3 ml-4">
+                            <p className="text-blue-400 text-xs font-medium mb-1">Your Response</p>
+                            <p className="text-white/70 text-sm">{fu.answer}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Introduction Feedback */}
+                {selectedResult.introduction.feedback && (
+                  <div className="bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20 rounded-lg p-4 mt-4">
+                    <h4 className="text-green-400 font-medium text-sm mb-3">Feedback on Your Introduction</h4>
+                    <div className="text-white/80 text-sm space-y-2 whitespace-pre-wrap">
+                      {selectedResult.introduction.feedback.split('\n').map((line, idx) => {
+                        if (line.startsWith('**') && line.endsWith('**')) {
+                          return <p key={idx} className="font-semibold text-white mt-3 first:mt-0">{line.replace(/\*\*/g, '')}</p>;
+                        }
+                        if (line.startsWith('- ')) {
+                          return <p key={idx} className="text-white/70 pl-3">{line}</p>;
+                        }
+                        return line.trim() ? <p key={idx} className="text-white/70">{line}</p> : null;
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Question Details */}
             <div className="space-y-4 mb-6">

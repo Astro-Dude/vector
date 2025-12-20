@@ -20,6 +20,18 @@ export interface IFollowUpResult {
   wasHint: boolean;
 }
 
+export interface IIntroductionExchange {
+  question: string;
+  answer: string;
+}
+
+export interface IIntroduction {
+  initialQuestion: string;
+  initialAnswer: string;
+  followUps: IIntroductionExchange[];
+  feedback?: string; // Qualitative feedback on self-introduction (no scores)
+}
+
 export interface IQuestionResult {
   question: string;
   answer: string;
@@ -45,6 +57,7 @@ export interface IInterviewResult extends Document {
   userId: mongoose.Types.ObjectId;
   sessionId: string;
   candidateName: string;
+  introduction?: IIntroduction;
   questions: IQuestionResult[];
   finalScore: number;
   overallFeedback: IOverallFeedback;
@@ -75,6 +88,18 @@ const followUpResultSchema = new Schema({
   question: { type: String, required: true },
   answer: { type: String, required: true },
   wasHint: { type: Boolean, default: false }
+}, { _id: false });
+
+const introductionExchangeSchema = new Schema({
+  question: { type: String, required: true },
+  answer: { type: String, required: true }
+}, { _id: false });
+
+const introductionSchema = new Schema({
+  initialQuestion: { type: String, required: true },
+  initialAnswer: { type: String, required: true },
+  followUps: [introductionExchangeSchema],
+  feedback: { type: String }
 }, { _id: false });
 
 const questionResultSchema = new Schema<IQuestionResult>({
@@ -112,6 +137,10 @@ const interviewResultSchema = new Schema<IInterviewResult>({
   candidateName: {
     type: String,
     required: true
+  },
+  introduction: {
+    type: introductionSchema,
+    required: false
   },
   questions: [questionResultSchema],
   finalScore: {

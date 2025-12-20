@@ -15,6 +15,7 @@ import {
   generateSpokenFeedback,
   generateDetailedFeedback,
   generateIntroductionFollowUp,
+  generateIntroductionFeedback,
   generateFollowUp,
   generateReport,
   getQuestionIntro,
@@ -748,11 +749,27 @@ async function moveToNextQuestion(
       })
     );
 
+    // Build introduction data with feedback if available
+    let introductionData = undefined;
+    if (session.introductionAnswer) {
+      const introductionFeedback = await generateIntroductionFeedback(
+        session.introductionAnswer,
+        session.introductionFollowUpHistory || []
+      );
+      introductionData = {
+        initialQuestion: "Tell me about yourself - your background, interests, and what brings you here.",
+        initialAnswer: session.introductionAnswer,
+        followUps: session.introductionFollowUpHistory || [],
+        feedback: introductionFeedback
+      };
+    }
+
     // Save to MongoDB with enhanced data
     const interviewResult = new InterviewResult({
       userId: session.userId,
       sessionId: session.sessionId,
       candidateName: session.candidateName,
+      introduction: introductionData,
       questions: questionsWithDetails,
       finalScore: typedReport.finalScore,
       overallFeedback: typedReport.overallFeedback,
@@ -1241,13 +1258,35 @@ export async function endInterviewEarly(req: Request, res: Response): Promise<vo
       })
     );
 
+    // Build introduction data with feedback if available
+    let introductionData = undefined;
+    if (session.introductionAnswer) {
+      const introductionFeedback = await generateIntroductionFeedback(
+        session.introductionAnswer,
+        session.introductionFollowUpHistory || []
+      );
+      introductionData = {
+        initialQuestion: "Tell me about yourself - your background, interests, and what brings you here.",
+        initialAnswer: session.introductionAnswer,
+        followUps: session.introductionFollowUpHistory || [],
+        feedback: introductionFeedback
+      };
+    }
+
+    // Recalculate final score based on TOTAL questions (not just answered)
+    // Each question is worth 10 points, final score is percentage out of 100
+    const totalPossibleMarks = session.questions.length * 10;
+    const earnedMarks = questionsWithDetails.reduce((sum, q) => sum + (q.total || 0), 0);
+    const adjustedFinalScore = Math.round((earnedMarks / totalPossibleMarks) * 100);
+
     // Save to MongoDB with incomplete status
     const interviewResult = new InterviewResult({
       userId: session.userId,
       sessionId: session.sessionId,
       candidateName: session.candidateName,
+      introduction: introductionData,
       questions: questionsWithDetails,
-      finalScore: typedReport.finalScore,
+      finalScore: adjustedFinalScore,
       overallFeedback: typedReport.overallFeedback,
       startedAt: session.startedAt,
       completedAt: new Date(),
