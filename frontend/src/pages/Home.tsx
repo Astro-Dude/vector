@@ -387,17 +387,25 @@ export default function Home() {
                         Tests
                       </h3>
                       <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
-                        {purchasedItems.filter(item => item.type === 'test').map((item, index, arr) => (
-                          <div key={item._id} className={`flex items-center justify-between p-4 hover:bg-white/5 transition-colors ${index !== arr.length - 1 ? 'border-b border-white/10' : ''}`}>
-                            <span className="text-white font-medium">{item.title}</span>
-                            <button
-                              onClick={() => navigate(`/test/${item._id}`)}
-                              className="px-4 py-1.5 rounded-lg text-sm font-medium bg-white/10 text-white border border-white/20 hover:bg-white/20 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-white/10 transition-all duration-200"
-                            >
-                              Start
-                            </button>
-                          </div>
-                        ))}
+                        {purchasedItems.filter(item => item.type === 'test').map((item, index, arr) => {
+                          const itemId = item.id || item._id;
+                          return (
+                            <div key={item._id} className={`flex items-center justify-between p-4 hover:bg-white/5 transition-colors ${index !== arr.length - 1 ? 'border-b border-white/10' : ''}`}>
+                              <span className="text-white font-medium">{item.title}</span>
+                              <div className="flex items-center gap-4">
+                                <span className="text-sm text-blue-400">
+                                  Unlimited attempts
+                                </span>
+                                <button
+                                  onClick={() => navigate(`/test/setup/${itemId}`)}
+                                  className="px-4 py-1.5 rounded-lg text-sm font-medium bg-white/10 text-white border border-white/20 hover:bg-white/20 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-white/10 transition-all duration-200"
+                                >
+                                  Start
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
                   )}

@@ -100,20 +100,34 @@ router.get('/items', async (_req: Request, res: Response) => {
 // Create new item
 router.post('/items', async (req: Request, res: Response) => {
   try {
-    const { title, description, price, type } = req.body;
+    const { title, description, price, type, duration, timeLimit, questionCount } = req.body;
 
-    const item = new Item({
+    const itemData: Record<string, unknown> = {
       title,
       description,
       price,
       type: type || 'interview'
-    });
+    };
+
+    // Only add duration if it's not empty
+    if (duration && typeof duration === 'string' && duration.trim()) {
+      itemData.duration = duration.trim();
+    }
+
+    // Only add test-specific fields for test type
+    if (type === 'test') {
+      if (timeLimit) itemData.timeLimit = timeLimit;
+      if (questionCount) itemData.questionCount = questionCount;
+    }
+
+    const item = new Item(itemData);
 
     await item.save();
     res.status(201).json(item);
   } catch (error) {
     console.error('Error creating item:', error);
-    res.status(500).json({ error: 'Failed to create item' });
+    const errorMessage = error instanceof Error ? error.message : 'Failed to create item';
+    res.status(500).json({ error: errorMessage });
   }
 });
 

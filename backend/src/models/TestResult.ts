@@ -3,9 +3,10 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface ITestQuestionResult {
   questionId: mongoose.Types.ObjectId;
   question: string;
+  type: 'mcq' | 'short';
   options: string[];
-  selectedAnswer: number;
-  correctAnswer: number;
+  selectedAnswer: number | string; // number for MCQ (index), string for short answer
+  correctAnswer: number | string;
   isCorrect: boolean;
   maxScore: number;
   scoreAwarded: number;
@@ -41,16 +42,21 @@ const testQuestionResultSchema = new Schema<ITestQuestionResult>({
     type: String,
     required: true
   },
+  type: {
+    type: String,
+    enum: ['mcq', 'short'],
+    default: 'mcq'
+  },
   options: {
     type: [String],
-    required: true
+    default: []
   },
   selectedAnswer: {
-    type: Number,
+    type: Schema.Types.Mixed, // number for MCQ, string for short answer
     required: true
   },
   correctAnswer: {
-    type: Number,
+    type: Schema.Types.Mixed, // number for MCQ, string for short answer
     required: true
   },
   isCorrect: {

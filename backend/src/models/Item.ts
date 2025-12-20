@@ -6,6 +6,9 @@ export interface IItem extends Document {
   price: number;
   type: 'test' | 'interview' | 'course';
   duration?: string;
+  // Test-specific fields
+  timeLimit?: number; // Time limit in minutes for tests
+  questionCount?: number; // Number of questions to show in the test
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -35,6 +38,14 @@ const itemSchema = new Schema<IItem>({
   duration: {
     type: String,
     trim: true
+  },
+  timeLimit: {
+    type: Number,
+    min: 1
+  },
+  questionCount: {
+    type: Number,
+    min: 1
   },
   isActive: {
     type: Boolean,

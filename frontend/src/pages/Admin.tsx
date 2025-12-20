@@ -21,6 +21,8 @@ interface Item {
   price: number;
   type: 'test' | 'interview' | 'course';
   duration?: string;
+  timeLimit?: number; // Time limit in minutes for tests
+  questionCount?: number; // Number of questions for tests
   isActive: boolean;
 }
 
@@ -81,8 +83,10 @@ interface TestQuestion {
   _id: string;
   testId: { _id: string; title: string } | string;
   question: string;
+  type: 'mcq' | 'short';
   options: string[];
-  correctAnswer: number;
+  correctAnswer: number | string; // number for MCQ (index), string for short answer
+  note?: string; // Optional note to display with the question
   score: number;
   category: 'maths' | 'reasoning';
   difficulty: 'easy' | 'medium' | 'hard';
@@ -133,9 +137,11 @@ export default function Admin() {
   const [newItem, setNewItem] = useState({
     title: '',
     description: '',
-    price: 0,
+    price: '' as string | number,
     type: 'interview' as 'test' | 'interview' | 'course',
-    duration: ''
+    duration: '',
+    timeLimit: '' as string | number, // Default empty for tests
+    questionCount: '' as string | number // Default empty for tests
   });
 
   // Edit item state
@@ -156,8 +162,10 @@ export default function Admin() {
   const [newTestQuestion, setNewTestQuestion] = useState({
     testId: '',
     question: '',
+    type: 'mcq' as 'mcq' | 'short',
     options: ['', '', '', ''],
-    correctAnswer: 0,
+    correctAnswer: 0 as number | string, // number for MCQ, string for short answer
+    note: '',
     score: 1,
     category: 'maths' as 'maths' | 'reasoning',
     difficulty: 'medium' as 'easy' | 'medium' | 'hard'
@@ -246,16 +254,42 @@ export default function Admin() {
 
   const createItem = async () => {
     try {
+      // Build item data, only including non-empty fields
+      const itemData: Record<string, unknown> = {
+        title: newItem.title,
+        description: newItem.description,
+        price: newItem.price === '' ? 0 : Number(newItem.price),
+        type: newItem.type
+      };
+
+      // Only add duration if not empty
+      if (newItem.duration && newItem.duration.trim()) {
+        itemData.duration = newItem.duration.trim();
+      }
+
+      // Only add test fields if type is test and values are provided
+      if (newItem.type === 'test') {
+        if (newItem.timeLimit !== '' && newItem.timeLimit !== undefined) {
+          itemData.timeLimit = Number(newItem.timeLimit);
+        }
+        if (newItem.questionCount !== '' && newItem.questionCount !== undefined) {
+          itemData.questionCount = Number(newItem.questionCount);
+        }
+      }
+
       const res = await fetch(`${API_BASE_URL}/api/admin/items`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(newItem)
+        body: JSON.stringify(itemData)
       });
 
-      if (!res.ok) throw new Error('Failed to create item');
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to create item');
+      }
 
-      setNewItem({ title: '', description: '', price: 0, type: 'interview', duration: '' });
+      setNewItem({ title: '', description: '', price: '', type: 'interview', duration: '', timeLimit: '', questionCount: '' });
       loadTabData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error creating item');
@@ -289,7 +323,10 @@ export default function Admin() {
           price: editingItem.price,
           type: editingItem.type,
           duration: editingItem.duration,
-          isActive: editingItem.isActive
+          isActive: editingItem.isActive,
+          // Include test-specific fields
+          timeLimit: editingItem.timeLimit,
+          questionCount: editingItem.questionCount
         })
       });
 
@@ -395,21 +432,34 @@ export default function Admin() {
   // Test Question CRUD operations
   const createTestQuestion = async () => {
     try {
-      const filteredOptions = newTestQuestion.options.filter(o => o.trim() !== '');
-      if (filteredOptions.length < 2) {
-        setError('At least 2 options are required');
-        return;
+      let questionData;
+
+      if (newTestQuestion.type === 'mcq') {
+        const filteredOptions = newTestQuestion.options.filter(o => o.trim() !== '');
+        if (filteredOptions.length < 2) {
+          setError('At least 2 options are required for MCQ');
+          return;
+        }
+        questionData = { ...newTestQuestion, options: filteredOptions };
+      } else {
+        // Short answer type
+        if (!String(newTestQuestion.correctAnswer).trim()) {
+          setError('Correct answer is required for short answer questions');
+          return;
+        }
+        questionData = { ...newTestQuestion, options: [] };
       }
+
       const res = await fetch(`${API_BASE_URL}/api/admin/test-questions`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ ...newTestQuestion, options: filteredOptions })
+        body: JSON.stringify(questionData)
       });
 
       if (!res.ok) throw new Error('Failed to create test question');
 
-      setNewTestQuestion({ testId: '', question: '', options: ['', '', '', ''], correctAnswer: 0, score: 1, category: 'maths', difficulty: 'medium' });
+      setNewTestQuestion({ testId: '', question: '', type: 'mcq', options: ['', '', '', ''], correctAnswer: 0, note: '', score: 1, category: 'maths', difficulty: 'medium' });
       loadTabData();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error creating test question');
@@ -419,11 +469,30 @@ export default function Admin() {
   const updateTestQuestion = async () => {
     if (!editingTestQuestion) return;
     try {
+      let questionData;
+      const questionType = editingTestQuestion.type || 'mcq';
+
+      if (questionType === 'mcq') {
+        const filteredOptions = editingTestQuestion.options.filter(o => o.trim() !== '');
+        if (filteredOptions.length < 2) {
+          setError('At least 2 options are required for MCQ');
+          return;
+        }
+        questionData = { ...editingTestQuestion, options: filteredOptions };
+      } else {
+        // Short answer type
+        if (!String(editingTestQuestion.correctAnswer).trim()) {
+          setError('Correct answer is required for short answer questions');
+          return;
+        }
+        questionData = { ...editingTestQuestion, options: [] };
+      }
+
       const res = await fetch(`${API_BASE_URL}/api/admin/test-questions/${editingTestQuestion._id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify(editingTestQuestion)
+        body: JSON.stringify(questionData)
       });
 
       if (!res.ok) throw new Error('Failed to update test question');
@@ -501,7 +570,7 @@ export default function Admin() {
   });
 
   const filteredTestQuestionsDisplay = testQuestions.filter(q => {
-    const testIdValue = typeof q.testId === 'object' ? q.testId._id : q.testId;
+    const testIdValue = typeof q.testId === 'object' && q.testId ? q.testId._id : q.testId;
     if (filters.testQuestions.testId && testIdValue !== filters.testQuestions.testId) return false;
     if (filters.testQuestions.category && q.category !== filters.testQuestions.category) return false;
     if (filters.testQuestions.difficulty && q.difficulty !== filters.testQuestions.difficulty) return false;
@@ -511,7 +580,8 @@ export default function Admin() {
   });
 
   const filteredTestResultsDisplay = testResults.filter(r => {
-    if (filters.testResults.testId && r.testId._id !== filters.testResults.testId) return false;
+    const testIdValue = r.testId && typeof r.testId === 'object' ? r.testId._id : r.testId;
+    if (filters.testResults.testId && testIdValue !== filters.testResults.testId) return false;
     if (filters.testResults.status && r.status !== filters.testResults.status) return false;
     if (filters.testResults.search && !r.candidateName.toLowerCase().includes(filters.testResults.search.toLowerCase()) &&
         !r.userId?.email?.toLowerCase().includes(filters.testResults.search.toLowerCase())) return false;
@@ -906,58 +976,104 @@ export default function Admin() {
               {editingItem ? 'Edit Item' : 'Create New Item'}
             </h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <input
-                type="text"
-                placeholder="Title"
-                value={editingItem ? editingItem.title : newItem.title}
-                onChange={e => editingItem
-                  ? setEditingItem({ ...editingItem, title: e.target.value })
-                  : setNewItem({ ...newItem, title: e.target.value })
-                }
-                className="bg-zinc-800 p-2 rounded"
-              />
-              <input
-                type="text"
-                placeholder="Description"
-                value={editingItem ? editingItem.description : newItem.description}
-                onChange={e => editingItem
-                  ? setEditingItem({ ...editingItem, description: e.target.value })
-                  : setNewItem({ ...newItem, description: e.target.value })
-                }
-                className="bg-zinc-800 p-2 rounded"
-              />
-              <input
-                type="number"
-                placeholder="Price"
-                value={editingItem ? editingItem.price : newItem.price}
-                onChange={e => editingItem
-                  ? setEditingItem({ ...editingItem, price: Number(e.target.value) })
-                  : setNewItem({ ...newItem, price: Number(e.target.value) })
-                }
-                className="bg-zinc-800 p-2 rounded"
-              />
-              <select
-                value={editingItem ? editingItem.type : newItem.type}
-                onChange={e => editingItem
-                  ? setEditingItem({ ...editingItem, type: e.target.value as 'test' | 'interview' | 'course' })
-                  : setNewItem({ ...newItem, type: e.target.value as 'test' | 'interview' | 'course' })
-                }
-                className="bg-zinc-800 p-2 rounded"
-              >
-                <option value="interview">Interview</option>
-                <option value="test">Test</option>
-                <option value="course">Course</option>
-              </select>
-              <input
-                type="text"
-                placeholder="Duration (e.g., 30 mins)"
-                value={editingItem ? (editingItem.duration || '') : newItem.duration}
-                onChange={e => editingItem
-                  ? setEditingItem({ ...editingItem, duration: e.target.value })
-                  : setNewItem({ ...newItem, duration: e.target.value })
-                }
-                className="bg-zinc-800 p-2 rounded"
-              />
+              <div>
+                <label className="block text-white/60 text-xs mb-1">Title</label>
+                <input
+                  type="text"
+                  placeholder="Title"
+                  value={editingItem ? editingItem.title : newItem.title}
+                  onChange={e => editingItem
+                    ? setEditingItem({ ...editingItem, title: e.target.value })
+                    : setNewItem({ ...newItem, title: e.target.value })
+                  }
+                  className="bg-zinc-800 p-2 rounded w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-white/60 text-xs mb-1">Description</label>
+                <input
+                  type="text"
+                  placeholder="Description"
+                  value={editingItem ? editingItem.description : newItem.description}
+                  onChange={e => editingItem
+                    ? setEditingItem({ ...editingItem, description: e.target.value })
+                    : setNewItem({ ...newItem, description: e.target.value })
+                  }
+                  className="bg-zinc-800 p-2 rounded w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-white/60 text-xs mb-1">Price (₹)</label>
+                <input
+                  type="number"
+                  placeholder="Price"
+                  value={editingItem ? editingItem.price : newItem.price}
+                  onChange={e => editingItem
+                    ? setEditingItem({ ...editingItem, price: e.target.value === '' ? 0 : Number(e.target.value) })
+                    : setNewItem({ ...newItem, price: e.target.value })
+                  }
+                  className="bg-zinc-800 p-2 rounded w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-white/60 text-xs mb-1">Type</label>
+                <select
+                  value={editingItem ? editingItem.type : newItem.type}
+                  onChange={e => editingItem
+                    ? setEditingItem({ ...editingItem, type: e.target.value as 'test' | 'interview' | 'course' })
+                    : setNewItem({ ...newItem, type: e.target.value as 'test' | 'interview' | 'course' })
+                  }
+                  className="bg-zinc-800 p-2 rounded w-full"
+                >
+                  <option value="interview">Interview</option>
+                  <option value="test">Test</option>
+                  <option value="course">Course</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-white/60 text-xs mb-1">Duration</label>
+                <input
+                  type="text"
+                  placeholder="e.g., 30 mins"
+                  value={editingItem ? (editingItem.duration || '') : newItem.duration}
+                  onChange={e => editingItem
+                    ? setEditingItem({ ...editingItem, duration: e.target.value })
+                    : setNewItem({ ...newItem, duration: e.target.value })
+                  }
+                  className="bg-zinc-800 p-2 rounded w-full"
+                />
+              </div>
+              {/* Test-specific fields */}
+              {(editingItem ? editingItem.type : newItem.type) === 'test' && (
+                <>
+                  <div>
+                    <label className="block text-white/60 text-xs mb-1">Time Limit (mins)</label>
+                    <input
+                      type="number"
+                      placeholder="e.g., 30"
+                      value={editingItem ? (editingItem.timeLimit ?? '') : newItem.timeLimit}
+                      onChange={e => editingItem
+                        ? setEditingItem({ ...editingItem, timeLimit: e.target.value === '' ? undefined : Number(e.target.value) })
+                        : setNewItem({ ...newItem, timeLimit: e.target.value })
+                      }
+                      className="bg-zinc-800 p-2 rounded w-full"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-white/60 text-xs mb-1">Question Count</label>
+                    <input
+                      type="number"
+                      placeholder="e.g., 20"
+                      value={editingItem ? (editingItem.questionCount ?? '') : newItem.questionCount}
+                      onChange={e => editingItem
+                        ? setEditingItem({ ...editingItem, questionCount: e.target.value === '' ? undefined : Number(e.target.value) })
+                        : setNewItem({ ...newItem, questionCount: e.target.value })
+                      }
+                      className="bg-zinc-800 p-2 rounded w-full"
+                    />
+                  </div>
+                </>
+              )}
               {editingItem && (
                 <label className="flex items-center gap-2">
                   <input
@@ -1020,7 +1136,7 @@ export default function Admin() {
                   <th className="p-3">Description</th>
                   <th className="p-3">Price</th>
                   <th className="p-3">Type</th>
-                  <th className="p-3">Duration</th>
+                  <th className="p-3">Duration/Settings</th>
                   <th className="p-3">Active</th>
                   <th className="p-3">Actions</th>
                 </tr>
@@ -1032,7 +1148,16 @@ export default function Admin() {
                     <td className="p-3 text-white/60 text-sm">{item.description}</td>
                     <td className="p-3">₹{item.price}</td>
                     <td className="p-3">{item.type}</td>
-                    <td className="p-3 text-white/60">{item.duration || '-'}</td>
+                    <td className="p-3 text-white/60">
+                      {item.type === 'test' ? (
+                        <div className="text-xs">
+                          <div>{item.timeLimit || 30} mins</div>
+                          <div>{item.questionCount || 20} questions</div>
+                        </div>
+                      ) : (
+                        item.duration || '-'
+                      )}
+                    </td>
                     <td className="p-3">{item.isActive ? 'Yes' : 'No'}</td>
                     <td className="p-3 flex gap-2">
                       <button
@@ -1470,7 +1595,7 @@ export default function Admin() {
               <div>
                 <label className="block text-white/60 mb-1">Test</label>
                 <select
-                  value={editingTestQuestion ? (typeof editingTestQuestion.testId === 'object' ? editingTestQuestion.testId._id : editingTestQuestion.testId) : newTestQuestion.testId}
+                  value={editingTestQuestion ? (typeof editingTestQuestion.testId === 'object' && editingTestQuestion.testId ? editingTestQuestion.testId._id : editingTestQuestion.testId || '') : newTestQuestion.testId}
                   onChange={e => editingTestQuestion
                     ? setEditingTestQuestion({ ...editingTestQuestion, testId: e.target.value })
                     : setNewTestQuestion({ ...newTestQuestion, testId: e.target.value })
@@ -1496,38 +1621,104 @@ export default function Admin() {
                 />
               </div>
               <div>
-                <label className="block text-white/60 mb-1">Options</label>
-                <div className="space-y-2">
-                  {(editingTestQuestion ? editingTestQuestion.options : newTestQuestion.options).map((opt, idx) => (
-                    <div key={idx} className="flex gap-2 items-center">
-                      <input
-                        type="radio"
-                        name="correctAnswer"
-                        checked={(editingTestQuestion ? editingTestQuestion.correctAnswer : newTestQuestion.correctAnswer) === idx}
-                        onChange={() => editingTestQuestion
-                          ? setEditingTestQuestion({ ...editingTestQuestion, correctAnswer: idx })
-                          : setNewTestQuestion({ ...newTestQuestion, correctAnswer: idx })
-                        }
-                        className="text-white"
-                      />
-                      <input
-                        type="text"
-                        placeholder={`Option ${idx + 1}`}
-                        value={opt}
-                        onChange={e => {
-                          const newOpts = [...(editingTestQuestion ? editingTestQuestion.options : newTestQuestion.options)];
-                          newOpts[idx] = e.target.value;
-                          editingTestQuestion
-                            ? setEditingTestQuestion({ ...editingTestQuestion, options: newOpts })
-                            : setNewTestQuestion({ ...newTestQuestion, options: newOpts });
-                        }}
-                        className="flex-1 bg-zinc-800 p-2 rounded"
-                      />
-                    </div>
-                  ))}
-                </div>
-                <p className="text-white/40 text-xs mt-1">Select the radio button for the correct answer</p>
+                <label className="block text-white/60 mb-1">Question Type</label>
+                <select
+                  value={editingTestQuestion ? (editingTestQuestion.type || 'mcq') : newTestQuestion.type}
+                  onChange={e => {
+                    const newType = e.target.value as 'mcq' | 'short';
+                    if (editingTestQuestion) {
+                      setEditingTestQuestion({
+                        ...editingTestQuestion,
+                        type: newType,
+                        correctAnswer: newType === 'mcq' ? 0 : '',
+                        options: newType === 'mcq' ? ['', '', '', ''] : []
+                      });
+                    } else {
+                      setNewTestQuestion({
+                        ...newTestQuestion,
+                        type: newType,
+                        correctAnswer: newType === 'mcq' ? 0 : '',
+                        options: newType === 'mcq' ? ['', '', '', ''] : []
+                      });
+                    }
+                  }}
+                  className="w-full bg-zinc-800 p-2 rounded"
+                >
+                  <option value="mcq">Multiple Choice (MCQ)</option>
+                  <option value="short">Short Answer (Input)</option>
+                </select>
               </div>
+
+              {/* MCQ Options */}
+              {(editingTestQuestion ? (editingTestQuestion.type || 'mcq') : newTestQuestion.type) === 'mcq' && (
+                <div>
+                  <label className="block text-white/60 mb-1">Options</label>
+                  <div className="space-y-2">
+                    {(editingTestQuestion ? editingTestQuestion.options : newTestQuestion.options).map((opt, idx) => (
+                      <div key={idx} className="flex gap-2 items-center">
+                        <input
+                          type="radio"
+                          name="correctAnswer"
+                          checked={(editingTestQuestion ? editingTestQuestion.correctAnswer : newTestQuestion.correctAnswer) === idx}
+                          onChange={() => editingTestQuestion
+                            ? setEditingTestQuestion({ ...editingTestQuestion, correctAnswer: idx })
+                            : setNewTestQuestion({ ...newTestQuestion, correctAnswer: idx })
+                          }
+                          className="text-white"
+                        />
+                        <input
+                          type="text"
+                          placeholder={`Option ${idx + 1}`}
+                          value={opt}
+                          onChange={e => {
+                            const newOpts = [...(editingTestQuestion ? editingTestQuestion.options : newTestQuestion.options)];
+                            newOpts[idx] = e.target.value;
+                            editingTestQuestion
+                              ? setEditingTestQuestion({ ...editingTestQuestion, options: newOpts })
+                              : setNewTestQuestion({ ...newTestQuestion, options: newOpts });
+                          }}
+                          className="flex-1 bg-zinc-800 p-2 rounded"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-white/40 text-xs mt-1">Select the radio button for the correct answer</p>
+                </div>
+              )}
+
+              {/* Short Answer Input */}
+              {(editingTestQuestion ? (editingTestQuestion.type || 'mcq') : newTestQuestion.type) === 'short' && (
+                <div>
+                  <label className="block text-white/60 mb-1">Correct Answer</label>
+                  <input
+                    type="text"
+                    placeholder="Enter the correct answer (case-insensitive)"
+                    value={editingTestQuestion ? String(editingTestQuestion.correctAnswer) : String(newTestQuestion.correctAnswer)}
+                    onChange={e => editingTestQuestion
+                      ? setEditingTestQuestion({ ...editingTestQuestion, correctAnswer: e.target.value })
+                      : setNewTestQuestion({ ...newTestQuestion, correctAnswer: e.target.value })
+                    }
+                    className="w-full bg-zinc-800 p-2 rounded"
+                  />
+                  <p className="text-white/40 text-xs mt-1">User's answer will be matched case-insensitively with whitespace trimmed</p>
+                </div>
+              )}
+
+              {/* Optional Note */}
+              <div>
+                <label className="block text-white/60 mb-1">Note (Optional)</label>
+                <textarea
+                  placeholder="Add a note or hint to display with this question..."
+                  value={editingTestQuestion ? (editingTestQuestion.note || '') : newTestQuestion.note}
+                  onChange={e => editingTestQuestion
+                    ? setEditingTestQuestion({ ...editingTestQuestion, note: e.target.value })
+                    : setNewTestQuestion({ ...newTestQuestion, note: e.target.value })
+                  }
+                  className="w-full bg-zinc-800 p-2 rounded min-h-[60px]"
+                />
+                <p className="text-white/40 text-xs mt-1">This note will be displayed with the question during the test</p>
+              </div>
+
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-white/60 mb-1">Score</label>
@@ -1655,7 +1846,10 @@ export default function Admin() {
                 <div className="flex justify-between items-start mb-2">
                   <div className="flex gap-2 flex-wrap">
                     <span className="px-2 py-0.5 rounded text-xs bg-cyan-500/20 text-cyan-400">
-                      {typeof q.testId === 'object' ? q.testId.title : 'Unknown Test'}
+                      {typeof q.testId === 'object' && q.testId ? q.testId.title : 'Unknown Test'}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded text-xs ${(q.type || 'mcq') === 'mcq' ? 'bg-purple-500/20 text-purple-400' : 'bg-pink-500/20 text-pink-400'}`}>
+                      {(q.type || 'mcq') === 'mcq' ? 'MCQ' : 'Input'}
                     </span>
                     <span className={`px-2 py-0.5 rounded text-xs ${q.category === 'maths' ? 'bg-blue-500/20 text-blue-400' : 'bg-orange-500/20 text-orange-400'}`}>
                       {q.category}
@@ -1698,13 +1892,24 @@ export default function Admin() {
                   </div>
                 </div>
                 <p className="font-medium mb-2">{q.question}</p>
-                <div className="space-y-1">
-                  {q.options.map((opt, idx) => (
-                    <div key={idx} className={`text-sm px-2 py-1 rounded ${idx === q.correctAnswer ? 'bg-green-500/20 text-green-400' : 'text-white/60'}`}>
-                      {idx === q.correctAnswer ? '✓ ' : '  '}{opt}
-                    </div>
-                  ))}
-                </div>
+                {q.note && (
+                  <p className="text-sm text-white/50 italic mb-2 px-2 py-1 bg-white/5 rounded">
+                    Note: {q.note}
+                  </p>
+                )}
+                {(q.type || 'mcq') === 'mcq' ? (
+                  <div className="space-y-1">
+                    {q.options.map((opt, idx) => (
+                      <div key={idx} className={`text-sm px-2 py-1 rounded ${idx === q.correctAnswer ? 'bg-green-500/20 text-green-400' : 'text-white/60'}`}>
+                        {idx === q.correctAnswer ? '✓ ' : '  '}{opt}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm px-2 py-1 rounded bg-green-500/20 text-green-400">
+                    Answer: {String(q.correctAnswer)}
+                  </div>
+                )}
               </div>
             ))}
           </div>

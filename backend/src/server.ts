@@ -13,6 +13,7 @@ import './config/passport.js';
 
 import authRoutes from './routes/auth.js';
 import interviewRoutes from './routes/interview.js';
+import testRoutes from './routes/test.js';
 import adminRoutes from './routes/admin.js';
 import paymentRoutes from './routes/payment.js';
 import { fileURLToPath } from 'url';
@@ -64,6 +65,7 @@ app.use(passport.session());
 // Routes
 app.use('/auth', authRoutes);
 app.use('/api/interview', interviewRoutes);
+app.use('/api/test', testRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/payment', paymentRoutes);
 

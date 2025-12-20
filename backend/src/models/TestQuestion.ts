@@ -3,8 +3,10 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface ITestQuestion extends Document {
   testId: mongoose.Types.ObjectId;
   question: string;
+  type: 'mcq' | 'short';
   options: string[];
-  correctAnswer: number;
+  correctAnswer: number | string; // number for MCQ (index), string for short answer
+  note?: string; // Optional note/hint to display with the question
   score: number;
   category: 'maths' | 'reasoning';
   difficulty: 'easy' | 'medium' | 'hard';
@@ -24,18 +26,29 @@ const testQuestionSchema = new Schema<ITestQuestion>({
     required: true,
     trim: true
   },
+  type: {
+    type: String,
+    enum: ['mcq', 'short'],
+    default: 'mcq'
+  },
   options: {
     type: [String],
-    required: true,
+    default: [],
     validate: {
-      validator: (v: string[]) => v.length >= 2,
-      message: 'At least 2 options are required'
+      validator: function(this: ITestQuestion, v: string[]) {
+        // MCQ requires at least 2 options, short answer can have none
+        return this.type === 'short' || v.length >= 2;
+      },
+      message: 'MCQ questions require at least 2 options'
     }
   },
   correctAnswer: {
-    type: Number,
-    required: true,
-    min: 0
+    type: Schema.Types.Mixed, // number for MCQ, string for short answer
+    required: true
+  },
+  note: {
+    type: String,
+    trim: true
   },
   score: {
     type: Number,
