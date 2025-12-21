@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" id="favicon" type="image/png" href="src/assets/images/logo.png" />
+    <link rel="icon" id="favicon" type="image/png" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vector</title>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -12,8 +12,8 @@
         const favicon = document.getElementById('favicon');
         if (!favicon) return;
 
-        const darkLogo = '/src/assets/images/logo.png';
-        const lightLogo = '/src/assets/images/logo-dark.png';
+        const darkLogo = '/logo.png';
+        const lightLogo = '/logo-dark.png';
 
         function updateFavicon(isDark) {
           favicon.href = isDark ? darkLogo : lightLogo;

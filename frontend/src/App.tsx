@@ -11,7 +11,7 @@ import TestSession from './pages/test/TestSession';
 import TestHistory from './pages/test/TestHistory';
 import TestResult from './pages/test/TestResult';
 import Admin from './pages/Admin';
-import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRoute, { AdminRoute } from './components/ProtectedRoute';
 
 function App() {
   return (
@@ -90,7 +90,14 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/admin" element={<Admin />} />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <Admin />
+            </AdminRoute>
+          }
+        />
       </Routes>
     </AuthProvider>
   );

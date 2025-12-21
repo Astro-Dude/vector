@@ -14,6 +14,8 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
+  isAdmin: boolean;
+  isImpersonating: boolean;
   isLoading: boolean;
   login: () => void;
   logout: () => Promise<void>;
@@ -26,6 +28,8 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isImpersonating, setIsImpersonating] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -39,12 +43,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         const data = await response.json();
         if (data.authenticated) {
           setUser(data.user);
+          setIsAdmin(data.isAdmin || false);
+          setIsImpersonating(data.isImpersonating || false);
           // Redirect to home if authenticated and not already there
           if (window.location.pathname === '/' && !window.location.search.includes('code')) {
             navigate('/home');
           }
         } else {
           setUser(null);
+          setIsAdmin(false);
+          setIsImpersonating(false);
         }
       }
     } catch (error) {
@@ -98,6 +106,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
+    isAdmin,
+    isImpersonating,
     isLoading,
     login,
     logout,

@@ -11,6 +11,7 @@ declare global {
       lastName?: string;
       phone?: string;
       profilePicture?: string;
+      isAdmin: boolean;
       createdAt: Date;
       lastLogin: Date;
     }
@@ -20,5 +21,11 @@ declare global {
 declare module 'express-serve-static-core' {
   interface Request {
     logout(callback: (err?: any) => void): void;
+  }
+}
+
+declare module 'express-session' {
+  interface SessionData {
+    originalAdminId?: string;
   }
 }

@@ -750,4 +750,89 @@ router.get('/test-results/:sessionId', async (req: Request, res: Response) => {
   }
 });
 
+// ==================== ADMIN MANAGEMENT ====================
+
+// Get all admins
+router.get('/admins', async (_req: Request, res: Response) => {
+  try {
+    const admins = await User.find({ isAdmin: true })
+      .select('_id email firstName lastName profilePicture createdAt')
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json(admins);
+  } catch (error) {
+    console.error('Error fetching admins:', error);
+    res.status(500).json({ error: 'Failed to fetch admins' });
+  }
+});
+
+// Add admin by email
+router.post('/admins', async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      res.status(400).json({ error: 'Email is required' });
+      return;
+    }
+
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found with this email' });
+      return;
+    }
+
+    if (user.isAdmin) {
+      res.status(400).json({ error: 'User is already an admin' });
+      return;
+    }
+
+    user.isAdmin = true;
+    await user.save();
+
+    res.json({
+      message: 'Admin added successfully',
+      admin: {
+        _id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profilePicture: user.profilePicture,
+        createdAt: user.createdAt
+      }
+    });
+  } catch (error) {
+    console.error('Error adding admin:', error);
+    res.status(500).json({ error: 'Failed to add admin' });
+  }
+});
+
+// Remove admin
+router.delete('/admins/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findById(id);
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    if (!user.isAdmin) {
+      res.status(400).json({ error: 'User is not an admin' });
+      return;
+    }
+
+    user.isAdmin = false;
+    await user.save();
+
+    res.json({ message: 'Admin removed successfully' });
+  } catch (error) {
+    console.error('Error removing admin:', error);
+    res.status(500).json({ error: 'Failed to remove admin' });
+  }
+});
+
 export default router;

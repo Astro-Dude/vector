@@ -3,8 +3,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import ProfileAvatar from './ProfileAvatar';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+
 export default function Navbar() {
-  const { user, isAuthenticated, login, logout } = useAuth();
+  const { user, isAuthenticated, isImpersonating, login, logout } = useAuth();
   const navigate = useNavigate();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -96,7 +98,22 @@ export default function Navbar() {
   }, [isAuthenticated]);
 
   return (
-    <nav className="fixed top-3 md:top-6 left-1/2 -translate-x-1/2 z-1000 w-[95%] max-w-[1400px]">
+    <>
+      {/* Impersonation Banner */}
+      {isImpersonating && (
+        <div className="fixed top-0 left-0 right-0 z-[1001] bg-yellow-500 text-black text-center py-2 px-4 flex items-center justify-center gap-4">
+          <span className="text-sm font-medium">
+            Impersonating: {user?.email}
+          </span>
+          <a
+            href={`${API_BASE_URL}/auth/stop-impersonation`}
+            className="text-sm font-semibold underline hover:no-underline"
+          >
+            Stop Impersonation
+          </a>
+        </div>
+      )}
+      <nav className={`fixed ${isImpersonating ? 'top-12 md:top-14' : 'top-3 md:top-6'} left-1/2 -translate-x-1/2 z-1000 w-[95%] max-w-[1400px]`}>
       <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl md:rounded-4xl px-4 md:px-8 py-3 md:py-4 flex justify-between items-center shadow-[0_8px_32px_rgba(0,0,0,0.4)]">
         <div className="navbar-brand">
           <button
@@ -209,5 +226,6 @@ export default function Navbar() {
         </div>
       </div>
     </nav>
+    </>
   );
 }

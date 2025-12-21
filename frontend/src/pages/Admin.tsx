@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
-type Tab = 'stats' | 'users' | 'items' | 'purchases' | 'results' | 'questions' | 'testQuestions';
+type Tab = 'stats' | 'users' | 'items' | 'purchases' | 'results' | 'questions' | 'testQuestions' | 'admins';
 
 interface User {
   _id: string;
@@ -119,6 +119,8 @@ export default function Admin() {
   const [questions, setQuestions] = useState<InterviewQuestion[]>([]);
   const [testQuestions, setTestQuestions] = useState<TestQuestion[]>([]);
   const [testResults, setTestResults] = useState<TestResult[]>([]);
+  const [admins, setAdmins] = useState<{ _id: string; email: string; firstName?: string; lastName?: string; profilePicture?: string; createdAt: string }[]>([]);
+  const [newAdminEmail, setNewAdminEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -248,6 +250,10 @@ export default function Admin() {
         ]);
         if (testQuestionsData) setTestQuestions(testQuestionsData);
         if (itemsForTestQ) setItems(itemsForTestQ);
+        break;
+      case 'admins':
+        const adminsData = await fetchData('admins');
+        if (adminsData) setAdmins(adminsData);
         break;
     }
   };
@@ -595,7 +601,8 @@ export default function Admin() {
     { key: 'purchases', label: 'Purchases' },
     { key: 'results', label: 'Results' },
     { key: 'questions', label: 'Interview Questions' },
-    { key: 'testQuestions', label: 'Test Questions' }
+    { key: 'testQuestions', label: 'Test Questions' },
+    { key: 'admins', label: 'Admins' }
   ];
 
   return (
@@ -951,12 +958,20 @@ export default function Admin() {
                     <td className="p-3 text-green-400">₹{user.totalPaid.toLocaleString()}</td>
                     <td className="p-3 text-yellow-400">₹{user.totalAssigned.toLocaleString()}</td>
                     <td className="p-3">{new Date(user.createdAt).toLocaleDateString()}</td>
-                    <td className="p-3">
+                    <td className="p-3 flex gap-2">
                       <button
                         onClick={() => setAssignPopup({ user, itemId: '', quantity: 1 })}
                         className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 text-sm"
                       >
                         Assign
+                      </button>
+                      <button
+                        onClick={() => {
+                          window.location.href = `${API_BASE_URL}/auth/become/${encodeURIComponent(user.email)}`;
+                        }}
+                        className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded hover:bg-yellow-500/30 text-sm"
+                      >
+                        Impersonate
                       </button>
                     </td>
                   </tr>
@@ -1916,6 +1931,114 @@ export default function Admin() {
         </div>
       )}
 
+      {/* Admins Tab */}
+      {tab === 'admins' && (
+        <div>
+          {/* Add Admin Form */}
+          <div className="bg-zinc-900 p-4 rounded mb-6">
+            <h3 className="text-lg font-semibold mb-4">Add New Admin</h3>
+            <div className="flex gap-4">
+              <input
+                type="email"
+                placeholder="Enter user email..."
+                value={newAdminEmail}
+                onChange={e => setNewAdminEmail(e.target.value)}
+                className="flex-1 bg-zinc-800 p-2 rounded"
+              />
+              <button
+                onClick={async () => {
+                  if (!newAdminEmail.trim()) return;
+                  try {
+                    const res = await fetch(`${API_BASE_URL}/api/admin/admins`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      credentials: 'include',
+                      body: JSON.stringify({ email: newAdminEmail.trim() })
+                    });
+                    const data = await res.json();
+                    if (!res.ok) {
+                      setError(data.error || 'Failed to add admin');
+                      return;
+                    }
+                    setNewAdminEmail('');
+                    // Refresh admins list
+                    const adminsData = await fetch(`${API_BASE_URL}/api/admin/admins`, { credentials: 'include' }).then(r => r.json());
+                    setAdmins(adminsData);
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : 'Failed to add admin');
+                  }
+                }}
+                className="px-4 py-2 bg-white text-black rounded hover:bg-white/90"
+              >
+                Add Admin
+              </button>
+            </div>
+          </div>
+
+          {/* Admins List */}
+          <div className="bg-zinc-900 p-4 rounded">
+            <h3 className="text-lg font-semibold mb-4">Current Admins ({admins.length})</h3>
+            {admins.length === 0 ? (
+              <p className="text-white/60">No admins found</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead className="bg-zinc-800">
+                    <tr>
+                      <th className="p-3">Email</th>
+                      <th className="p-3">Name</th>
+                      <th className="p-3">Added</th>
+                      <th className="p-3">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {admins.map(admin => (
+                      <tr key={admin._id} className="border-b border-zinc-800">
+                        <td className="p-3">
+                          <div className="flex items-center gap-2">
+                            {admin.profilePicture && (
+                              <img src={admin.profilePicture} alt="" className="w-8 h-8 rounded-full" />
+                            )}
+                            {admin.email}
+                          </div>
+                        </td>
+                        <td className="p-3">{admin.firstName} {admin.lastName}</td>
+                        <td className="p-3">{new Date(admin.createdAt).toLocaleDateString()}</td>
+                        <td className="p-3">
+                          <button
+                            onClick={async () => {
+                              if (!confirm(`Remove admin access for ${admin.email}?`)) return;
+                              try {
+                                const res = await fetch(`${API_BASE_URL}/api/admin/admins/${admin._id}`, {
+                                  method: 'DELETE',
+                                  credentials: 'include'
+                                });
+                                if (!res.ok) {
+                                  const data = await res.json();
+                                  setError(data.error || 'Failed to remove admin');
+                                  return;
+                                }
+                                // Refresh admins list
+                                const adminsData = await fetch(`${API_BASE_URL}/api/admin/admins`, { credentials: 'include' }).then(r => r.json());
+                                setAdmins(adminsData);
+                              } catch (err) {
+                                setError(err instanceof Error ? err.message : 'Failed to remove admin');
+                              }
+                            }}
+                            className="px-3 py-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30"
+                          >
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Assign Popup Modal */}
       {assignPopup && (

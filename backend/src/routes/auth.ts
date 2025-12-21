@@ -27,19 +27,104 @@ router.get('/google/callback',
 // Check authentication status
 router.get('/status', (req: Request, res: Response) => {
   if (req.isAuthenticated()) {
+    const user = req.user as any;
     res.json({
       authenticated: true,
       user: {
-        id: (req.user as any)._id,
-        email: (req.user as any).email,
-        firstName: (req.user as any).firstName,
-        lastName: (req.user as any).lastName,
-        phone: (req.user as any).phone,
-        profilePicture: (req.user as any).profilePicture
-      }
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        phone: user.phone,
+        profilePicture: user.profilePicture
+      },
+      isAdmin: user.isAdmin || false,
+      isImpersonating: !!req.session.originalAdminId
     });
   } else {
     res.json({ authenticated: false });
+  }
+});
+
+// Admin impersonation - become another user
+router.get('/become/:email', async (req: Request, res: Response) => {
+  const frontendUrl = process.env.NODE_ENV === 'production' ? '' : (process.env.FRONTEND_URL || 'http://localhost:5173');
+
+  if (!req.isAuthenticated()) {
+    return res.redirect(`${frontendUrl}/login`);
+  }
+
+  const currentUser = req.user as any;
+
+  // Check if current user is admin
+  if (!currentUser.isAdmin) {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+
+  try {
+    const targetEmail = decodeURIComponent(req.params.email);
+    const targetUser = await User.findOne({ email: targetEmail });
+
+    if (!targetUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Store original admin ID in session (only if not already impersonating)
+    if (!req.session.originalAdminId) {
+      req.session.originalAdminId = currentUser._id.toString();
+    }
+
+    // Log in as target user
+    req.login(targetUser, (err) => {
+      if (err) {
+        console.error('Error during impersonation login:', err);
+        return res.status(500).json({ error: 'Failed to impersonate user' });
+      }
+      res.redirect(`${frontendUrl}/home`);
+    });
+  } catch (error) {
+    console.error('Error during impersonation:', error);
+    res.status(500).json({ error: 'Failed to impersonate user' });
+  }
+});
+
+// Stop impersonation - return to admin account
+router.get('/stop-impersonation', async (req: Request, res: Response) => {
+  const frontendUrl = process.env.NODE_ENV === 'production' ? '' : (process.env.FRONTEND_URL || 'http://localhost:5173');
+
+  if (!req.isAuthenticated()) {
+    return res.redirect(`${frontendUrl}/login`);
+  }
+
+  const originalAdminId = req.session.originalAdminId;
+
+  if (!originalAdminId) {
+    return res.redirect(`${frontendUrl}/home`);
+  }
+
+  try {
+    const adminUser = await User.findById(originalAdminId);
+
+    if (!adminUser) {
+      // Clear invalid session data
+      delete req.session.originalAdminId;
+      return res.redirect(`${frontendUrl}/home`);
+    }
+
+    // Clear impersonation data
+    delete req.session.originalAdminId;
+
+    // Log back in as admin
+    req.login(adminUser, (err) => {
+      if (err) {
+        console.error('Error restoring admin session:', err);
+        return res.status(500).json({ error: 'Failed to restore admin session' });
+      }
+      res.redirect(`${frontendUrl}/admin`);
+    });
+  } catch (error) {
+    console.error('Error stopping impersonation:', error);
+    res.status(500).json({ error: 'Failed to stop impersonation' });
   }
 });
 

@@ -7,6 +7,7 @@ export interface IUser extends Document {
   lastName?: string;
   phone?: string;
   profilePicture?: string;
+  isAdmin: boolean;
   createdAt: Date;
   lastLogin: Date;
 }
@@ -29,6 +30,10 @@ const userSchema = new Schema<IUser>({
     trim: true
   },
   profilePicture: String,
+  isAdmin: {
+    type: Boolean,
+    default: false
+  },
   createdAt: {
     type: Date,
     default: Date.now
