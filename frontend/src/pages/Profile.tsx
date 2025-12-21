@@ -149,7 +149,7 @@ export default function Profile() {
             )}
             {/* Profile Picture */}
             <div className="flex flex-col items-center mb-6 md:mb-8">
-              <div className="border-4 border-white/20 rounded-full mb-3 md:mb-4">
+              <div className="mb-3 md:mb-4">
                 <ProfileAvatar
                   src={user?.profilePicture}
                   name={user?.firstName}

@@ -406,7 +406,7 @@ router.get('/stats', async (_req: Request, res: Response) => {
         { $sort: { '_id.year': 1, '_id.month': 1 } },
         { $limit: 12 }
       ]),
-      // Total credits for interviews (purchased + assigned)
+      // Total credits for interviews (purchased only, not assigned)
       Purchase.aggregate([
         {
           $lookup: {
@@ -427,7 +427,7 @@ router.get('/stats', async (_req: Request, res: Response) => {
           }
         }
       ]),
-      // Total tests purchased
+      // Total tests purchased (only actual purchases, not assigned)
       Purchase.aggregate([
         {
           $lookup: {
@@ -438,12 +438,13 @@ router.get('/stats', async (_req: Request, res: Response) => {
           }
         },
         { $unwind: '$itemDetails' },
-        { $match: { 'itemDetails.type': 'test' } },
+        { $match: { 'itemDetails.type': 'test', amount: { $gt: 0 } } },
         { $group: { _id: null, count: { $sum: 1 } } }
       ])
     ]);
 
-    const totalInterviewCredits = (interviewsCount[0]?.totalCredits || 0) + (interviewsCount[0]?.totalAssigned || 0);
+    // Only count purchased credits, not assigned ones
+    const totalInterviewCredits = interviewsCount[0]?.totalCredits || 0;
 
     res.json({
       totalUsers,

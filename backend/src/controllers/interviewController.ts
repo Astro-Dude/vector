@@ -258,16 +258,17 @@ export async function startInterview(req: Request, res: Response): Promise<void>
     const { candidateName } = req.body;
     const name = candidateName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Anonymous';
 
-    // Fetch 2 random questions from MongoDB
-    const questions = await InterviewQuestion.aggregate([
-      { $match: { isActive: true } },
-      { $sample: { size: 2 } }
-    ]);
+    // Fetch all active questions and randomly select 2 unique ones
+    const allQuestions = await InterviewQuestion.find({ isActive: true });
 
-    if (questions.length < 2) {
+    if (allQuestions.length < 2) {
       res.status(500).json({ error: 'Not enough questions in database. Please add more questions.' });
       return;
     }
+
+    // Shuffle using Fisher-Yates-like approach and pick first 2
+    const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
+    const questions: IInterviewQuestion[] = shuffled.slice(0, 2);
 
     // Increment credits used count
     purchase.creditsUsed += 1;
@@ -278,7 +279,7 @@ export async function startInterview(req: Request, res: Response): Promise<void>
       sessionId,
       userId: user._id.toString(),
       candidateName: name,
-      questions: questions as IInterviewQuestion[],
+      questions: questions,
       currentQuestionIndex: 0,
       answers: [],
       startedAt: new Date(),

@@ -26,22 +26,20 @@ export default function ProfileAvatar({
   const fallbackLetter = (name || email || 'U').charAt(0).toUpperCase();
   const showFallback = !src || imageError;
 
-  return (
+  return showFallback ? (
+    <div className={`rounded-full bg-zinc-700 flex items-center justify-center ${sizeClasses[size]} ${className}`}>
+      <span className="text-white font-bold -translate-x-px -translate-y-px">
+        {fallbackLetter}
+      </span>
+    </div>
+  ) : (
     <div className={`rounded-full overflow-hidden ${sizeClasses[size]} ${className}`}>
-      {showFallback ? (
-        <div className="w-full h-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-          <span className="text-white font-bold">
-            {fallbackLetter}
-          </span>
-        </div>
-      ) : (
-        <img
-          src={src}
-          alt={name || 'Profile'}
-          className="w-full h-full object-cover"
-          onError={() => setImageError(true)}
-        />
-      )}
+      <img
+        src={src}
+        alt={name || 'Profile'}
+        className="w-full h-full object-cover"
+        onError={() => setImageError(true)}
+      />
     </div>
   );
 }
