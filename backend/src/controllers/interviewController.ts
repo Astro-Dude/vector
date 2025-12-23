@@ -54,6 +54,7 @@ interface InterviewSession {
   introductionFollowUpCount: number;
   introductionAnswer?: string;
   introductionFollowUpHistory: Array<{ question: string; answer: string }>;
+  currentIntroFollowUpQuestion?: string;
   // New: Track follow-up state for current question
   currentQuestionState: {
     followUpCount: number;
@@ -104,6 +105,7 @@ async function handleIntroductionAnswer(
 
     // Generate a follow-up question about their background
     const followUpQuestion = await generateIntroductionFollowUp(answer, []);
+    session.currentIntroFollowUpQuestion = followUpQuestion;
 
     session.phase = 'introduction_followup';
     session.introductionFollowUpCount = 1;
@@ -125,13 +127,9 @@ async function handleIntroductionAnswer(
   }
 
   if (session.phase === 'introduction_followup') {
-    // Store the follow-up answer
-    const previousFollowUp = session.introductionFollowUpHistory.length > 0
-      ? session.introductionFollowUpHistory[session.introductionFollowUpHistory.length - 1]
-      : null;
-
+    // Store the follow-up answer with the question that was asked
     session.introductionFollowUpHistory.push({
-      question: previousFollowUp?.question || 'Follow-up question',
+      question: session.currentIntroFollowUpQuestion || 'Follow-up question',
       answer
     });
 
@@ -151,6 +149,7 @@ async function handleIntroductionAnswer(
         session.introductionAnswer || answer,
         allFollowUps
       );
+      session.currentIntroFollowUpQuestion = followUpQuestion;
 
       session.introductionFollowUpCount++;
 
