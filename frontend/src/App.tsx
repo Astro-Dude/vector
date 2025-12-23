@@ -3,6 +3,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import Dashboard from './pages/Dashboard';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
+import Referral from './pages/Referral';
 import InterviewSetup from './pages/interview/InterviewSetup';
 import InterviewSession from './pages/interview/InterviewSession';
 import InterviewHistory from './pages/interview/InterviewHistory';
@@ -31,6 +32,14 @@ function App() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/referral"
+          element={
+            <ProtectedRoute>
+              <Referral />
             </ProtectedRoute>
           }
         />

@@ -3,6 +3,10 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import Item from '../models/Item.js';
 import Purchase from '../models/Purchase.js';
+import Coupon from '../models/Coupon.js';
+import User from '../models/User.js';
+import Referral from '../models/Referral.js';
+import ReferralSettings from '../models/ReferralSettings.js';
 
 const router = express.Router();
 
@@ -30,7 +34,8 @@ router.post('/create-order', async (req: Request, res: Response) => {
   }
 
   try {
-    const { itemId, quantity = 1 } = req.body;
+    const { itemId, quantity = 1, discountCode } = req.body;
+    const userId = (req.user as any)._id;
 
     const item = await Item.findById(itemId);
     if (!item) {
@@ -41,17 +46,88 @@ router.post('/create-order', async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Item is not available' });
     }
 
-    const amount = item.price * quantity * 100; // Razorpay expects amount in paise
+    let originalAmount = item.price * quantity;
+    let discountAmount = 0;
+    let discountType: 'coupon' | 'referral' | undefined;
+    let couponId: string | undefined;
+    let referrerId: string | undefined;
+
+    // Process discount code if provided
+    if (discountCode) {
+      const upperCode = discountCode.toUpperCase().trim();
+
+      // Check if it's a coupon
+      const coupon = await Coupon.findOne({ code: upperCode });
+      if (coupon) {
+        if (!coupon.isActive) {
+          return res.status(400).json({ message: 'This coupon is no longer active' });
+        }
+        if (coupon.expiryDate && new Date(coupon.expiryDate) < new Date()) {
+          return res.status(400).json({ message: 'This coupon has expired' });
+        }
+        if (coupon.maxUses > 0 && coupon.currentUses >= coupon.maxUses) {
+          return res.status(400).json({ message: 'This coupon has reached its usage limit' });
+        }
+        if (!coupon.applicableTypes.includes(item.type as 'interview' | 'test' | 'course')) {
+          return res.status(400).json({ message: `This coupon is not applicable to ${item.type} purchases` });
+        }
+
+        discountType = 'coupon';
+        couponId = coupon._id.toString();
+        if (coupon.discountType === 'percentage') {
+          discountAmount = Math.round(originalAmount * (coupon.discountValue / 100));
+        } else {
+          discountAmount = Math.min(coupon.discountValue, originalAmount);
+        }
+      } else {
+        // Check if it's a referral code
+        const referrer = await User.findOne({ referralCode: upperCode });
+        if (referrer) {
+          if (referrer._id.toString() === userId.toString()) {
+            return res.status(400).json({ message: 'You cannot use your own referral code' });
+          }
+
+          const settings = await ReferralSettings.findOne();
+          if (!settings || !settings.isActive) {
+            return res.status(400).json({ message: 'Referral system is currently disabled' });
+          }
+
+          if (item.type !== 'interview') {
+            return res.status(400).json({ message: 'Referral codes can only be used for interview purchases' });
+          }
+
+          const currentUser = await User.findById(userId);
+          if (currentUser?.referredBy) {
+            return res.status(400).json({ message: 'You have already used a referral code' });
+          }
+
+          discountType = 'referral';
+          referrerId = referrer._id.toString();
+          discountAmount = Math.round(originalAmount * (settings.referralDiscountPercent / 100));
+        } else {
+          return res.status(400).json({ message: 'Invalid discount code' });
+        }
+      }
+    }
+
+    const finalAmount = originalAmount - discountAmount;
+    const amountInPaise = finalAmount * 100; // Razorpay expects amount in paise
 
     const options = {
-      amount,
+      amount: amountInPaise,
       currency: 'INR',
       receipt: `ord_${Date.now()}`,
       notes: {
         itemId: String(item._id),
-        userId: String((req.user as any)._id),
+        userId: String(userId),
         quantity: String(quantity),
-        itemType: item.type
+        itemType: item.type,
+        discountCode: discountCode || '',
+        discountType: discountType || '',
+        discountAmount: String(discountAmount),
+        originalAmount: String(originalAmount),
+        couponId: couponId || '',
+        referrerId: referrerId || ''
       }
     };
 
@@ -63,7 +139,12 @@ router.post('/create-order', async (req: Request, res: Response) => {
       currency: order.currency,
       itemTitle: item.title,
       itemType: item.type,
-      quantity
+      quantity,
+      originalAmount,
+      discountAmount,
+      finalAmount,
+      discountType,
+      discountCode: discountCode || undefined
     });
   } catch (error) {
     console.error('Error creating Razorpay order:', error);
@@ -83,7 +164,13 @@ router.post('/verify', async (req: Request, res: Response) => {
       razorpay_payment_id,
       razorpay_signature,
       itemId,
-      quantity = 1
+      quantity = 1,
+      discountCode,
+      discountType,
+      discountAmount = 0,
+      originalAmount,
+      couponId,
+      referrerId
     } = req.body;
 
     // Verify signature
@@ -104,6 +191,29 @@ router.post('/verify', async (req: Request, res: Response) => {
     }
 
     const userId = (req.user as any)._id;
+    const finalAmount = (originalAmount || item.price * quantity) - (discountAmount || 0);
+
+    // Handle referral if used
+    let referralRecord = null;
+    if (discountType === 'referral' && referrerId) {
+      // Mark user as referred
+      await User.findByIdAndUpdate(userId, { referredBy: referrerId });
+
+      // Create referral record
+      referralRecord = new Referral({
+        referrerId: referrerId,
+        referredUserId: userId,
+        status: 'pending',
+        rewardAmount: 0,
+        rewardStatus: 'pending'
+      });
+      await referralRecord.save();
+    }
+
+    // Increment coupon usage if used
+    if (discountType === 'coupon' && couponId) {
+      await Coupon.findByIdAndUpdate(couponId, { $inc: { currentUses: 1 } });
+    }
 
     // For interview type items, allow purchasing multiple and adding to existing
     if (item.type === 'interview') {
@@ -116,8 +226,22 @@ router.post('/verify', async (req: Request, res: Response) => {
       if (existingPurchase) {
         // Add to existing purchase
         existingPurchase.credits += quantity;
-        existingPurchase.amount += item.price * quantity;
+        existingPurchase.amount += finalAmount;
+        existingPurchase.originalAmount = (existingPurchase.originalAmount || 0) + (originalAmount || item.price * quantity);
+        existingPurchase.discountAmount = (existingPurchase.discountAmount || 0) + (discountAmount || 0);
+        if (discountType) {
+          existingPurchase.discountType = discountType;
+          existingPurchase.discountCode = discountCode;
+        }
+        if (couponId) existingPurchase.couponId = couponId as any;
+        if (referralRecord) existingPurchase.referralId = referralRecord._id;
         await existingPurchase.save();
+
+        // Update referral with purchase ID
+        if (referralRecord) {
+          referralRecord.purchaseId = existingPurchase._id;
+          await referralRecord.save();
+        }
 
         const totalCredits = existingPurchase.credits + existingPurchase.creditsAssigned;
         return res.json({
@@ -136,7 +260,13 @@ router.post('/verify', async (req: Request, res: Response) => {
       const purchase = new Purchase({
         user: userId,
         item: item._id,
-        amount: item.price * quantity,
+        amount: finalAmount,
+        originalAmount: originalAmount || item.price * quantity,
+        discountAmount: discountAmount || 0,
+        discountType: discountType || undefined,
+        discountCode: discountCode || undefined,
+        couponId: couponId || undefined,
+        referralId: referralRecord?._id || undefined,
         credits: quantity,
         creditsUsed: 0,
         creditsAssigned: 0,
@@ -144,6 +274,12 @@ router.post('/verify', async (req: Request, res: Response) => {
       });
 
       await purchase.save();
+
+      // Update referral with purchase ID
+      if (referralRecord) {
+        referralRecord.purchaseId = purchase._id;
+        await referralRecord.save();
+      }
 
       return res.json({
         success: true,
@@ -172,7 +308,12 @@ router.post('/verify', async (req: Request, res: Response) => {
     const purchase = new Purchase({
       user: userId,
       item: item._id,
-      amount: item.price,
+      amount: finalAmount,
+      originalAmount: originalAmount || item.price,
+      discountAmount: discountAmount || 0,
+      discountType: discountType || undefined,
+      discountCode: discountCode || undefined,
+      couponId: couponId || undefined,
       credits: 1,
       creditsUsed: 0,
       creditsAssigned: 0,
@@ -197,6 +338,93 @@ router.post('/verify', async (req: Request, res: Response) => {
 // Get Razorpay key (public)
 router.get('/key', (req: Request, res: Response) => {
   res.json({ key: process.env.RAZORPAY_KEY_ID });
+});
+
+// Validate discount code (coupon or referral)
+router.post('/validate-code', async (req: Request, res: Response) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: 'Not authenticated' });
+  }
+
+  try {
+    const { code, itemType } = req.body;
+    const userId = (req.user as any)._id;
+
+    if (!code) {
+      return res.status(400).json({ valid: false, message: 'Code is required' });
+    }
+
+    const upperCode = code.toUpperCase().trim();
+
+    // First check if it's a coupon
+    const coupon = await Coupon.findOne({ code: upperCode });
+    if (coupon) {
+      // Validate coupon
+      if (!coupon.isActive) {
+        return res.json({ valid: false, message: 'This coupon is no longer active' });
+      }
+      if (coupon.expiryDate && new Date(coupon.expiryDate) < new Date()) {
+        return res.json({ valid: false, message: 'This coupon has expired' });
+      }
+      if (coupon.maxUses > 0 && coupon.currentUses >= coupon.maxUses) {
+        return res.json({ valid: false, message: 'This coupon has reached its usage limit' });
+      }
+      if (itemType && !coupon.applicableTypes.includes(itemType)) {
+        return res.json({ valid: false, message: `This coupon is not applicable to ${itemType} purchases` });
+      }
+
+      return res.json({
+        valid: true,
+        type: 'coupon',
+        discountType: coupon.discountType,
+        discountValue: coupon.discountValue,
+        applicableTypes: coupon.applicableTypes,
+        message: coupon.discountType === 'percentage'
+          ? `${coupon.discountValue}% discount will be applied`
+          : `₹${coupon.discountValue} discount will be applied`
+      });
+    }
+
+    // Check if it's a referral code
+    const referrer = await User.findOne({ referralCode: upperCode });
+    if (referrer) {
+      // Can't use your own referral code
+      if (referrer._id.toString() === userId.toString()) {
+        return res.json({ valid: false, message: 'You cannot use your own referral code' });
+      }
+
+      // Check if referral system is active
+      const settings = await ReferralSettings.findOne();
+      if (!settings || !settings.isActive) {
+        return res.json({ valid: false, message: 'Referral system is currently disabled' });
+      }
+
+      // Referral codes only work for interviews
+      if (itemType && itemType !== 'interview') {
+        return res.json({ valid: false, message: 'Referral codes can only be used for interview purchases' });
+      }
+
+      // Check if user has already used a referral code before
+      const currentUser = await User.findById(userId);
+      if (currentUser?.referredBy) {
+        return res.json({ valid: false, message: 'You have already used a referral code' });
+      }
+
+      return res.json({
+        valid: true,
+        type: 'referral',
+        discountType: 'percentage',
+        discountValue: settings.referralDiscountPercent,
+        referrerId: referrer._id,
+        message: `${settings.referralDiscountPercent}% referral discount will be applied`
+      });
+    }
+
+    return res.json({ valid: false, message: 'Invalid code' });
+  } catch (error) {
+    console.error('Error validating code:', error);
+    res.status(500).json({ valid: false, message: 'Failed to validate code' });
+  }
 });
 
 export default router;

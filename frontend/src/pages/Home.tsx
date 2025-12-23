@@ -29,6 +29,14 @@ interface PurchasedItem extends Item {
   creditsAssigned?: number;
 }
 
+interface DiscountInfo {
+  valid: boolean;
+  discountType: 'percentage' | 'flat';
+  discountValue: number;
+  codeType: 'coupon' | 'referral';
+  message: string;
+}
+
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -37,6 +45,11 @@ export default function Home() {
   const [purchasedItems, setPurchasedItems] = useState<PurchasedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Discount code state per item
+  const [discountCodes, setDiscountCodes] = useState<Record<string, string>>({});
+  const [discountInfo, setDiscountInfo] = useState<Record<string, DiscountInfo | null>>({});
+  const [validatingCode, setValidatingCode] = useState<Record<string, boolean>>({});
 
   // Fetch available items
   useEffect(() => {
@@ -87,6 +100,81 @@ export default function Home() {
     fetchPurchasedItems();
   }, [isAuthenticated]);
 
+  // Validate discount code
+  const validateDiscountCode = async (itemId: string, itemType: string) => {
+    const code = discountCodes[itemId]?.trim();
+    if (!code) return;
+
+    setValidatingCode(prev => ({ ...prev, [itemId]: true }));
+    setDiscountInfo(prev => ({ ...prev, [itemId]: null }));
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/payment/validate-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ code, itemType })
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.valid) {
+        setDiscountInfo(prev => ({
+          ...prev,
+          [itemId]: {
+            valid: true,
+            discountType: data.discountType,
+            discountValue: data.discountValue,
+            codeType: data.codeType,
+            message: data.message
+          }
+        }));
+      } else {
+        setDiscountInfo(prev => ({
+          ...prev,
+          [itemId]: {
+            valid: false,
+            discountType: 'percentage',
+            discountValue: 0,
+            codeType: 'coupon',
+            message: data.message || 'Invalid code'
+          }
+        }));
+      }
+    } catch (err) {
+      setDiscountInfo(prev => ({
+        ...prev,
+        [itemId]: {
+          valid: false,
+          discountType: 'percentage',
+          discountValue: 0,
+          codeType: 'coupon',
+          message: 'Failed to validate code'
+        }
+      }));
+    } finally {
+      setValidatingCode(prev => ({ ...prev, [itemId]: false }));
+    }
+  };
+
+  // Calculate discounted price
+  const getDiscountedPrice = (item: Item): number => {
+    const info = discountInfo[item._id];
+    if (!info || !info.valid) return item.price;
+
+    if (info.discountType === 'percentage') {
+      return Math.round(item.price * (1 - info.discountValue / 100));
+    } else {
+      return Math.max(0, item.price - info.discountValue);
+    }
+  };
+
+  // Clear discount code
+  const clearDiscountCode = (itemId: string) => {
+    setDiscountCodes(prev => ({ ...prev, [itemId]: '' }));
+    setDiscountInfo(prev => ({ ...prev, [itemId]: null }));
+  };
+
   const handlePurchase = async (item: Item) => {
     try {
       // Get Razorpay key
@@ -95,12 +183,19 @@ export default function Home() {
       });
       const { key } = await keyResponse.json();
 
+      // Get discount code if validated
+      const validDiscount = discountInfo[item._id]?.valid ? discountCodes[item._id]?.trim() : undefined;
+
       // Create order
       const orderResponse = await fetch(`${API_BASE_URL}/api/payment/create-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ itemId: item._id, quantity: 1 })
+        body: JSON.stringify({
+          itemId: item._id,
+          quantity: 1,
+          discountCode: validDiscount
+        })
       });
 
       if (!orderResponse.ok) {
@@ -130,7 +225,8 @@ export default function Home() {
                 razorpay_payment_id: response.razorpay_payment_id,
                 razorpay_signature: response.razorpay_signature,
                 itemId: item._id,
-                quantity: 1
+                quantity: 1,
+                discountCode: validDiscount
               })
             });
 
@@ -299,42 +395,94 @@ export default function Home() {
               {activeTab === 'available' && (
                 <div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-                    {availableItems.map((item) => (
-                      <div key={item._id} className="bg-white/5 border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-6 hover:bg-white/10 transition-all duration-300">
-                        <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-3 md:mb-4 gap-2">
-                          <span className={`px-2 py-1 md:px-3 md:py-1 rounded-full text-xs font-medium border self-start ${getTypeColor(item.type)}`}>
-                            {item.type.toUpperCase()}
-                          </span>
-                          <span className="text-xl md:text-2xl font-bold text-white">₹{item.price}</span>
-                        </div>
+                    {availableItems.map((item) => {
+                      const hasValidDiscount = discountInfo[item._id]?.valid;
+                      const discountedPrice = getDiscountedPrice(item);
+                      const discount = discountInfo[item._id];
 
-                        <h3 className="text-lg md:text-xl font-bold text-white mb-2 md:mb-3 leading-tight">{item.title}</h3>
-                        <p className="text-white/70 mb-3 md:mb-4 leading-relaxed text-sm md:text-base line-clamp-3">{item.description}</p>
+                      return (
+                        <div key={item._id} className="bg-white/5 border border-white/10 rounded-xl md:rounded-2xl p-4 md:p-6 hover:bg-white/10 transition-all duration-300">
+                          <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-3 md:mb-4 gap-2">
+                            <span className={`px-2 py-1 md:px-3 md:py-1 rounded-full text-xs font-medium border self-start ${getTypeColor(item.type)}`}>
+                              {item.type.toUpperCase()}
+                            </span>
+                            <div className="text-right">
+                              {hasValidDiscount ? (
+                                <>
+                                  <span className="text-sm text-white/50 line-through mr-2">₹{item.price}</span>
+                                  <span className="text-xl md:text-2xl font-bold text-green-400">₹{discountedPrice}</span>
+                                </>
+                              ) : (
+                                <span className="text-xl md:text-2xl font-bold text-white">₹{item.price}</span>
+                              )}
+                            </div>
+                          </div>
 
-                        <div className="flex flex-col gap-2 md:gap-4 mb-4 md:mb-6 text-xs md:text-sm text-white/60">
-                          {item.duration && (
-                            <div className="flex items-center gap-1">
-                              <svg className="w-3 h-3 md:w-4 md:h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                              </svg>
-                              <span className="truncate">{item.duration}</span>
+                          <h3 className="text-lg md:text-xl font-bold text-white mb-2 md:mb-3 leading-tight">{item.title}</h3>
+                          <p className="text-white/70 mb-3 md:mb-4 leading-relaxed text-sm md:text-base line-clamp-3">{item.description}</p>
+
+                          <div className="flex flex-col gap-2 md:gap-4 mb-4 text-xs md:text-sm text-white/60">
+                            {item.duration && (
+                              <div className="flex items-center gap-1">
+                                <svg className="w-3 h-3 md:w-4 md:h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <span className="truncate">{item.duration}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Discount Code Input */}
+                          {!isItemPurchased(item) && (
+                            <div className="mb-4">
+                              <div className="flex gap-2">
+                                <input
+                                  type="text"
+                                  placeholder="Coupon or referral code"
+                                  value={discountCodes[item._id] || ''}
+                                  onChange={(e) => setDiscountCodes(prev => ({ ...prev, [item._id]: e.target.value.toUpperCase() }))}
+                                  className="flex-1 px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white text-sm placeholder:text-white/40 focus:outline-none focus:border-white/40"
+                                />
+                                {hasValidDiscount ? (
+                                  <button
+                                    onClick={() => clearDiscountCode(item._id)}
+                                    className="px-3 py-2 bg-red-500/20 text-red-400 border border-red-500/30 rounded-lg text-sm font-medium hover:bg-red-500/30"
+                                  >
+                                    Clear
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => validateDiscountCode(item._id, item.type)}
+                                    disabled={!discountCodes[item._id]?.trim() || validatingCode[item._id]}
+                                    className="px-3 py-2 bg-white/10 text-white border border-white/20 rounded-lg text-sm font-medium hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                                  >
+                                    {validatingCode[item._id] ? '...' : 'Apply'}
+                                  </button>
+                                )}
+                              </div>
+                              {/* Discount message */}
+                              {discount && (
+                                <p className={`mt-2 text-xs ${discount.valid ? 'text-green-400' : 'text-red-400'}`}>
+                                  {discount.message}
+                                </p>
+                              )}
                             </div>
                           )}
-                        </div>
 
-                        <button
-                          onClick={() => handlePurchase(item)}
-                          disabled={isItemPurchased(item)}
-                          className={`w-full py-2.5 md:py-3 rounded-lg font-medium transition-colors duration-300 text-sm md:text-base ${
-                            isItemPurchased(item)
-                              ? 'bg-gray-500/50 text-gray-400 cursor-not-allowed'
-                              : 'bg-white text-black hover:bg-white/90'
-                          }`}
-                        >
-                          {isItemPurchased(item) ? 'Already Purchased' : 'Purchase Now'}
-                        </button>
-                      </div>
-                    ))}
+                          <button
+                            onClick={() => handlePurchase(item)}
+                            disabled={isItemPurchased(item)}
+                            className={`w-full py-2.5 md:py-3 rounded-lg font-medium transition-colors duration-300 text-sm md:text-base ${
+                              isItemPurchased(item)
+                                ? 'bg-gray-500/50 text-gray-400 cursor-not-allowed'
+                                : 'bg-white text-black hover:bg-white/90'
+                            }`}
+                          >
+                            {isItemPurchased(item) ? 'Already Purchased' : 'Purchase Now'}
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               )}

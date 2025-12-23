@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
-type Tab = 'stats' | 'users' | 'items' | 'purchases' | 'results' | 'questions' | 'testQuestions' | 'admins';
+type Tab = 'stats' | 'users' | 'items' | 'purchases' | 'results' | 'questions' | 'testQuestions' | 'admins' | 'coupons' | 'referrals';
 
 interface User {
   _id: string;
@@ -109,6 +109,38 @@ interface TestResult {
   createdAt: string;
 }
 
+interface Coupon {
+  _id: string;
+  code: string;
+  discountType: 'percentage' | 'flat';
+  discountValue: number;
+  applicableTypes: ('interview' | 'test' | 'course')[];
+  maxUses: number;
+  currentUses: number;
+  expiryDate?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+interface ReferralRecord {
+  _id: string;
+  referrerId: { _id: string; email: string; firstName?: string; lastName?: string };
+  referredUserId: { _id: string; email: string; firstName?: string; lastName?: string };
+  status: 'pending' | 'successful' | 'failed';
+  rewardAmount: number;
+  rewardStatus: 'pending' | 'earned' | 'paid';
+  createdAt: string;
+  completedAt?: string;
+}
+
+interface ReferralSettings {
+  _id?: string;
+  referralDiscountPercent: number;
+  referralRewardAmount: number;
+  minScoreForReward: number;
+  isActive: boolean;
+}
+
 export default function Admin() {
   const [tab, setTab] = useState<Tab>('stats');
   const [stats, setStats] = useState<Stats | null>(null);
@@ -121,6 +153,14 @@ export default function Admin() {
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [admins, setAdmins] = useState<{ _id: string; email: string; firstName?: string; lastName?: string; profilePicture?: string; createdAt: string }[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [referrals, setReferrals] = useState<ReferralRecord[]>([]);
+  const [referralSettings, setReferralSettings] = useState<ReferralSettings>({
+    referralDiscountPercent: 10,
+    referralRewardAmount: 50,
+    minScoreForReward: 50,
+    isActive: true
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -181,6 +221,17 @@ export default function Admin() {
 
   // Results sub-tab state
   const [resultsSubTab, setResultsSubTab] = useState<'interviews' | 'tests'>('interviews');
+
+  // Coupon form state
+  const [newCoupon, setNewCoupon] = useState({
+    code: '',
+    discountType: 'percentage' as 'percentage' | 'flat',
+    discountValue: '' as string | number,
+    applicableTypes: [] as ('interview' | 'test' | 'course')[],
+    maxUses: '' as string | number,
+    expiryDate: ''
+  });
+  const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null);
 
 
   const fetchData = async (endpoint: string) => {
@@ -254,6 +305,18 @@ export default function Admin() {
       case 'admins':
         const adminsData = await fetchData('admins');
         if (adminsData) setAdmins(adminsData);
+        break;
+      case 'coupons':
+        const couponsData = await fetchData('coupons');
+        if (couponsData) setCoupons(couponsData);
+        break;
+      case 'referrals':
+        const [referralsData, refSettingsData] = await Promise.all([
+          fetchData('referrals'),
+          fetchData('referral-settings')
+        ]);
+        if (referralsData) setReferrals(referralsData);
+        if (refSettingsData) setReferralSettings(refSettingsData);
         break;
     }
   };
@@ -602,6 +665,8 @@ export default function Admin() {
     { key: 'results', label: 'Results' },
     { key: 'questions', label: 'Interview Questions' },
     { key: 'testQuestions', label: 'Test Questions' },
+    { key: 'coupons', label: 'Coupons' },
+    { key: 'referrals', label: 'Referrals' },
     { key: 'admins', label: 'Admins' }
   ];
 
@@ -1927,6 +1992,419 @@ export default function Admin() {
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Coupons Tab */}
+      {tab === 'coupons' && (
+        <div>
+          {/* Create/Edit Coupon Form */}
+          <div className="bg-zinc-900 p-4 rounded mb-6">
+            <h3 className="text-lg font-semibold mb-4">
+              {editingCoupon ? 'Edit Coupon' : 'Create New Coupon'}
+            </h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-white/60 text-xs mb-1">Code</label>
+                <input
+                  type="text"
+                  placeholder="SAVE20"
+                  value={editingCoupon ? editingCoupon.code : newCoupon.code}
+                  onChange={e => editingCoupon
+                    ? setEditingCoupon({ ...editingCoupon, code: e.target.value.toUpperCase() })
+                    : setNewCoupon({ ...newCoupon, code: e.target.value.toUpperCase() })
+                  }
+                  className="bg-zinc-800 p-2 rounded w-full uppercase"
+                />
+              </div>
+              <div>
+                <label className="block text-white/60 text-xs mb-1">Discount Type</label>
+                <select
+                  value={editingCoupon ? editingCoupon.discountType : newCoupon.discountType}
+                  onChange={e => editingCoupon
+                    ? setEditingCoupon({ ...editingCoupon, discountType: e.target.value as 'percentage' | 'flat' })
+                    : setNewCoupon({ ...newCoupon, discountType: e.target.value as 'percentage' | 'flat' })
+                  }
+                  className="bg-zinc-800 p-2 rounded w-full"
+                >
+                  <option value="percentage">Percentage (%)</option>
+                  <option value="flat">Flat (₹)</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-white/60 text-xs mb-1">Discount Value</label>
+                <input
+                  type="number"
+                  placeholder={editingCoupon?.discountType === 'percentage' || newCoupon.discountType === 'percentage' ? '10' : '100'}
+                  value={editingCoupon ? editingCoupon.discountValue : newCoupon.discountValue}
+                  onChange={e => editingCoupon
+                    ? setEditingCoupon({ ...editingCoupon, discountValue: Number(e.target.value) })
+                    : setNewCoupon({ ...newCoupon, discountValue: e.target.value })
+                  }
+                  className="bg-zinc-800 p-2 rounded w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-white/60 text-xs mb-1">Max Uses (0 = unlimited)</label>
+                <input
+                  type="number"
+                  placeholder="0"
+                  value={editingCoupon ? editingCoupon.maxUses : newCoupon.maxUses}
+                  onChange={e => editingCoupon
+                    ? setEditingCoupon({ ...editingCoupon, maxUses: Number(e.target.value) })
+                    : setNewCoupon({ ...newCoupon, maxUses: e.target.value })
+                  }
+                  className="bg-zinc-800 p-2 rounded w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-white/60 text-xs mb-1">Expiry Date (optional)</label>
+                <input
+                  type="date"
+                  value={editingCoupon ? (editingCoupon.expiryDate ? new Date(editingCoupon.expiryDate).toISOString().split('T')[0] : '') : newCoupon.expiryDate}
+                  onChange={e => editingCoupon
+                    ? setEditingCoupon({ ...editingCoupon, expiryDate: e.target.value })
+                    : setNewCoupon({ ...newCoupon, expiryDate: e.target.value })
+                  }
+                  className="bg-zinc-800 p-2 rounded w-full"
+                />
+              </div>
+              <div className="col-span-2 md:col-span-1">
+                <label className="block text-white/60 text-xs mb-1">Applicable To</label>
+                <div className="flex gap-3">
+                  {(['interview', 'test', 'course'] as const).map(type => (
+                    <label key={type} className="flex items-center gap-1 text-sm">
+                      <input
+                        type="checkbox"
+                        checked={editingCoupon
+                          ? editingCoupon.applicableTypes.includes(type)
+                          : newCoupon.applicableTypes.includes(type)
+                        }
+                        onChange={e => {
+                          const types = editingCoupon ? [...editingCoupon.applicableTypes] : [...newCoupon.applicableTypes];
+                          if (e.target.checked) {
+                            types.push(type);
+                          } else {
+                            const idx = types.indexOf(type);
+                            if (idx > -1) types.splice(idx, 1);
+                          }
+                          editingCoupon
+                            ? setEditingCoupon({ ...editingCoupon, applicableTypes: types })
+                            : setNewCoupon({ ...newCoupon, applicableTypes: types });
+                        }}
+                        className="rounded"
+                      />
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={async () => {
+                  const couponData = editingCoupon || newCoupon;
+                  if (!couponData.code || couponData.discountValue === '' || (Array.isArray(couponData.applicableTypes) && couponData.applicableTypes.length === 0)) {
+                    setError('Please fill in code, discount value, and select applicable types');
+                    return;
+                  }
+                  try {
+                    const url = editingCoupon
+                      ? `${API_BASE_URL}/api/admin/coupons/${editingCoupon._id}`
+                      : `${API_BASE_URL}/api/admin/coupons`;
+                    const res = await fetch(url, {
+                      method: editingCoupon ? 'PUT' : 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      credentials: 'include',
+                      body: JSON.stringify({
+                        code: couponData.code,
+                        discountType: couponData.discountType,
+                        discountValue: Number(couponData.discountValue),
+                        applicableTypes: couponData.applicableTypes,
+                        maxUses: Number(couponData.maxUses) || 0,
+                        expiryDate: couponData.expiryDate || undefined
+                      })
+                    });
+                    if (!res.ok) {
+                      const data = await res.json();
+                      setError(data.error || 'Failed to save coupon');
+                      return;
+                    }
+                    setNewCoupon({ code: '', discountType: 'percentage', discountValue: '', applicableTypes: [], maxUses: '', expiryDate: '' });
+                    setEditingCoupon(null);
+                    const couponsData = await fetchData('coupons');
+                    if (couponsData) setCoupons(couponsData);
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : 'Failed to save coupon');
+                  }
+                }}
+                className="px-4 py-2 bg-white text-black rounded hover:bg-white/90"
+              >
+                {editingCoupon ? 'Update Coupon' : 'Create Coupon'}
+              </button>
+              {editingCoupon && (
+                <button
+                  onClick={() => {
+                    setEditingCoupon(null);
+                    setNewCoupon({ code: '', discountType: 'percentage', discountValue: '', applicableTypes: [], maxUses: '', expiryDate: '' });
+                  }}
+                  className="px-4 py-2 bg-zinc-700 rounded hover:bg-zinc-600"
+                >
+                  Cancel
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Coupons List */}
+          <div className="bg-zinc-900 p-4 rounded">
+            <h3 className="text-lg font-semibold mb-4">Coupons ({coupons.length})</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-zinc-800">
+                  <tr>
+                    <th className="p-3">Code</th>
+                    <th className="p-3">Discount</th>
+                    <th className="p-3">Applicable To</th>
+                    <th className="p-3">Uses</th>
+                    <th className="p-3">Expiry</th>
+                    <th className="p-3">Status</th>
+                    <th className="p-3">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {coupons.map(coupon => (
+                    <tr key={coupon._id} className="border-b border-zinc-800">
+                      <td className="p-3 font-mono">{coupon.code}</td>
+                      <td className="p-3">
+                        {coupon.discountType === 'percentage' ? `${coupon.discountValue}%` : `₹${coupon.discountValue}`}
+                      </td>
+                      <td className="p-3">
+                        <div className="flex gap-1 flex-wrap">
+                          {coupon.applicableTypes.map(type => (
+                            <span key={type} className="px-2 py-0.5 bg-zinc-700 rounded text-xs">{type}</span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        {coupon.currentUses}/{coupon.maxUses === 0 ? '∞' : coupon.maxUses}
+                      </td>
+                      <td className="p-3">
+                        {coupon.expiryDate ? new Date(coupon.expiryDate).toLocaleDateString() : 'Never'}
+                      </td>
+                      <td className="p-3">
+                        <span className={`px-2 py-1 rounded text-xs ${coupon.isActive ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                          {coupon.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setEditingCoupon(coupon)}
+                            className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded hover:bg-blue-500/30 text-sm"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={async () => {
+                              try {
+                                await fetch(`${API_BASE_URL}/api/admin/coupons/${coupon._id}/toggle`, {
+                                  method: 'PATCH',
+                                  credentials: 'include'
+                                });
+                                const couponsData = await fetchData('coupons');
+                                if (couponsData) setCoupons(couponsData);
+                              } catch (err) {
+                                setError('Failed to toggle coupon');
+                              }
+                            }}
+                            className={`px-2 py-1 rounded text-sm ${coupon.isActive ? 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30' : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'}`}
+                          >
+                            {coupon.isActive ? 'Disable' : 'Enable'}
+                          </button>
+                          <button
+                            onClick={async () => {
+                              if (!confirm(`Delete coupon ${coupon.code}?`)) return;
+                              try {
+                                await fetch(`${API_BASE_URL}/api/admin/coupons/${coupon._id}`, {
+                                  method: 'DELETE',
+                                  credentials: 'include'
+                                });
+                                const couponsData = await fetchData('coupons');
+                                if (couponsData) setCoupons(couponsData);
+                              } catch (err) {
+                                setError('Failed to delete coupon');
+                              }
+                            }}
+                            className="px-2 py-1 bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 text-sm"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Referrals Tab */}
+      {tab === 'referrals' && (
+        <div>
+          {/* Referral Settings */}
+          <div className="bg-zinc-900 p-4 rounded mb-6">
+            <h3 className="text-lg font-semibold mb-4">Referral Settings</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-white/60 text-xs mb-1">Discount for Referred User (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={referralSettings.referralDiscountPercent}
+                  onChange={e => setReferralSettings({ ...referralSettings, referralDiscountPercent: Number(e.target.value) })}
+                  className="bg-zinc-800 p-2 rounded w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-white/60 text-xs mb-1">Reward Amount (₹)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={referralSettings.referralRewardAmount}
+                  onChange={e => setReferralSettings({ ...referralSettings, referralRewardAmount: Number(e.target.value) })}
+                  className="bg-zinc-800 p-2 rounded w-full"
+                />
+              </div>
+              <div>
+                <label className="block text-white/60 text-xs mb-1">Min Score for Reward (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={referralSettings.minScoreForReward}
+                  onChange={e => setReferralSettings({ ...referralSettings, minScoreForReward: Number(e.target.value) })}
+                  className="bg-zinc-800 p-2 rounded w-full"
+                />
+              </div>
+              <div className="flex items-end gap-4">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={referralSettings.isActive}
+                    onChange={e => setReferralSettings({ ...referralSettings, isActive: e.target.checked })}
+                    className="rounded"
+                  />
+                  <span className="text-sm">Enabled</span>
+                </label>
+                <button
+                  onClick={async () => {
+                    try {
+                      const res = await fetch(`${API_BASE_URL}/api/admin/referral-settings`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify(referralSettings)
+                      });
+                      if (!res.ok) {
+                        setError('Failed to save settings');
+                        return;
+                      }
+                      const data = await res.json();
+                      setReferralSettings(data);
+                    } catch (err) {
+                      setError('Failed to save settings');
+                    }
+                  }}
+                  className="px-4 py-2 bg-white text-black rounded hover:bg-white/90"
+                >
+                  Save Settings
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Referrals List */}
+          <div className="bg-zinc-900 p-4 rounded">
+            <h3 className="text-lg font-semibold mb-4">Referrals ({referrals.length})</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead className="bg-zinc-800">
+                  <tr>
+                    <th className="p-3">Referrer</th>
+                    <th className="p-3">Referred User</th>
+                    <th className="p-3">Status</th>
+                    <th className="p-3">Reward</th>
+                    <th className="p-3">Payment</th>
+                    <th className="p-3">Date</th>
+                    <th className="p-3">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {referrals.map(ref => (
+                    <tr key={ref._id} className="border-b border-zinc-800">
+                      <td className="p-3">
+                        <div>
+                          <div className="text-sm">{ref.referrerId?.email}</div>
+                          <div className="text-xs text-white/50">{ref.referrerId?.firstName} {ref.referrerId?.lastName}</div>
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <div>
+                          <div className="text-sm">{ref.referredUserId?.email}</div>
+                          <div className="text-xs text-white/50">{ref.referredUserId?.firstName} {ref.referredUserId?.lastName}</div>
+                        </div>
+                      </td>
+                      <td className="p-3">
+                        <span className={`px-2 py-1 rounded text-xs ${
+                          ref.status === 'successful' ? 'bg-green-500/20 text-green-400' :
+                          ref.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                          'bg-red-500/20 text-red-400'
+                        }`}>
+                          {ref.status}
+                        </span>
+                      </td>
+                      <td className="p-3">₹{ref.rewardAmount}</td>
+                      <td className="p-3">
+                        <span className={`px-2 py-1 rounded text-xs ${
+                          ref.rewardStatus === 'paid' ? 'bg-green-500/20 text-green-400' :
+                          ref.rewardStatus === 'earned' ? 'bg-blue-500/20 text-blue-400' :
+                          'bg-zinc-700 text-white/60'
+                        }`}>
+                          {ref.rewardStatus}
+                        </span>
+                      </td>
+                      <td className="p-3">{new Date(ref.createdAt).toLocaleDateString()}</td>
+                      <td className="p-3">
+                        {ref.status === 'successful' && ref.rewardStatus === 'earned' && (
+                          <button
+                            onClick={async () => {
+                              try {
+                                await fetch(`${API_BASE_URL}/api/admin/referrals/${ref._id}/mark-paid`, {
+                                  method: 'PATCH',
+                                  credentials: 'include'
+                                });
+                                const referralsData = await fetchData('referrals');
+                                if (referralsData) setReferrals(referralsData);
+                              } catch (err) {
+                                setError('Failed to mark as paid');
+                              }
+                            }}
+                            className="px-2 py-1 bg-green-500/20 text-green-400 rounded hover:bg-green-500/30 text-sm"
+                          >
+                            Mark Paid
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

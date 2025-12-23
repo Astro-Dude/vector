@@ -1,4 +1,5 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Types } from 'mongoose';
+import crypto from 'crypto';
 
 export interface IUser extends Document {
   googleId: string;
@@ -8,6 +9,9 @@ export interface IUser extends Document {
   phone?: string;
   profilePicture?: string;
   isAdmin: boolean;
+  referralCode: string;
+  referredBy?: Types.ObjectId;
+  totalReferralEarnings: number;
   createdAt: Date;
   lastLogin: Date;
 }
@@ -34,6 +38,19 @@ const userSchema = new Schema<IUser>({
     type: Boolean,
     default: false
   },
+  referralCode: {
+    type: String,
+    unique: true,
+    sparse: true
+  },
+  referredBy: {
+    type: Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  totalReferralEarnings: {
+    type: Number,
+    default: 0
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -44,9 +61,28 @@ const userSchema = new Schema<IUser>({
   }
 });
 
-// Update lastLogin on save
-userSchema.pre<IUser>('save', function(next) {
+// Generate unique referral code
+function generateReferralCode(): string {
+  return crypto.randomBytes(4).toString('hex').toUpperCase();
+}
+
+// Update lastLogin and generate referral code on save
+userSchema.pre<IUser>('save', async function(next) {
   this.lastLogin = new Date();
+
+  // Generate referral code if not present
+  if (!this.referralCode) {
+    let code = generateReferralCode();
+    // Ensure uniqueness
+    const User = mongoose.model('User');
+    let exists = await User.findOne({ referralCode: code });
+    while (exists) {
+      code = generateReferralCode();
+      exists = await User.findOne({ referralCode: code });
+    }
+    this.referralCode = code;
+  }
+
   next();
 });
 

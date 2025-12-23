@@ -3,6 +3,7 @@ import passport from 'passport';
 import User from '../models/User.js';
 import Item from '../models/Item.js';
 import Purchase from '../models/Purchase.js';
+import Referral from '../models/Referral.js';
 
 const router = express.Router();
 
@@ -428,6 +429,68 @@ router.post('/purchase/:itemId', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error processing purchase:', error);
     res.status(500).json({ message: 'Failed to process purchase' });
+  }
+});
+
+// Get user's referral code and stats
+router.get('/referral', async (req: Request, res: Response) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ message: 'Not authenticated' });
+  }
+
+  try {
+    const userId = (req.user as any)._id;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Get all referrals where this user is the referrer
+    const referrals = await Referral.find({ referrerId: userId })
+      .populate('referredUserId', 'email firstName lastName')
+      .sort({ createdAt: -1 });
+
+    // Format referrals for frontend
+    const formattedReferrals = referrals.map(ref => {
+      const referred = ref.referredUserId as any;
+      // Mask email for privacy
+      const email = referred?.email || '';
+      const maskedEmail = email.length > 3
+        ? email[0] + '*'.repeat(Math.min(email.indexOf('@') - 1, 5)) + email.slice(email.indexOf('@'))
+        : email;
+
+      return {
+        id: ref._id,
+        referredEmail: maskedEmail,
+        referredName: referred?.firstName || 'User',
+        status: ref.status,
+        rewardAmount: ref.rewardAmount,
+        rewardStatus: ref.rewardStatus,
+        createdAt: ref.createdAt,
+        completedAt: ref.completedAt
+      };
+    });
+
+    // Calculate stats
+    const successfulReferrals = referrals.filter(r => r.status === 'successful').length;
+    const pendingReferrals = referrals.filter(r => r.status === 'pending').length;
+    const totalEarned = user.totalReferralEarnings || 0;
+    const pendingEarnings = referrals
+      .filter(r => r.rewardStatus === 'earned')
+      .reduce((sum, r) => sum + r.rewardAmount, 0);
+
+    res.json({
+      referralCode: user.referralCode,
+      totalEarnings: totalEarned,
+      pendingEarnings,
+      successfulReferrals,
+      pendingReferrals,
+      referrals: formattedReferrals
+    });
+  } catch (error) {
+    console.error('Error fetching referral data:', error);
+    res.status(500).json({ message: 'Failed to fetch referral data' });
   }
 });
 

@@ -12,6 +12,13 @@ export interface IPurchase extends Document {
   creditsUsed: number;    // Credits consumed
   creditsAssigned: number; // Credits assigned by admin (free)
   // Total available = credits + creditsAssigned - creditsUsed
+  // Discount tracking fields
+  originalAmount: number;
+  discountAmount: number;
+  discountType?: 'coupon' | 'referral';
+  discountCode?: string;
+  couponId?: mongoose.Types.ObjectId;
+  referralId?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -59,6 +66,32 @@ const purchaseSchema = new Schema<IPurchase>({
     type: Number,
     default: 0,
     min: 0
+  },
+  // Discount tracking
+  originalAmount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  discountAmount: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  discountType: {
+    type: String,
+    enum: ['coupon', 'referral']
+  },
+  discountCode: {
+    type: String
+  },
+  couponId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Coupon'
+  },
+  referralId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Referral'
   }
 }, {
   timestamps: true

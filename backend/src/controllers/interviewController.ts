@@ -9,6 +9,9 @@ import InterviewQuestion, { IInterviewQuestion } from '../models/InterviewQuesti
 import InterviewResult from '../models/InterviewResult.js';
 import Purchase from '../models/Purchase.js';
 import Item from '../models/Item.js';
+import User from '../models/User.js';
+import Referral from '../models/Referral.js';
+import ReferralSettings from '../models/ReferralSettings.js';
 import { storeMemory, recallMemory, getFormattedConversationContext } from '../services/vectorService.js';
 import {
   generateFeedback,
@@ -83,6 +86,53 @@ function resetQuestionState(): InterviewSession['currentQuestionState'] {
 }
 
 const activeSessions: Map<string, InterviewSession> = new Map();
+
+// Helper function to process referral completion
+async function processReferralCompletion(userId: string, finalScore: number, interviewResultId: string, isComplete: boolean): Promise<void> {
+  try {
+    // Find user and check if they were referred
+    const user = await User.findById(userId);
+    if (!user || !user.referredBy) return;
+
+    // Find pending referral for this user
+    const referral = await Referral.findOne({
+      referredUserId: userId,
+      status: 'pending'
+    });
+
+    if (!referral) return;
+
+    // Get referral settings
+    const settings = await ReferralSettings.findOne();
+    if (!settings) return;
+
+    const minScore = settings.minScoreForReward || 50;
+
+    // Update referral record
+    referral.interviewResultId = interviewResultId as any;
+    referral.completedAt = new Date();
+
+    // Successful referral: interview completed naturally AND score > minScore
+    if (isComplete && finalScore > minScore) {
+      referral.status = 'successful';
+      referral.rewardAmount = settings.referralRewardAmount;
+      referral.rewardStatus = 'earned';
+
+      // Update referrer's total earnings
+      await User.findByIdAndUpdate(user.referredBy, {
+        $inc: { totalReferralEarnings: settings.referralRewardAmount }
+      });
+    } else {
+      // Failed referral: either incomplete or score too low
+      referral.status = 'failed';
+      referral.rewardAmount = 0;
+    }
+
+    await referral.save();
+  } catch (error) {
+    console.error('Error processing referral completion:', error);
+  }
+}
 
 // Handle introduction phase answers
 async function handleIntroductionAnswer(
@@ -779,6 +829,14 @@ async function moveToNextQuestion(
 
     await interviewResult.save();
 
+    // Process referral completion (complete interview)
+    await processReferralCompletion(
+      session.userId,
+      typedReport.finalScore,
+      (interviewResult._id as any).toString(),
+      true // isComplete = true
+    );
+
     session.status = 'completed';
     activeSessions.delete(session.sessionId);
 
@@ -1296,6 +1354,15 @@ export async function endInterviewEarly(req: Request, res: Response): Promise<vo
     });
 
     await interviewResult.save();
+
+    // Process referral completion (incomplete = failed referral)
+    await processReferralCompletion(
+      session.userId,
+      adjustedFinalScore,
+      (interviewResult._id as any).toString(),
+      false // isComplete = false for early exit
+    );
+
     session.status = 'completed';
     activeSessions.delete(session.sessionId);
 

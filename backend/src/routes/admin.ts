@@ -6,6 +6,9 @@ import InterviewResult from '../models/InterviewResult.js';
 import InterviewQuestion from '../models/InterviewQuestion.js';
 import TestQuestion from '../models/TestQuestion.js';
 import TestResult from '../models/TestResult.js';
+import Coupon from '../models/Coupon.js';
+import Referral from '../models/Referral.js';
+import ReferralSettings from '../models/ReferralSettings.js';
 
 const router = Router();
 
@@ -833,6 +836,206 @@ router.delete('/admins/:id', async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error removing admin:', error);
     res.status(500).json({ error: 'Failed to remove admin' });
+  }
+});
+
+// ==================== COUPONS ====================
+
+// Get all coupons
+router.get('/coupons', async (_req: Request, res: Response) => {
+  try {
+    const coupons = await Coupon.find({}).sort({ createdAt: -1 }).lean();
+    res.json(coupons);
+  } catch (error) {
+    console.error('Error fetching coupons:', error);
+    res.status(500).json({ error: 'Failed to fetch coupons' });
+  }
+});
+
+// Create coupon
+router.post('/coupons', async (req: Request, res: Response) => {
+  try {
+    const { code, discountType, discountValue, applicableTypes, maxUses, expiryDate } = req.body;
+
+    if (!code || !discountType || discountValue === undefined || !applicableTypes?.length) {
+      res.status(400).json({ error: 'Code, discount type, discount value, and applicable types are required' });
+      return;
+    }
+
+    // Check if code already exists
+    const existing = await Coupon.findOne({ code: code.toUpperCase() });
+    if (existing) {
+      res.status(400).json({ error: 'Coupon code already exists' });
+      return;
+    }
+
+    const coupon = new Coupon({
+      code: code.toUpperCase(),
+      discountType,
+      discountValue,
+      applicableTypes,
+      maxUses: maxUses || 0,
+      expiryDate: expiryDate || undefined
+    });
+
+    await coupon.save();
+    res.status(201).json(coupon);
+  } catch (error) {
+    console.error('Error creating coupon:', error);
+    res.status(500).json({ error: 'Failed to create coupon' });
+  }
+});
+
+// Update coupon
+router.put('/coupons/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { code, discountType, discountValue, applicableTypes, maxUses, expiryDate } = req.body;
+
+    const coupon = await Coupon.findById(id);
+    if (!coupon) {
+      res.status(404).json({ error: 'Coupon not found' });
+      return;
+    }
+
+    // Check if new code already exists (if code is being changed)
+    if (code && code.toUpperCase() !== coupon.code) {
+      const existing = await Coupon.findOne({ code: code.toUpperCase() });
+      if (existing) {
+        res.status(400).json({ error: 'Coupon code already exists' });
+        return;
+      }
+      coupon.code = code.toUpperCase();
+    }
+
+    if (discountType) coupon.discountType = discountType;
+    if (discountValue !== undefined) coupon.discountValue = discountValue;
+    if (applicableTypes) coupon.applicableTypes = applicableTypes;
+    if (maxUses !== undefined) coupon.maxUses = maxUses;
+    if (expiryDate !== undefined) coupon.expiryDate = expiryDate || undefined;
+
+    await coupon.save();
+    res.json(coupon);
+  } catch (error) {
+    console.error('Error updating coupon:', error);
+    res.status(500).json({ error: 'Failed to update coupon' });
+  }
+});
+
+// Delete coupon
+router.delete('/coupons/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const coupon = await Coupon.findByIdAndDelete(id);
+    if (!coupon) {
+      res.status(404).json({ error: 'Coupon not found' });
+      return;
+    }
+    res.json({ message: 'Coupon deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting coupon:', error);
+    res.status(500).json({ error: 'Failed to delete coupon' });
+  }
+});
+
+// Toggle coupon active status
+router.patch('/coupons/:id/toggle', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const coupon = await Coupon.findById(id);
+    if (!coupon) {
+      res.status(404).json({ error: 'Coupon not found' });
+      return;
+    }
+    coupon.isActive = !coupon.isActive;
+    await coupon.save();
+    res.json(coupon);
+  } catch (error) {
+    console.error('Error toggling coupon:', error);
+    res.status(500).json({ error: 'Failed to toggle coupon' });
+  }
+});
+
+// ==================== REFERRAL SETTINGS ====================
+
+// Get referral settings
+router.get('/referral-settings', async (_req: Request, res: Response) => {
+  try {
+    let settings = await ReferralSettings.findOne();
+    if (!settings) {
+      settings = await ReferralSettings.create({
+        referralDiscountPercent: 10,
+        referralRewardAmount: 50,
+        minScoreForReward: 50,
+        isActive: true
+      });
+    }
+    res.json(settings);
+  } catch (error) {
+    console.error('Error fetching referral settings:', error);
+    res.status(500).json({ error: 'Failed to fetch referral settings' });
+  }
+});
+
+// Update referral settings
+router.put('/referral-settings', async (req: Request, res: Response) => {
+  try {
+    const { referralDiscountPercent, referralRewardAmount, minScoreForReward, isActive } = req.body;
+
+    let settings = await ReferralSettings.findOne();
+    if (!settings) {
+      settings = new ReferralSettings({});
+    }
+
+    if (referralDiscountPercent !== undefined) settings.referralDiscountPercent = referralDiscountPercent;
+    if (referralRewardAmount !== undefined) settings.referralRewardAmount = referralRewardAmount;
+    if (minScoreForReward !== undefined) settings.minScoreForReward = minScoreForReward;
+    if (isActive !== undefined) settings.isActive = isActive;
+
+    await settings.save();
+    res.json(settings);
+  } catch (error) {
+    console.error('Error updating referral settings:', error);
+    res.status(500).json({ error: 'Failed to update referral settings' });
+  }
+});
+
+// ==================== REFERRALS ====================
+
+// Get all referrals
+router.get('/referrals', async (_req: Request, res: Response) => {
+  try {
+    const referrals = await Referral.find({})
+      .populate('referrerId', 'email firstName lastName')
+      .populate('referredUserId', 'email firstName lastName')
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json(referrals);
+  } catch (error) {
+    console.error('Error fetching referrals:', error);
+    res.status(500).json({ error: 'Failed to fetch referrals' });
+  }
+});
+
+// Mark referral as paid
+router.patch('/referrals/:id/mark-paid', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const referral = await Referral.findById(id);
+    if (!referral) {
+      res.status(404).json({ error: 'Referral not found' });
+      return;
+    }
+    if (referral.status !== 'successful' || referral.rewardStatus !== 'earned') {
+      res.status(400).json({ error: 'Can only mark successful earned referrals as paid' });
+      return;
+    }
+    referral.rewardStatus = 'paid';
+    await referral.save();
+    res.json(referral);
+  } catch (error) {
+    console.error('Error marking referral as paid:', error);
+    res.status(500).json({ error: 'Failed to mark referral as paid' });
   }
 });
 
