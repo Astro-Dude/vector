@@ -30,9 +30,8 @@ interface Purchase {
   _id: string;
   user: { firstName?: string; lastName?: string; email: string };
   item: { title: string; price: number };
-  credits: number;
-  creditsUsed: number;
-  creditsAssigned: number;
+  quantity: number;
+  purchaseType: 'paid' | 'assigned';
   amount: number;
   status: string;
   createdAt: string;
@@ -153,6 +152,8 @@ export default function Admin() {
   const [testResults, setTestResults] = useState<TestResult[]>([]);
   const [admins, setAdmins] = useState<{ _id: string; email: string; firstName?: string; lastName?: string; profilePicture?: string; createdAt: string }[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState('');
+  const [emailSuggestions, setEmailSuggestions] = useState<{ _id: string; email: string; firstName?: string; lastName?: string }[]>([]);
+  const [showEmailSuggestions, setShowEmailSuggestions] = useState(false);
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [referrals, setReferrals] = useState<ReferralRecord[]>([]);
   const [referralSettings, setReferralSettings] = useState<ReferralSettings>({
@@ -1290,8 +1291,8 @@ export default function Admin() {
                 <tr>
                   <th className="p-3">User</th>
                   <th className="p-3">Item</th>
-                  <th className="p-3">Credits</th>
-                  <th className="p-3">Used</th>
+                  <th className="p-3">Qty</th>
+                  <th className="p-3">Type</th>
                   <th className="p-3">Amount</th>
                   <th className="p-3">Status</th>
                   <th className="p-3">Date</th>
@@ -1302,9 +1303,13 @@ export default function Admin() {
                   <tr key={p._id} className="border-b border-zinc-800">
                     <td className="p-3">{p.user?.email || 'N/A'}</td>
                     <td className="p-3">{p.item?.title || 'N/A'}</td>
-                    <td className="p-3">{p.credits + p.creditsAssigned}</td>
-                    <td className="p-3">{p.creditsUsed}</td>
-                    <td className="p-3">₹{p.amount}</td>
+                    <td className="p-3">{p.quantity}</td>
+                    <td className="p-3">
+                      <span className={`px-2 py-1 rounded text-xs ${p.purchaseType === 'paid' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'}`}>
+                        {p.purchaseType}
+                      </span>
+                    </td>
+                    <td className="p-3">{p.purchaseType === 'paid' ? `₹${p.amount}` : '-'}</td>
                     <td className="p-3">{p.status}</td>
                     <td className="p-3">{new Date(p.createdAt).toLocaleDateString()}</td>
                   </tr>
@@ -2416,13 +2421,60 @@ export default function Admin() {
           <div className="bg-zinc-900 p-4 rounded mb-6">
             <h3 className="text-lg font-semibold mb-4">Add New Admin</h3>
             <div className="flex gap-4">
-              <input
-                type="email"
-                placeholder="Enter user email..."
-                value={newAdminEmail}
-                onChange={e => setNewAdminEmail(e.target.value)}
-                className="flex-1 bg-zinc-800 p-2 rounded"
-              />
+              <div className="flex-1 relative">
+                <input
+                  type="email"
+                  placeholder="Enter user email..."
+                  value={newAdminEmail}
+                  onChange={async (e) => {
+                    const value = e.target.value;
+                    setNewAdminEmail(value);
+                    if (value.length >= 2) {
+                      try {
+                        const res = await fetch(`${API_BASE_URL}/api/admin/users/search?q=${encodeURIComponent(value)}`, {
+                          credentials: 'include'
+                        });
+                        if (res.ok) {
+                          const suggestions = await res.json();
+                          setEmailSuggestions(suggestions);
+                          setShowEmailSuggestions(suggestions.length > 0);
+                        }
+                      } catch (err) {
+                        console.error('Error fetching suggestions:', err);
+                      }
+                    } else {
+                      setShowEmailSuggestions(false);
+                    }
+                  }}
+                  onFocus={() => {
+                    if (emailSuggestions.length > 0) setShowEmailSuggestions(true);
+                  }}
+                  onBlur={() => {
+                    // Delay to allow click on suggestion
+                    setTimeout(() => setShowEmailSuggestions(false), 200);
+                  }}
+                  className="w-full bg-zinc-800 p-2 rounded"
+                />
+                {showEmailSuggestions && emailSuggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-zinc-800 border border-zinc-700 rounded shadow-lg z-10 max-h-48 overflow-y-auto">
+                    {emailSuggestions.map(user => (
+                      <div
+                        key={user._id}
+                        className="p-2 hover:bg-zinc-700 cursor-pointer"
+                        onClick={() => {
+                          setNewAdminEmail(user.email);
+                          setShowEmailSuggestions(false);
+                        }}
+                      >
+                        <div className="text-sm">{user.email}</div>
+                        {(user.firstName || user.lastName) && (
+                          <div className="text-xs text-white/60">{user.firstName} {user.lastName}</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 onClick={async () => {
                   if (!newAdminEmail.trim()) return;
@@ -2439,6 +2491,7 @@ export default function Admin() {
                       return;
                     }
                     setNewAdminEmail('');
+                    setEmailSuggestions([]);
                     // Refresh admins list
                     const adminsData = await fetch(`${API_BASE_URL}/api/admin/admins`, { credentials: 'include' }).then(r => r.json());
                     setAdmins(adminsData);

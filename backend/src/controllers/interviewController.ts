@@ -256,27 +256,34 @@ async function handleIntroductionAnswer(
 // Start a new interview session
 export async function startInterview(req: Request, res: Response): Promise<void> {
   try {
-    const user = req.user as { _id: string; firstName?: string; lastName?: string } | undefined;
+    const reqUser = req.user as { _id: string; firstName?: string; lastName?: string } | undefined;
 
-    if (!user) {
+    if (!reqUser) {
       res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
-    // Check if user has purchased AI Interview and has remaining interviews
+    // Get user from database to check interview credits
+    const user = await User.findById(reqUser._id);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // Check if user has any interview purchase (for access verification)
     const aiInterviewItem = await Item.findOne({ title: 'AI Interview', isActive: true });
     if (!aiInterviewItem) {
       res.status(404).json({ error: 'AI Interview product not found' });
       return;
     }
 
-    const purchase = await Purchase.findOne({
+    const hasPurchase = await Purchase.exists({
       user: user._id,
       item: aiInterviewItem._id,
       status: 'active'
     });
 
-    if (!purchase) {
+    if (!hasPurchase && user.interviewCredits === 0) {
       res.status(403).json({
         error: 'No active AI Interview purchase found',
         message: 'Please purchase an AI Interview to continue'
@@ -284,28 +291,20 @@ export async function startInterview(req: Request, res: Response): Promise<void>
       return;
     }
 
-    // Migrate old fields if they exist (one-time migration)
-    const oldPurchase = purchase as any;
-    if (oldPurchase.interviewsPurchased !== undefined && purchase.credits === 0) {
-      purchase.credits = oldPurchase.interviewsPurchased || 0;
-      purchase.creditsUsed = oldPurchase.interviewsUsed || 0;
-      await purchase.save();
-    }
-
     // Check if user has remaining credits
-    const totalCredits = purchase.credits + purchase.creditsAssigned;
-    if (purchase.creditsUsed >= totalCredits) {
+    const creditsRemaining = user.interviewCredits - user.interviewCreditsUsed;
+    if (creditsRemaining <= 0) {
       res.status(403).json({
         error: 'No interviews remaining',
         message: 'You have used all your purchased interviews. Please purchase more to continue.',
-        totalCredits,
-        creditsUsed: purchase.creditsUsed
+        totalCredits: user.interviewCredits,
+        creditsUsed: user.interviewCreditsUsed
       });
       return;
     }
 
     const { candidateName } = req.body;
-    const name = candidateName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Anonymous';
+    const name = candidateName || `${reqUser.firstName || ''} ${reqUser.lastName || ''}`.trim() || 'Anonymous';
 
     // Fetch all active questions and randomly select 2 unique ones
     const allQuestions = await InterviewQuestion.find({ isActive: true });
@@ -319,14 +318,15 @@ export async function startInterview(req: Request, res: Response): Promise<void>
     const shuffled = [...allQuestions].sort(() => Math.random() - 0.5);
     const questions: IInterviewQuestion[] = shuffled.slice(0, 2);
 
-    // Increment credits used count
-    purchase.creditsUsed += 1;
-    await purchase.save();
+    // Increment credits used count on User model
+    await User.findByIdAndUpdate(user._id, {
+      $inc: { interviewCreditsUsed: 1 }
+    });
 
     const sessionId = uuidv4();
     const session: InterviewSession = {
       sessionId,
-      userId: user._id.toString(),
+      userId: (user._id as any).toString(),
       candidateName: name,
       questions: questions,
       currentQuestionIndex: 0,
@@ -362,7 +362,7 @@ export async function startInterview(req: Request, res: Response): Promise<void>
       introductionMessage,
       currentQuestion: null, // No technical question yet
       speechService: getSpeechServiceStatus(),
-      creditsRemaining: totalCredits - purchase.creditsUsed
+      creditsRemaining: creditsRemaining - 1
     });
   } catch (error) {
     console.error('Error starting interview:', error);
@@ -1076,15 +1076,16 @@ export function getSpeechStatus(_req: Request, res: Response): void {
 // Get user's interview balance (purchased vs used)
 export async function getInterviewBalance(req: Request, res: Response): Promise<void> {
   try {
-    const user = req.user as { _id: string } | undefined;
+    const reqUser = req.user as { _id: string } | undefined;
 
-    if (!user) {
+    if (!reqUser) {
       res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
-    const aiInterviewItem = await Item.findOne({ title: 'AI Interview', isActive: true });
-    if (!aiInterviewItem) {
+    // Get user from database to check interview credits
+    const user = await User.findById(reqUser._id);
+    if (!user) {
       res.json({
         hasPurchase: false,
         totalCredits: 0,
@@ -1094,13 +1095,8 @@ export async function getInterviewBalance(req: Request, res: Response): Promise<
       return;
     }
 
-    const purchase = await Purchase.findOne({
-      user: user._id,
-      item: aiInterviewItem._id,
-      status: 'active'
-    });
-
-    if (!purchase) {
+    // Check if user has any interview credits
+    if (user.interviewCredits === 0) {
       res.json({
         hasPurchase: false,
         totalCredits: 0,
@@ -1110,20 +1106,11 @@ export async function getInterviewBalance(req: Request, res: Response): Promise<
       return;
     }
 
-    // Migrate old fields if they exist (one-time migration)
-    const oldPurchase = purchase as any;
-    if (oldPurchase.interviewsPurchased !== undefined && purchase.credits === 0) {
-      purchase.credits = oldPurchase.interviewsPurchased || 0;
-      purchase.creditsUsed = oldPurchase.interviewsUsed || 0;
-      await purchase.save();
-    }
-
-    const totalCredits = purchase.credits + purchase.creditsAssigned;
     res.json({
       hasPurchase: true,
-      totalCredits,
-      creditsUsed: purchase.creditsUsed,
-      creditsRemaining: totalCredits - purchase.creditsUsed
+      totalCredits: user.interviewCredits,
+      creditsUsed: user.interviewCreditsUsed,
+      creditsRemaining: user.interviewCredits - user.interviewCreditsUsed
     });
   } catch (error) {
     console.error('Error getting interview balance:', error);
@@ -1134,31 +1121,25 @@ export async function getInterviewBalance(req: Request, res: Response): Promise<
 // Get interview session page - checks balance and returns session info
 export async function getInterviewSession(req: Request, res: Response): Promise<void> {
   try {
-    const user = req.user as { _id: string; firstName?: string; lastName?: string } | undefined;
+    const reqUser = req.user as { _id: string; firstName?: string; lastName?: string } | undefined;
 
-    if (!user) {
+    if (!reqUser) {
       res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
-    // Get AI Interview item
-    const aiInterviewItem = await Item.findOne({ title: 'AI Interview', isActive: true });
-    if (!aiInterviewItem) {
+    // Get user from database to check interview credits
+    const user = await User.findById(reqUser._id);
+    if (!user) {
       res.status(404).json({
-        error: 'AI Interview product not found',
+        error: 'User not found',
         canStartInterview: false
       });
       return;
     }
 
-    // Get user's purchase
-    const purchase = await Purchase.findOne({
-      user: user._id,
-      item: aiInterviewItem._id,
-      status: 'active'
-    });
-
-    if (!purchase) {
+    // Check if user has any interview credits
+    if (user.interviewCredits === 0) {
       res.status(403).json({
         error: 'No active AI Interview purchase found',
         message: 'Please purchase an AI Interview to continue',
@@ -1170,24 +1151,15 @@ export async function getInterviewSession(req: Request, res: Response): Promise<
       return;
     }
 
-    // Migrate old fields if they exist (one-time migration)
-    const oldPurchase = purchase as any;
-    if (oldPurchase.interviewsPurchased !== undefined && purchase.credits === 0) {
-      purchase.credits = oldPurchase.interviewsPurchased || 0;
-      purchase.creditsUsed = oldPurchase.interviewsUsed || 0;
-      await purchase.save();
-    }
-
-    const totalCredits = purchase.credits + purchase.creditsAssigned;
-    const creditsRemaining = totalCredits - purchase.creditsUsed;
+    const creditsRemaining = user.interviewCredits - user.interviewCreditsUsed;
 
     if (creditsRemaining <= 0) {
       res.status(403).json({
         error: 'No interviews remaining',
         message: 'You have used all your purchased interviews. Please purchase more to continue.',
         canStartInterview: false,
-        totalCredits,
-        creditsUsed: purchase.creditsUsed,
+        totalCredits: user.interviewCredits,
+        creditsUsed: user.interviewCreditsUsed,
         creditsRemaining: 0
       });
       return;
@@ -1196,10 +1168,10 @@ export async function getInterviewSession(req: Request, res: Response): Promise<
     // User can start an interview
     res.json({
       canStartInterview: true,
-      totalCredits,
-      creditsUsed: purchase.creditsUsed,
+      totalCredits: user.interviewCredits,
+      creditsUsed: user.interviewCreditsUsed,
       creditsRemaining,
-      message: `You have ${creditsRemaining} interview${creditsRemaining > 1 ? 's' : ''} remaining out of ${totalCredits} total.`,
+      message: `You have ${creditsRemaining} interview${creditsRemaining > 1 ? 's' : ''} remaining out of ${user.interviewCredits} total.`,
       speechService: getSpeechServiceStatus()
     });
   } catch (error) {

@@ -34,12 +34,14 @@ router.get('/users', async (_req: Request, res: Response) => {
       users.map(async (user) => {
         const purchases = await Purchase.find({ user: user._id }).lean();
 
-        // Total paid (actual spending)
-        const totalPaid = purchases.reduce((sum, p) => sum + (p.amount || 0), 0);
+        // Total paid (actual spending from paid purchases)
+        const totalPaid = purchases
+          .filter(p => p.purchaseType === 'paid')
+          .reduce((sum, p) => sum + (p.amount || 0), 0);
 
-        // Assigned value (calculated from assigned credits * item price)
+        // Assigned value (calculated from assigned purchases * item price)
         const totalAssigned = await Purchase.aggregate([
-          { $match: { user: user._id } },
+          { $match: { user: user._id, purchaseType: 'assigned' } },
           {
             $lookup: {
               from: 'items',
@@ -52,7 +54,7 @@ router.get('/users', async (_req: Request, res: Response) => {
           {
             $group: {
               _id: null,
-              total: { $sum: { $multiply: ['$creditsAssigned', '$itemDetails.price'] } }
+              total: { $sum: { $multiply: ['$quantity', '$itemDetails.price'] } }
             }
           }
         ]);
@@ -70,6 +72,29 @@ router.get('/users', async (_req: Request, res: Response) => {
   } catch (error) {
     console.error('Error fetching users:', error);
     res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+// Search users by email (for autocomplete)
+router.get('/users/search', async (req: Request, res: Response) => {
+  try {
+    const { q } = req.query;
+    if (!q || String(q).length < 2) {
+      res.json([]);
+      return;
+    }
+
+    const users = await User.find({
+      email: { $regex: q, $options: 'i' }
+    })
+      .select('_id email firstName lastName')
+      .limit(10)
+      .lean();
+
+    res.json(users);
+  } catch (error) {
+    console.error('Error searching users:', error);
+    res.status(500).json({ error: 'Failed to search users' });
   }
 });
 
@@ -192,48 +217,40 @@ router.post('/assign', async (req: Request, res: Response) => {
 
     const creditCount = quantity || 1;
 
-    // Find existing active purchase for this item
-    const existingPurchase = await Purchase.findOne({
-      user: userId,
-      item: itemId,
-      status: 'active'
-    });
-
     if (item.type === 'interview') {
-      // Interviews: add assigned credits to existing or create new purchase
-      if (existingPurchase) {
-        // Add to existing purchase
-        existingPurchase.creditsAssigned += creditCount;
-        await existingPurchase.save();
+      // Always create a new purchase record for interviews
+      const purchase = new Purchase({
+        user: userId,
+        item: itemId,
+        quantity: creditCount,
+        purchaseType: 'assigned',
+        amount: 0,
+        status: 'active'
+      });
 
-        const totalCredits = existingPurchase.credits + existingPurchase.creditsAssigned;
-        const remaining = totalCredits - existingPurchase.creditsUsed;
+      await purchase.save();
 
-        res.status(200).json({
-          message: `Added ${creditCount} credit(s) to ${user.email}. Total: ${totalCredits}, Used: ${existingPurchase.creditsUsed}, Remaining: ${remaining}`,
-          purchase: existingPurchase
-        });
-      } else {
-        // Create new purchase with assigned credits
-        const purchase = new Purchase({
-          user: userId,
-          item: itemId,
-          credits: 0,
-          creditsUsed: 0,
-          creditsAssigned: creditCount,
-          amount: 0,
-          status: 'active'
-        });
+      // Update user's interview credits
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { $inc: { interviewCredits: creditCount } },
+        { new: true }
+      );
 
-        await purchase.save();
+      const remaining = (updatedUser?.interviewCredits || 0) - (updatedUser?.interviewCreditsUsed || 0);
 
-        res.status(201).json({
-          message: `Assigned ${creditCount} credit(s) to ${user.email}`,
-          purchase
-        });
-      }
+      res.status(201).json({
+        message: `Assigned ${creditCount} credit(s) to ${user.email}. Total: ${updatedUser?.interviewCredits}, Used: ${updatedUser?.interviewCreditsUsed}, Remaining: ${remaining}`,
+        purchase
+      });
     } else if (item.type === 'test') {
-      // Tests: check if user already has access, if not assign it
+      // For tests, check if user already has access
+      const existingPurchase = await Purchase.findOne({
+        user: userId,
+        item: itemId,
+        status: 'active'
+      });
+
       if (existingPurchase) {
         res.status(200).json({
           message: `${user.email} already has access to "${item.title}"`,
@@ -246,9 +263,8 @@ router.post('/assign', async (req: Request, res: Response) => {
       const purchase = new Purchase({
         user: userId,
         item: itemId,
-        credits: 0,
-        creditsUsed: 0,
-        creditsAssigned: 1, // 1 credit = unlimited access for tests
+        quantity: 1,
+        purchaseType: 'assigned',
         amount: 0,
         status: 'active'
       });
@@ -261,6 +277,12 @@ router.post('/assign', async (req: Request, res: Response) => {
       });
     } else {
       // Courses or other types - check if exists, if not create
+      const existingPurchase = await Purchase.findOne({
+        user: userId,
+        item: itemId,
+        status: 'active'
+      });
+
       if (existingPurchase) {
         res.status(200).json({
           message: `${user.email} already has access to "${item.title}"`,
@@ -272,9 +294,8 @@ router.post('/assign', async (req: Request, res: Response) => {
       const purchase = new Purchase({
         user: userId,
         item: itemId,
-        credits: 0,
-        creditsUsed: 0,
-        creditsAssigned: 1,
+        quantity: 1,
+        purchaseType: 'assigned',
         amount: 0,
         status: 'active'
       });
@@ -334,16 +355,19 @@ router.get('/stats', async (_req: Request, res: Response) => {
       purchasesByType,
       earningsOverTime,
       usersOverTime,
-      interviewsCount,
+      interviewPurchasedStats,
+      interviewUsedStats,
       testsCount
     ] = await Promise.all([
       User.countDocuments(),
-      // Total earnings (what users actually paid)
+      // Total earnings (what users actually paid - only paid purchases)
       Purchase.aggregate([
+        { $match: { purchaseType: 'paid' } },
         { $group: { _id: null, total: { $sum: '$amount' } } }
       ]),
-      // Total assigned value (creditsAssigned * item price)
+      // Total assigned value (quantity * item price for assigned purchases)
       Purchase.aggregate([
+        { $match: { purchaseType: 'assigned' } },
         {
           $lookup: {
             from: 'items',
@@ -356,7 +380,7 @@ router.get('/stats', async (_req: Request, res: Response) => {
         {
           $group: {
             _id: null,
-            total: { $sum: { $multiply: ['$creditsAssigned', '$itemDetails.price'] } }
+            total: { $sum: { $multiply: ['$quantity', '$itemDetails.price'] } }
           }
         }
       ]),
@@ -374,15 +398,23 @@ router.get('/stats', async (_req: Request, res: Response) => {
         {
           $group: {
             _id: '$itemDetails.type',
-            count: { $sum: 1 },
+            count: { $sum: '$quantity' },  // Sum quantities, not records
             totalAmount: { $sum: '$amount' },
-            totalAssigned: { $sum: { $multiply: ['$creditsAssigned', '$itemDetails.price'] } }
+            totalAssigned: {
+              $sum: {
+                $cond: [
+                  { $eq: ['$purchaseType', 'assigned'] },
+                  { $multiply: ['$quantity', '$itemDetails.price'] },
+                  0
+                ]
+              }
+            }
           }
         }
       ]),
       // Earnings over time (last 12 months) - only actual paid amounts
       Purchase.aggregate([
-        { $match: { amount: { $gt: 0 } } },
+        { $match: { purchaseType: 'paid', amount: { $gt: 0 } } },
         {
           $group: {
             _id: {
@@ -409,7 +441,7 @@ router.get('/stats', async (_req: Request, res: Response) => {
         { $sort: { '_id.year': 1, '_id.month': 1 } },
         { $limit: 12 }
       ]),
-      // Total credits for interviews (purchased only, not assigned)
+      // Total interview credits purchased (paid only, from Purchase table)
       Purchase.aggregate([
         {
           $lookup: {
@@ -420,13 +452,15 @@ router.get('/stats', async (_req: Request, res: Response) => {
           }
         },
         { $unwind: '$itemDetails' },
-        { $match: { 'itemDetails.type': 'interview' } },
+        { $match: { 'itemDetails.type': 'interview', purchaseType: 'paid' } },
+        { $group: { _id: null, total: { $sum: '$quantity' } } }
+      ]),
+      // Total interview credits used (from User table)
+      User.aggregate([
         {
           $group: {
             _id: null,
-            totalCredits: { $sum: '$credits' },
-            totalAssigned: { $sum: '$creditsAssigned' },
-            totalUsed: { $sum: '$creditsUsed' }
+            totalUsed: { $sum: '$interviewCreditsUsed' }
           }
         }
       ]),
@@ -441,20 +475,17 @@ router.get('/stats', async (_req: Request, res: Response) => {
           }
         },
         { $unwind: '$itemDetails' },
-        { $match: { 'itemDetails.type': 'test', amount: { $gt: 0 } } },
+        { $match: { 'itemDetails.type': 'test', purchaseType: 'paid' } },
         { $group: { _id: null, count: { $sum: 1 } } }
       ])
     ]);
-
-    // Only count purchased credits, not assigned ones
-    const totalInterviewCredits = interviewsCount[0]?.totalCredits || 0;
 
     res.json({
       totalUsers,
       totalEarnings: totalEarningsResult[0]?.total || 0,
       totalAssigned: totalAssignedResult[0]?.total || 0,
-      totalInterviewCredits,
-      totalInterviewCreditsUsed: interviewsCount[0]?.totalUsed || 0,
+      totalInterviewCredits: interviewPurchasedStats[0]?.total || 0,
+      totalInterviewCreditsUsed: interviewUsedStats[0]?.totalUsed || 0,
       totalTestsPurchased: testsCount[0]?.count || 0,
       purchasesByType,
       earningsOverTime,

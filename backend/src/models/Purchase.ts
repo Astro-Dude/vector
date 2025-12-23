@@ -7,11 +7,8 @@ export interface IPurchase extends Document {
   status: 'active' | 'completed' | 'expired' | 'cancelled';
   expiryDate?: Date;
   amount: number;
-  // Credit tracking fields
-  credits: number;        // Credits purchased (paid)
-  creditsUsed: number;    // Credits consumed
-  creditsAssigned: number; // Credits assigned by admin (free)
-  // Total available = credits + creditsAssigned - creditsUsed
+  quantity: number;
+  purchaseType: 'paid' | 'assigned';
   // Discount tracking fields
   originalAmount: number;
   discountAmount: number;
@@ -51,21 +48,15 @@ const purchaseSchema = new Schema<IPurchase>({
     required: true,
     min: 0
   },
-  // Credit tracking: paid credits, used credits, assigned credits
-  credits: {
+  quantity: {
     type: Number,
-    default: 0,
-    min: 0
+    default: 1,
+    min: 1
   },
-  creditsUsed: {
-    type: Number,
-    default: 0,
-    min: 0
-  },
-  creditsAssigned: {
-    type: Number,
-    default: 0,
-    min: 0
+  purchaseType: {
+    type: String,
+    enum: ['paid', 'assigned'],
+    default: 'paid'
   },
   // Discount tracking
   originalAmount: {

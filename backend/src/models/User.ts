@@ -12,6 +12,8 @@ export interface IUser extends Document {
   referralCode: string;
   referredBy?: Types.ObjectId;
   totalReferralEarnings: number;
+  interviewCredits: number;
+  interviewCreditsUsed: number;
   createdAt: Date;
   lastLogin: Date;
 }
@@ -50,6 +52,16 @@ const userSchema = new Schema<IUser>({
   totalReferralEarnings: {
     type: Number,
     default: 0
+  },
+  interviewCredits: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  interviewCreditsUsed: {
+    type: Number,
+    default: 0,
+    min: 0
   },
   createdAt: {
     type: Date,

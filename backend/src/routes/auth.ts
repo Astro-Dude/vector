@@ -147,7 +147,12 @@ router.get('/purchases', async (req: Request, res: Response) => {
   }
 
   try {
-    const purchases = await Purchase.find({ user: (req.user as any)._id })
+    const userId = (req.user as any)._id;
+
+    // Get user for interview credits
+    const user = await User.findById(userId);
+
+    const purchases = await Purchase.find({ user: userId })
       .populate('item')
       .sort({ purchaseDate: -1 });
 
@@ -156,43 +161,37 @@ router.get('/purchases', async (req: Request, res: Response) => {
       .filter(purchase => purchase.item) // Filter out purchases with null items
       .map(purchase => {
         const item = purchase.item as any;
-        const base = {
-          _id: item._id.toString(),
-          id: item._id.toString(),
+        return {
+          _id: (purchase._id as any).toString(),
+          id: (purchase._id as any).toString(),
+          itemId: item._id.toString(),
           title: item.title,
           description: item.description,
           price: purchase.amount,
           type: item.type,
           duration: item.duration,
           purchasedAt: purchase.purchaseDate.toISOString(),
-          status: purchase.status
+          status: purchase.status,
+          quantity: purchase.quantity,
+          purchaseType: purchase.purchaseType
         };
-
-        // Add credit fields for interview type items
-        if (item.type === 'interview') {
-          // Handle migration from old fields
-          const oldPurchase = purchase as any;
-          let credits = purchase.credits;
-          let creditsUsed = purchase.creditsUsed;
-          if (oldPurchase.interviewsPurchased !== undefined && purchase.credits === 0) {
-            credits = oldPurchase.interviewsPurchased || 0;
-            creditsUsed = oldPurchase.interviewsUsed || 0;
-          }
-
-          const totalCredits = credits + purchase.creditsAssigned;
-          return {
-            ...base,
-            credits,
-            creditsUsed,
-            creditsAssigned: purchase.creditsAssigned,
-            creditsRemaining: totalCredits - creditsUsed
-          };
-        }
-
-        return base;
       });
 
-    res.json({ purchases: formattedPurchases });
+    // Include user's interview credit balance
+    const interviewBalance = user ? {
+      totalCredits: user.interviewCredits,
+      creditsUsed: user.interviewCreditsUsed,
+      creditsRemaining: user.interviewCredits - user.interviewCreditsUsed
+    } : {
+      totalCredits: 0,
+      creditsUsed: 0,
+      creditsRemaining: 0
+    };
+
+    res.json({
+      purchases: formattedPurchases,
+      interviewBalance
+    });
   } catch (error) {
     console.error('Error fetching purchases:', error);
     res.status(500).json({ message: 'Failed to fetch purchases' });
@@ -306,13 +305,14 @@ router.delete('/items/:id', async (req: Request, res: Response) => {
   }
 });
 
-// Purchase an item
+// Purchase an item (legacy endpoint - use /payment routes for actual purchases)
 router.post('/purchase/:itemId', async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ message: 'Not authenticated' });
   }
 
   try {
+    const userId = (req.user as any)._id;
     const item = await Item.findById(req.params.itemId);
 
     if (!item) {
@@ -329,56 +329,26 @@ router.post('/purchase/:itemId', async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Quantity must be between 1 and 10' });
     }
 
-    // For interview type items, allow purchasing multiple and adding to existing
+    // For interview type items, always create a new purchase
     if (item.type === 'interview') {
-      // Check if user already has an active purchase for this interview item
-      const existingPurchase = await Purchase.findOne({
-        user: (req.user as any)._id,
-        item: item._id,
-        status: 'active'
-      });
-
-      if (existingPurchase) {
-        // Migrate old fields if they exist (one-time migration)
-        const oldPurchase = existingPurchase as any;
-        if (oldPurchase.interviewsPurchased !== undefined && existingPurchase.credits === 0) {
-          existingPurchase.credits = oldPurchase.interviewsPurchased || 0;
-          existingPurchase.creditsUsed = oldPurchase.interviewsUsed || 0;
-        }
-
-        // Add to existing purchase (paid credits)
-        existingPurchase.credits += quantity;
-        existingPurchase.amount += item.price * quantity;
-        await existingPurchase.save();
-
-        const totalCredits = existingPurchase.credits + existingPurchase.creditsAssigned;
-        return res.status(200).json({
-          message: `Successfully added ${quantity} interview${quantity > 1 ? 's' : ''} to your account`,
-          purchase: {
-            id: existingPurchase._id,
-            item: item,
-            purchaseDate: existingPurchase.purchaseDate,
-            status: existingPurchase.status,
-            credits: existingPurchase.credits,
-            creditsUsed: existingPurchase.creditsUsed,
-            creditsAssigned: existingPurchase.creditsAssigned,
-            creditsRemaining: totalCredits - existingPurchase.creditsUsed
-          }
-        });
-      }
-
-      // Create new purchase with credits
+      // Create new purchase record
       const purchase = new Purchase({
-        user: (req.user as any)._id,
+        user: userId,
         item: item._id,
         amount: item.price * quantity,
-        credits: quantity,
-        creditsUsed: 0,
-        creditsAssigned: 0,
+        quantity: quantity,
+        purchaseType: 'paid',
         expiryDate: new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000) // 6 months
       });
 
       await purchase.save();
+
+      // Update user's interview credits
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { $inc: { interviewCredits: quantity } },
+        { new: true }
+      );
 
       return res.status(201).json({
         message: `Successfully purchased ${quantity} interview${quantity > 1 ? 's' : ''}`,
@@ -387,17 +357,15 @@ router.post('/purchase/:itemId', async (req: Request, res: Response) => {
           item: item,
           purchaseDate: purchase.purchaseDate,
           status: purchase.status,
-          credits: purchase.credits,
-          creditsUsed: purchase.creditsUsed,
-          creditsAssigned: purchase.creditsAssigned,
-          creditsRemaining: purchase.credits - purchase.creditsUsed
+          quantity: purchase.quantity,
+          creditsRemaining: (updatedUser?.interviewCredits || quantity) - (updatedUser?.interviewCreditsUsed || 0)
         }
       });
     }
 
     // For non-interview items, check for existing purchase
     const existingPurchase = await Purchase.findOne({
-      user: (req.user as any)._id,
+      user: userId,
       item: item._id,
       status: { $in: ['active', 'completed'] }
     });
@@ -408,10 +376,11 @@ router.post('/purchase/:itemId', async (req: Request, res: Response) => {
 
     // Create purchase record for non-interview items
     const purchase = new Purchase({
-      user: (req.user as any)._id,
+      user: userId,
       item: item._id,
       amount: item.price,
-      // Set expiry date based on duration (simplified logic)
+      quantity: 1,
+      purchaseType: 'paid',
       expiryDate: item.duration ? new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000) : null // 6 months default
     });
 

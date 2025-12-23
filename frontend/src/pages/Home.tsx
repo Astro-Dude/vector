@@ -22,11 +22,17 @@ interface Item {
 
 interface PurchasedItem extends Item {
   id?: string; // Backend returns 'id' instead of '_id'
+  itemId?: string;
   purchasedAt: string;
   status: 'active' | 'completed' | 'expired';
-  credits?: number;
-  creditsUsed?: number;
-  creditsAssigned?: number;
+  quantity?: number;
+  purchaseType?: 'paid' | 'assigned';
+}
+
+interface InterviewBalance {
+  totalCredits: number;
+  creditsUsed: number;
+  creditsRemaining: number;
 }
 
 interface DiscountInfo {
@@ -43,6 +49,7 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<'available' | 'purchased'>('available');
   const [availableItems, setAvailableItems] = useState<Item[]>([]);
   const [purchasedItems, setPurchasedItems] = useState<PurchasedItem[]>([]);
+  const [interviewBalance, setInterviewBalance] = useState<InterviewBalance>({ totalCredits: 0, creditsUsed: 0, creditsRemaining: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -89,6 +96,9 @@ export default function Home() {
         }
         const data = await response.json();
         setPurchasedItems(data.purchases);
+        if (data.interviewBalance) {
+          setInterviewBalance(data.interviewBalance);
+        }
       } catch (err) {
         setError('Failed to load purchased items');
         console.error('Error fetching purchased items:', err);
@@ -240,6 +250,9 @@ export default function Home() {
               if (purchasedResponse.ok) {
                 const purchasedData = await purchasedResponse.json();
                 setPurchasedItems(purchasedData.purchases);
+                if (purchasedData.interviewBalance) {
+                  setInterviewBalance(purchasedData.interviewBalance);
+                }
               }
               // Switch to purchased tab
               setActiveTab('purchased');
@@ -491,38 +504,32 @@ export default function Home() {
               {activeTab === 'purchased' && (
                 <div>
                   {/* Interviews Section */}
-                  {purchasedItems.filter(item => item.type === 'interview').length > 0 && (
+                  {interviewBalance.totalCredits > 0 && (
                     <div className="mb-8">
                       <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                         <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
                         Interviews
                       </h3>
                       <div className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
-                        {purchasedItems.filter(item => item.type === 'interview').map((item, index, arr) => {
-                          const totalCredits = (item.credits || 0) + (item.creditsAssigned || 0);
-                          const remaining = totalCredits - (item.creditsUsed || 0);
-                          return (
-                            <div key={item._id} className={`flex items-center justify-between p-4 hover:bg-white/5 transition-colors ${index !== arr.length - 1 ? 'border-b border-white/10' : ''}`}>
-                              <span className="text-white font-medium">{item.title}</span>
-                              <div className="flex items-center gap-4">
-                                <span className={`text-sm ${remaining > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                                  {remaining} / {totalCredits} left
-                                </span>
-                                <button
-                                  onClick={() => navigate('/interview/setup')}
-                                  disabled={remaining <= 0}
-                                  className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                                    remaining > 0
-                                      ? 'bg-white/10 text-white border border-white/20 hover:bg-white/20 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-white/10'
-                                      : 'bg-white/5 text-white/30 border border-white/10 cursor-not-allowed'
-                                  }`}
-                                >
-                                  Start
-                                </button>
-                              </div>
-                            </div>
-                          );
-                        })}
+                        <div className="flex items-center justify-between p-4 hover:bg-white/5 transition-colors">
+                          <span className="text-white font-medium">AI Interview</span>
+                          <div className="flex items-center gap-4">
+                            <span className={`text-sm ${interviewBalance.creditsRemaining > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                              {interviewBalance.creditsRemaining} / {interviewBalance.totalCredits} left
+                            </span>
+                            <button
+                              onClick={() => navigate('/interview/setup')}
+                              disabled={interviewBalance.creditsRemaining <= 0}
+                              className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 ${
+                                interviewBalance.creditsRemaining > 0
+                                  ? 'bg-white/10 text-white border border-white/20 hover:bg-white/20 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-white/10'
+                                  : 'bg-white/5 text-white/30 border border-white/10 cursor-not-allowed'
+                              }`}
+                            >
+                              Start
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
