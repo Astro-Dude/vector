@@ -204,6 +204,7 @@ export default function Dashboard() {
                     "Mentored 100+ students",
                     "SDE Intern at InterviewBit",
                     "Teaching Assistant at SST",
+                    "Dean's List",
                   ],
                 },
                 {
@@ -214,6 +215,18 @@ export default function Dashboard() {
                     "Icpc Regionalist",
                     "Training Head @NLogN-The Cp Club of SST",
                     "Guardian @Leetcode (Top 1%)",
+                    "Expert @Codeforces",
+                  ],
+                },
+                {
+                  name: "Jaivardhan D Rao",
+                  role: "Mentor",
+                  linkedin: "https://www.linkedin.com/in/jaivardhan-d-rao/",
+                  achievements: [
+                    "SDE Intern at InterviewBit",
+                    "Teaching Assistant at SST",
+                    "Core Member @NLogN-The Cp Club of SST",
+                    "Dean's List",
                   ],
                 },
               ].map((mentor, index) => (
