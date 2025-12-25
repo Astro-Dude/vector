@@ -206,6 +206,16 @@ export default function Dashboard() {
                     "Teaching Assistant at SST",
                   ],
                 },
+                {
+                  name: "Krritin Keshan",
+                  role: "Mentor",
+                  linkedin: "linkedin.com/in/krritin-keshan/",
+                  achievements: [
+                    "Icpc Regionalist",
+                    "Training Head @NLogN-The Cp Club of SST",
+                    "Guardian @Leetcode (Top 1%)",
+                  ],
+                },
               ].map((mentor, index) => (
                 <div
                   key={index}
