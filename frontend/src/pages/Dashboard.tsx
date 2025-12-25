@@ -176,7 +176,7 @@ export default function Dashboard() {
                   Mock Interview
                 </h4>
                 <p className="text-white/60 leading-relaxed text-sm md:text-base">
-                  Experience a mock NSET interview with personalized feedback to
+                  Experience a mock NSET AI interview with personalized feedback to
                   sharpen your performance.
                 </p>
               </div>
@@ -197,83 +197,13 @@ export default function Dashboard() {
               {/* Mentor Cards - Black and White Theme */}
               {[
                 {
-                  name: "Alex Johnson",
-                  role: "Senior Mentor",
-                  linkedin: "https://linkedin.com/in/alex-johnson",
+                  name: "Shaurya Verma",
+                  role: "Founder",
+                  linkedin: "https://linkedin.com/in/astro-dude",
                   achievements: [
-                    "Top 1% in competitive coding",
-                    "Published 3 research papers",
-                    "Mentor for 50+ students",
-                  ],
-                },
-                {
-                  name: "Sarah Chen",
-                  role: "Algorithm Expert",
-                  linkedin: "https://linkedin.com/in/sarah-chen",
-                  achievements: [
-                    "Google Code Jam finalist",
-                    "ACM ICPC World Finals",
-                    "5⭐ on CodeForces",
-                  ],
-                },
-                {
-                  name: "Michael Brown",
-                  role: "Interview Coach",
-                  linkedin: "https://linkedin.com/in/michael-brown",
-                  achievements: [
-                    "Ex-FAANG Engineer",
-                    "Conducted 200+ mock interviews",
-                    "Career counselor",
-                  ],
-                },
-                {
-                  name: "Emma Davis",
-                  role: "Problem Solver",
-                  linkedin: "https://linkedin.com/in/emma-davis",
-                  achievements: [
-                    "Mathematics Olympiad Gold",
-                    "Hackathon winner 5x",
-                    "Open source contributor",
-                  ],
-                },
-                {
-                  name: "David Wilson",
-                  role: "Tech Lead",
-                  linkedin: "https://linkedin.com/in/david-wilson",
-                  achievements: [
-                    "10+ years experience",
-                    "Led teams of 20+",
-                    "Startup founder",
-                  ],
-                },
-                {
-                  name: "Lisa Anderson",
-                  role: "Data Scientist",
-                  linkedin: "https://linkedin.com/in/lisa-anderson",
-                  achievements: [
-                    "PhD in Machine Learning",
-                    "Published in top journals",
-                    "Kaggle Grandmaster",
-                  ],
-                },
-                {
-                  name: "James Martinez",
-                  role: "Full Stack Dev",
-                  linkedin: "https://linkedin.com/in/james-martinez",
-                  achievements: [
-                    "Built 15+ production apps",
-                    "Cloud architecture expert",
-                    "DevOps specialist",
-                  ],
-                },
-                {
-                  name: "Emily Taylor",
-                  role: "System Designer",
-                  linkedin: "https://linkedin.com/in/emily-taylor",
-                  achievements: [
-                    "Designed scalable systems",
-                    "Performance optimization expert",
-                    "Tech speaker",
+                    "Mentored 100+ students",
+                    "SDE Intern at InterviewBit",
+                    "Teaching Assistant at SST",
                   ],
                 },
               ].map((mentor, index) => (
