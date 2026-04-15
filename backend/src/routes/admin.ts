@@ -12,17 +12,21 @@ import ReferralSettings from '../models/ReferralSettings.js';
 
 const router = Router();
 
-// Block admin routes in production
-const blockInProduction = (req: Request, res: Response, next: NextFunction): void => {
-  if (process.env.NODE_ENV === 'production') {
-    res.status(403).json({ error: 'Not allowed in production' });
+// Require authenticated admin for all admin routes
+const requireAdmin = (req: Request, res: Response, next: NextFunction): void => {
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: 'Authentication required' });
+    return;
+  }
+  const user = req.user as any;
+  if (!user.isAdmin) {
+    res.status(403).json({ error: 'Admin access required' });
     return;
   }
   next();
 };
 
-// Apply production block to all admin routes
-router.use(blockInProduction);
+router.use(requireAdmin);
 
 // Get all users with their spend breakdown
 router.get('/users', async (_req: Request, res: Response) => {
